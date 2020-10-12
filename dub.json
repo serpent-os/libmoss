@@ -7,16 +7,34 @@
 	"license": "ZLib",
 	"version": "0.0.1",
 	"name": "moss-format",
+	"targetType" : "none",
 	"dependencies": {
-		"moss-core": ">=0.0.1",
-		"dyaml": {
-			"path": "external/dyaml",
-		},
-		"tinyendian": {
-			"path": "external/tinyendian",
-		},
-		"zstd": {
-			"path": "external/zstd",
-		}
+		"moss-format:source": "*",
+		"moss-format:binary": "*",
 	},
+	"subPackages": [
+		{
+			"name": "source",
+			"targetType": "library",
+			"sourcePaths": ["source/moss/format/source/"],
+			"dependencies": {
+				"dyaml": {
+					"path": "external/dyaml",
+				},
+				"tinyendian": {
+					"path": "external/tinyendian",
+				}
+			}
+		},
+		{
+			"name": "binary",
+			"targetType": "library",
+			"sourcePaths": ["source/moss/format/binary/"],
+			"dependencies": {
+				"zstd": {
+					"path": "external/zstd",
+				}
+			}
+		}
+	]
 }
