@@ -8,6 +8,7 @@
 	"version": "0.0.1",
 	"name": "moss-format",
 	"dependencies": {
+		"moss-core": ">=0.0.1",
 		"dyaml": {
 			"path": "external/dyaml",
 		},
