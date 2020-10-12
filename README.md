@@ -1,6 +1,6 @@
 ### moss-format
 
-This repository contains the D Modules required by [moss] and [boulder]
+This repository contains the D Modules required by [moss](https://github.com/serpent-linux/moss) and [boulder](https://github.com/serpent-linux/boulder)
 to read and write the binary and source formats, respectively.
 
 #### `moss.format.source`
