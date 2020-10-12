@@ -18,6 +18,7 @@
 			"targetType": "library",
 			"sourcePaths": ["source/moss/format/source/"],
 			"dependencies": {
+				"moss-core", ">=0.0.1",
 				"dyaml": {
 					"path": "external/dyaml",
 				},
@@ -31,6 +32,7 @@
 			"targetType": "library",
 			"sourcePaths": ["source/moss/format/binary/"],
 			"dependencies": {
+				"moss-core", ">=0.0.1",
 				"zstd": {
 					"path": "external/zstd",
 				}
