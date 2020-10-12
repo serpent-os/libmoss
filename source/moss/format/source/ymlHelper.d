@@ -1,5 +1,5 @@
 /*
-* This file is part of moss.
+* This file is part of moss-format.
 *
 * Copyright © 2020 Serpent OS Developers
 *
