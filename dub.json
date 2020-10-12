@@ -3,11 +3,10 @@
 		"Serpent OS Developers"
 	],
 	"copyright": "Copyright © 2020 Serpent OS Developers",
-	"description": "Serpent OS Package Manager",
+	"description": "Moss Source + Binary Formats",
 	"license": "ZLib",
 	"version": "0.0.1",
-	"name": "moss",
-	"targetPath": "bin",
+	"name": "moss-format",
 	"dependencies": {
 		"dyaml": {
 			"path": "external/dyaml",
@@ -19,15 +18,4 @@
 			"path": "external/zstd",
 		}
 	},
-	"buildTypes": {
-		"debug": {
-			"buildOptions": ["debugMode", "optimize"],
-			"dflags-dmd": ["-g", "-fPIC"],
-			"dflags-ldc": ["-gc", "-O2", "--relocation-model=pic"]
-		},
-		"release": {
-			"buildOptions": ["releaseMode", "optimize", "inline"],
-			"dflags-ldc": ["-flto=thin", "--relocation-model=pic", "-link-defaultlib-shared=false"]
-		}
-	}
 }
