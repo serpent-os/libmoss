@@ -86,6 +86,8 @@ static string genGetOpt(T)(string passText = "std.getopt.config.passThrough")
     import std.getopt;
     import std.traits;
 
+    mixin("import " ~ moduleName!T ~ ";");
+
     auto gtext = text("auto optResult = getopt(args, " ~ passText
             ~ ", std.getopt.config.caseSensitive, std.getopt.config.bundling,");
 
@@ -244,6 +246,25 @@ public:
         return _blurb;
     }
 
+    /**
+     * Proper execution entry
+     */
+    final int process(ref string[] argv)
+    {
+        return execMain(&this, argv);
+    }
+
+    /**
+     * Add a command to our known commands
+     */
+    final BaseCommand* addCommand(T : BaseCommand)()
+    {
+        auto com = newCommand!T();
+        com.parentCommand = &this;
+        commands ~= cast(BaseCommand*) com;
+        return cast(BaseCommand*) com;
+    }
+
 package:
 
     /* Executor.. */
@@ -349,17 +370,6 @@ package:
         enforce(pr !is null, "Unknown ancestor: " ~ typeName);
         enforce(pr.typeName == cmpName, "Unknown ancestor: " ~ typeName);
         return cast(T*) pr;
-    }
-
-    /**
-     * Add a command to our known commands
-     */
-    final BaseCommand* addCommand(T : BaseCommand)()
-    {
-        auto com = newCommand!T();
-        com.parentCommand = &this;
-        commands ~= cast(BaseCommand*) com;
-        return cast(BaseCommand*) com;
     }
 
     /**
@@ -479,14 +489,6 @@ package:
         import std.algorithm;
 
         return names.reverse.join(" ");
-    }
-
-    /**
-     * Proper execution entry
-     */
-    final int process(ref string[] argv)
-    {
-        return execMain(&this, argv);
     }
 
 private:
