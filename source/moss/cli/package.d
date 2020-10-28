@@ -401,7 +401,7 @@ package:
 
         import std.algorithm;
 
-        static auto pad = 2;
+        static auto pad = 4;
         auto longestName = commands.length > 0 ? commands.map!((c) => c.name.length).maxElement : 0;
         auto longestAlias = commands.length > 0
             ? commands.map!((c) => c.shortName.length).maxElement : 0;
