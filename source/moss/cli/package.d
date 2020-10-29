@@ -265,6 +265,30 @@ public:
         return cast(BaseCommand*) com;
     }
 
+    /**
+     * Walk back the parents to find a Command matching the type
+     */
+    final T* findAncestor(T)()
+    {
+        import std.exception : enforce;
+        import std.traits;
+
+        BaseCommand* pr = parentCommand;
+        static auto cmpName = moduleName!T ~ "." ~ T.stringof;
+
+        while (pr !is null)
+        {
+            if (pr.typeName == cmpName)
+            {
+                break;
+            }
+            pr = pr.parentCommand;
+        }
+        enforce(pr !is null, "Unknown ancestor: " ~ typeName);
+        enforce(pr.typeName == cmpName, "Unknown ancestor: " ~ typeName);
+        return cast(T*) pr;
+    }
+
 package:
 
     /* Executor.. */
@@ -346,30 +370,6 @@ package:
             }
         }
         return p;
-    }
-
-    /**
-     * Walk back the parents to find a Command matching the type
-     */
-    final T* findAncestor(T)()
-    {
-        import std.exception : enforce;
-        import std.traits;
-
-        BaseCommand* pr = parentCommand;
-        static auto cmpName = moduleName!T ~ "." ~ T.stringof;
-
-        while (pr !is null)
-        {
-            if (pr.typeName == cmpName)
-            {
-                break;
-            }
-            pr = pr.parentCommand;
-        }
-        enforce(pr !is null, "Unknown ancestor: " ~ typeName);
-        enforce(pr.typeName == cmpName, "Unknown ancestor: " ~ typeName);
-        return cast(T*) pr;
     }
 
     /**
