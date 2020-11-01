@@ -180,9 +180,9 @@ public:
         }
 
         /* And now all the packages */
-        foreach (ref k, v; f.packages)
+        foreach (ref v; f.packages)
         {
-            addPackage(k, cast(PackageDefinition) v);
+            addPackage(v.name, cast(PackageDefinition) v);
         }
     }
 

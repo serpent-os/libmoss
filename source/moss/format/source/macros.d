@@ -45,7 +45,7 @@ public:
     string[string] definitions;
     TuningFlag[string] flags;
     TuningGroup[string] groups;
-    PackageDefinition[string] packages;
+    PackageDefinition[] packages;
 
     /**
      * Construct a Spec from the given file
@@ -137,7 +137,7 @@ private:
             pd.name = name;
 
             /* Merge unbaked package description */
-            packages[name] = pd;
+            packages ~= pd;
         }
     }
 
