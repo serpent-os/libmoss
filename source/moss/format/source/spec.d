@@ -157,6 +157,23 @@ public:
         return up;
     }
 
+    /**
+     * Return an expanded version of the PackageDefinition
+     */
+    final PackageDefinition expand(PackageDefinition p) @safe
+    {
+        import std.algorithm;
+        import std.array;
+
+        p.name = _sbuilder.process(p.name);
+        p.summary = _sbuilder.process(p.summary);
+        p.description = _sbuilder.process(p.description);
+        p.runtimeDependencies = p.runtimeDependencies.map!((r) => _sbuilder.process(r)).uniq.array;
+        p.paths = p.paths.map!((r) => _sbuilder.process(r)).uniq.array;
+
+        return p;
+    }
+
 private:
 
     /**
