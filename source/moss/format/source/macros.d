@@ -134,7 +134,7 @@ private:
 
             PackageDefinition pd;
             parseSection(val, pd);
-            pd.name = key;
+            pd.name = name;
 
             /* Merge unbaked package description */
             packages[name] = pd;
