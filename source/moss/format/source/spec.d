@@ -113,6 +113,7 @@ public:
         parseSection(root, options);
 
         parsePackages(root);
+        rootPackage.name = source.name;
         parseBuilds(root);
         parseUpstreams(root);
         parseArchitectures(root);
@@ -247,6 +248,7 @@ private:
                 PackageDefinition pk;
                 auto name = c.as!string;
                 parseSection(v, pk);
+                pk.name = name;
                 subPackages[name] = pk;
             }
         }

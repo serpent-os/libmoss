@@ -32,6 +32,12 @@ struct PackageDefinition
 {
 
     /**
+     * The name of the package. This is automatically set by the spec
+     * parsing routine.
+     */
+    string name = null;
+
+    /**
      * A brief summary of the what the package is.
      */
     @YamlSchema("summary") string summary;
