@@ -33,6 +33,7 @@ public import moss.format.source.upstreamDefinition;
 
 import dyaml;
 import moss.format.source.ymlHelper;
+import moss.format.source.script;
 
 /**
  * A Spec is a stone specification file. It is used to parse a "stone.yml"
@@ -116,6 +117,15 @@ public:
         parseUpstreams(root);
         parseArchitectures(root);
         parseTuningOptions(root);
+
+        /* Used for expansion when requested */
+        _sbuilder = ScriptBuilder();
+        import std.conv : to;
+
+        _sbuilder.addDefinition("name", source.name);
+        _sbuilder.addDefinition("version", source.versionIdentifier);
+        _sbuilder.addDefinition("release", to!string(source.release));
+        _sbuilder.bake();
     }
 
     /**
@@ -126,6 +136,24 @@ public:
         import std.algorithm : canFind;
 
         return architectures.canFind(architecture);
+    }
+
+    /**
+     * Expand an UpstreamDefinition with our basic known variable set
+     */
+    final UpstreamDefinition expand(UpstreamDefinition up) @trusted
+    {
+        final switch (up.type)
+        {
+        case UpstreamType.Git:
+            up.uri = _sbuilder.process(up.uri);
+            up.git.refID = _sbuilder.process(up.git.refID);
+            break;
+        case UpstreamType.Plain:
+            up.uri = _sbuilder.process(up.uri);
+            break;
+        }
+        return up;
     }
 
 private:
@@ -371,4 +399,5 @@ private:
     }
 
     File _file;
+    ScriptBuilder _sbuilder;
 };
