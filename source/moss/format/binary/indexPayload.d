@@ -49,7 +49,7 @@ public:
     static IndexPayload opCall()
     {
         IndexPayload r;
-        r.type = PayloadType.Layout;
+        r.type = PayloadType.Index;
         r.compression = PayloadCompression.None;
         r.payloadVersion = IndexPayloadVersion;
         r.length = 0;
