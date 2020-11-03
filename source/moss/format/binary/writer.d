@@ -146,7 +146,7 @@ public:
                 import moss.format.binary.indexPayload;
 
                 auto i = cast(IndexPayload*) p;
-                p.encode(fp);
+                i.encode(fp);
                 break;
             default:
                 assert(0, "Unsupported type: " ~ p.type.stringof);
