@@ -22,5 +22,5 @@
 
 module moss.core.download;
 
-public import moss.core.ownload.manager;
+public import moss.core.download.manager;
 public import moss.core.download.store;
