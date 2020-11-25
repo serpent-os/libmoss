@@ -20,35 +20,46 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.download.store;
+module moss.core;
 
-public import moss.store;
+import core.stdc.stdlib : EXIT_FAILURE, EXIT_SUCCESS;
+
+public import moss.core.util;
+public import moss.core.platform;
+public import moss.core.store;
+
+/** Current Moss Version */
+const Version = "0.0.1";
+
+public import moss.core.platform;
 
 /**
- * The DownloadStore is a specialist implementation of the DiskStore
- * used for downloading + fetching files.
+ * Currently just wraps the two well known exit codes from the
+ * C standard library. We will flesh this out with specific exit
+ * codes to facilitate integration with scripts and tooling.
  */
-final class DownloadStore : DiskStore
+enum ExitStatus
 {
-
-    @disable this();
-
-    this(StoreType type)
-    {
-        super(type, "downloads", "v1");
-    }
-
-    /**
-     * Specialised handler for full paths
-     */
-    final override string fullPath(const(string) name)
-    {
-        import std.path : buildPath;
-
-        if (name.length > 10)
-        {
-            return directory.buildPath(name[0 .. 5], name[$ - 5 .. $], name);
-        }
-        return super.fullPath(name);
-    }
+    Failure = EXIT_FAILURE,
+    Success = EXIT_SUCCESS,
 }
+
+/**
+ * Base of all our required directories
+ */
+const RootTree = "os";
+
+/**
+ * The HashStore directory, used for deduplication purposes
+ */
+const HashStore = RootTree ~ "/store";
+
+/**
+ * The RootStore directory contains our OS image root
+ */
+const RootStore = RootTree ~ "/root";
+
+/**
+ * The DownloadStore directory contains all downloads
+ */
+const DownloadStore = RootTree ~ "/download";

@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.download;
+module moss.core.download;
 
-public import moss.download.manager;
-public import moss.download.store;
+public import moss.core.ownload.manager;
+public import moss.core.download.store;

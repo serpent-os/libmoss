@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.util;
+module moss.core.util;
 
 import core.sys.posix.unistd;
 import core.stdc.string;

@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.platform;
+module moss.core.platform;
 
 /**
  * Type of the platform, helps to wrap up various version defines into

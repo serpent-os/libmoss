@@ -20,9 +20,9 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.download.manager;
+module moss.core.download.manager;
 
-public import moss.download.store;
+public import moss.core.download.store;
 
 /**
  * A Download is an as-yet-unimplemented type that will
