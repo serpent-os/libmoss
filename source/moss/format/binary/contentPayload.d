@@ -189,6 +189,18 @@ public:
         numRecords++;
     }
 
+    /**
+     * Return true if we have the file
+     */
+    pure final bool hasFile(string hashID) @safe @nogc nothrow
+    {
+        if (hashID in content)
+        {
+            return true;
+        }
+        return false;
+    }
+
 private:
 
     string[string] content;
