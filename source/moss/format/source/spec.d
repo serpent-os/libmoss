@@ -277,7 +277,7 @@ private:
 
         if (!node.containsKey("architectures"))
         {
-            import moss.platform;
+            import moss.core.platform;
 
             auto plat = platform();
             auto emul32name = "emul32/" ~ plat.name;
