@@ -123,7 +123,7 @@ public:
      */
     final void share(const(string) id, const(string) target) @system
     {
-        import moss.util : hardLink;
+        import moss.core.util : hardLink;
 
         hardLink(fullPath(id), target);
     }
@@ -188,7 +188,7 @@ package:
         }
 
         /* Check if the directory exists + is writable */
-        import moss.util : checkWritable;
+        import moss.core.util : checkWritable;
 
         writable = checkWritable(_directory);
     }
