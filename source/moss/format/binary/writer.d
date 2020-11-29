@@ -33,7 +33,7 @@ import moss.format.binary.payload;
 /**
  * The Writer is a low-level mechanism for writing Moss binary packages
  */
-struct Writer
+class Writer
 {
 
 private:
