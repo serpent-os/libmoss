@@ -41,6 +41,8 @@ private:
     uint16_t payloadIndex;
     Payload curPayload;
     bool loaded = false;
+    bool _skipPayload = false;
+    ubyte[] payloadData = null;
 
     /**
      * Load the current payload
@@ -113,7 +115,11 @@ public:
     {
         if (!loaded)
         {
-            skipPayload();
+            if (!_skipPayload)
+            {
+                skipPayload();
+            }
+            _skipPayload = true;
             curPayload = loadPayload();
             loaded = true;
         }
@@ -147,6 +153,18 @@ public:
 
         enforce(loaded, "Cannot unpack unloaded archive");
         enforce(curPayload.type == PayloadType.Content, "Can only unpack content payload");
+    }
+
+    /**
+     * Attempt to unpack the payload into memory, performing CRC64 checks
+     * and such.
+     *
+     * Note that the payload *belongs* to us so its up to consumers to
+     * copy the data.
+     */
+    final void readPayload()
+    {
+        _skipPayload = false;
     }
 
     /**
