@@ -23,9 +23,10 @@
 module moss.format.binary.reader;
 
 public import std.stdio : File;
+public import moss.format.binary.payload;
+public import moss.format.binary.header;
+
 import moss.format.binary.endianness;
-import moss.format.binary.header;
-import moss.format.binary.payload;
 
 /**
  * The Reader is a low-level mechanism for parsing Moss binary packages.
