@@ -139,6 +139,17 @@ public:
     }
 
     /**
+     * When we've seeked to the content, an unpack is possible
+     */
+    final void unpackContent(const(string) destName)
+    {
+        import std.exception : enforce;
+
+        enforce(loaded, "Cannot unpack unloaded archive");
+        enforce(curPayload.type == PayloadType.Content, "Can only unpack content payload");
+    }
+
+    /**
      * Flush and close the underying file.
      */
     final void close() @safe
