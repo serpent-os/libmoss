@@ -164,7 +164,11 @@ public:
      */
     final void readPayload()
     {
+        import std.exception : enforce;
+
         _skipPayload = false;
+
+        enforce(curPayload.type != PayloadType.Content, "Can only read non-content payloads");
     }
 
     /**
