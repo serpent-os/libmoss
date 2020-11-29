@@ -153,6 +153,7 @@ public:
 
         enforce(loaded, "Cannot unpack unloaded archive");
         enforce(curPayload.type == PayloadType.Content, "Can only unpack content payload");
+        enforce(curPayload.type != PayloadType.Unknown, "Cannot unpack UNKNOWN payload");
     }
 
     /**
@@ -169,6 +170,7 @@ public:
         _skipPayload = false;
 
         enforce(curPayload.type != PayloadType.Content, "Can only read non-content payloads");
+        enforce(curPayload.type != PayloadType.Unknown, "Cannot read UNKNOWN payload");
     }
 
     /**
