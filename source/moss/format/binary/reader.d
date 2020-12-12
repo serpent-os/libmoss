@@ -29,6 +29,38 @@ public import moss.format.binary.header;
 import moss.format.binary.endianness;
 
 /**
+ * Encapsulates the underlying Payload so we can provide some tracking
+ * and iteration abiliies
+ */
+final struct PayloadWrapper
+{
+    Payload pt;
+    alias pt this;
+
+package:
+
+    /**
+     * Returns the 'read' property, i.e. was we decoded or not
+     */
+    pure final @property bool read() @safe @nogc nothrow
+    {
+        return _read;
+    }
+
+    /**
+     * Update the read property
+     */
+    pure final @property void read(bool b) @safe @nogc nothrow
+    {
+        _read = b;
+    }
+
+private:
+
+    bool _read = false;
+}
+
+/**
  * The Reader is a low-level mechanism for parsing Moss binary packages.
  */
 final class Reader
@@ -38,10 +70,9 @@ private:
 
     File _file;
     Header _header;
-    uint16_t payloadIndex;
-    Payload curPayload;
-    bool loaded = false;
-    bool _skipPayload = false;
+    int16_t payloadIndex = -1;
+    int16_t requestedIndex = 0;
+    PayloadWrapper curPayload;
     ubyte[] payloadData = null;
 
     /**
@@ -94,13 +125,7 @@ public:
         _header.toHostOrder();
         _header.validate();
 
-        curPayload = Payload();
-        loaded = true;
-
-        if (_header.numPayloads > 0)
-        {
-            curPayload = loadPayload();
-        }
+        curPayload = PayloadWrapper();
     }
 
     ~this() @safe
@@ -111,17 +136,16 @@ public:
     /**
      * Return the current entry in the reader
      */
-    final @property Payload front()
+    final @property PayloadWrapper front()
     {
-        if (!loaded)
+        if (requestedIndex != payloadIndex)
         {
-            if (!_skipPayload)
+            if (requestedIndex > 0 && !curPayload.read)
             {
                 skipPayload();
             }
-            _skipPayload = true;
-            curPayload = loadPayload();
-            loaded = true;
+            curPayload.pt = loadPayload();
+            payloadIndex = requestedIndex;
         }
         return curPayload;
     }
@@ -131,46 +155,16 @@ public:
      */
     final @property bool empty()
     {
-        return payloadIndex >= _header.numPayloads;
+        return requestedIndex >= _header.numPayloads;
     }
 
     /**
      * Pop the current entry and find the next
      */
-    final @property Payload popFront()
+    final @property PayloadWrapper popFront()
     {
-        payloadIndex++;
-        loaded = false;
+        ++requestedIndex;
         return curPayload;
-    }
-
-    /**
-     * When we've seeked to the content, an unpack is possible
-     */
-    final void unpackContent(const(string) destName)
-    {
-        import std.exception : enforce;
-
-        enforce(loaded, "Cannot unpack unloaded archive");
-        enforce(curPayload.type == PayloadType.Content, "Can only unpack content payload");
-        enforce(curPayload.type != PayloadType.Unknown, "Cannot unpack UNKNOWN payload");
-    }
-
-    /**
-     * Attempt to unpack the payload into memory, performing CRC64 checks
-     * and such.
-     *
-     * Note that the payload *belongs* to us so its up to consumers to
-     * copy the data.
-     */
-    final void readPayload()
-    {
-        import std.exception : enforce;
-
-        _skipPayload = false;
-
-        enforce(curPayload.type != PayloadType.Content, "Can only read non-content payloads");
-        enforce(curPayload.type != PayloadType.Unknown, "Cannot read UNKNOWN payload");
     }
 
     /**
