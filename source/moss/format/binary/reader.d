@@ -31,7 +31,7 @@ import moss.format.binary.endianness;
 /**
  * The Reader is a low-level mechanism for parsing Moss binary packages.
  */
-class Reader
+final class Reader
 {
 
 private:
