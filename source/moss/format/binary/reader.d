@@ -73,7 +73,6 @@ private:
     int16_t payloadIndex = -1;
     int16_t requestedIndex = 0;
     PayloadWrapper curPayload;
-    ubyte[] payloadData = null;
 
     /**
      * Load the current payload
