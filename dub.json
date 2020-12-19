@@ -4,7 +4,7 @@
 	],
 	"copyright": "Copyright © 2020 Serpent OS Developers",
 	"description": "Moss Source + Binary Formats",
-	"license": "ZLib",
+	"license": "Zlib",
 	"version": "0.0.1",
 	"name": "moss-format",
 	"targetType" : "none",
