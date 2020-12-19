@@ -28,7 +28,7 @@ public import moss.core.download.store;
  * A Download is an as-yet-unimplemented type that will
  * be used for download tracking
  */
-final struct Download
+struct Download
 {
     /** Where to find the file */
     string uri;
@@ -56,7 +56,7 @@ public:
      *
      * System caches are always checked first
      */
-    final void add(DownloadStore c) @safe
+    void add(DownloadStore c) @safe
     {
         import std.algorithm.sorting;
 
@@ -69,7 +69,7 @@ public:
     /**
      * Add a download to the queue
      */
-    final void add(Download d) @safe
+    void add(Download d) @safe
     {
         import std.string : toLower;
 
@@ -80,7 +80,7 @@ public:
     /**
      * Return true if we have the file in our caches
      */
-    final bool contains(const(string) hash) @safe nothrow
+    bool contains(const(string) hash) @safe nothrow
     {
         foreach (ref st; stores)
         {
@@ -95,7 +95,7 @@ public:
     /**
      * Fetch all files in the queue, verifying + staging as we go
      */
-    final void fetch() @system
+    void fetch() @system
     {
         import std.algorithm;
         import std.array;
@@ -144,7 +144,7 @@ public:
     /**
      * Find responsible download store, share contents to target location
      */
-    final void share(const(string) hash, const(string) target) @system
+    void share(const(string) hash, const(string) target) @system
     {
         import std.algorithm;
         import std.array;
@@ -172,7 +172,7 @@ private:
      * Ugly utility to check a hash, we should build this while downloading
      * the file.
      */
-    final string checkHash(const(string) path)
+    string checkHash(const(string) path)
     {
         import std.stdio;
         import std.digest.sha;

@@ -41,7 +41,7 @@ final class DownloadStore : DiskStore
     /**
      * Specialised handler for full paths
      */
-    final override string fullPath(const(string) name)
+    override string fullPath(const(string) name)
     {
         import std.path : buildPath;
 

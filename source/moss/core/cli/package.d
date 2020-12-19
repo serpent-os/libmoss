@@ -249,7 +249,7 @@ public:
     /**
      * Proper execution entry
      */
-    final int process(ref string[] argv)
+    int process(ref string[] argv)
     {
         return execMain(&this, argv);
     }
@@ -257,7 +257,7 @@ public:
     /**
      * Add a command to our known commands
      */
-    final BaseCommand* addCommand(T : BaseCommand)()
+    BaseCommand* addCommand(T : BaseCommand)()
     {
         auto com = newCommand!T();
         com.parentCommand = &this;
@@ -268,7 +268,7 @@ public:
     /**
      * Walk back the parents to find a Command matching the type
      */
-    final T* findAncestor(T)()
+    T* findAncestor(T)()
     {
         import std.exception : enforce;
         import std.traits;
@@ -343,7 +343,7 @@ package:
     /**
      * Find the relevant base command
      */
-    final BaseCommand* findCommand(string name)
+    BaseCommand* findCommand(string name)
     {
         foreach (ref c; commands)
         {
@@ -355,7 +355,7 @@ package:
         return null;
     }
 
-    final BaseCommand* rootCommand()
+    BaseCommand* rootCommand()
     {
         BaseCommand* p = &this;
         while (p)
@@ -377,7 +377,7 @@ package:
      *
      * Used in conjunction with help to emit nice messages.
      */
-    final void printUsage()
+    void printUsage()
     {
         writefln("usage: %s %s", fullName, usage);
     }
@@ -385,7 +385,7 @@ package:
     /**
      * Print help for this command
      */
-    final void printHelp(scope BaseCommand* root)
+    void printHelp(scope BaseCommand* root)
     {
         writeln(blurb);
 
@@ -475,7 +475,7 @@ package:
      * Obtain the fully qualified command path by reversing the list
      * of names in this path
      */
-    final string fullName()
+    string fullName()
     {
         string[] names;
         BaseCommand* p = &this;
@@ -493,7 +493,7 @@ package:
 
 private:
 
-    final int execMain(scope BaseCommand* root, ref string[] argv)
+    int execMain(scope BaseCommand* root, ref string[] argv)
     {
         GetoptResult optResult;
         try
@@ -607,7 +607,7 @@ private:
 /**
  * Return root command with processing abilities
  */
-final T* cliProcessor(T : BaseCommand)(ref string[] args)
+T* cliProcessor(T : BaseCommand)(ref string[] args)
 {
     import std.traits;
 

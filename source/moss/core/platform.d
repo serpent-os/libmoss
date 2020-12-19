@@ -45,7 +45,7 @@ final enum PlatformType
  * ensuring we don't need to perform lots of conditional compilation
  * which may go wrong, without tracking.
  */
-final struct Platform
+struct Platform
 {
     PlatformType type; /* Primary architecture */
     bool emul32 = false; /* Is emul32 supported? */
@@ -55,7 +55,7 @@ final struct Platform
 /**
  * Return a Platform struct for the current configuration.
  */
-final Platform platform() @safe @nogc nothrow
+Platform platform() @safe @nogc nothrow
 {
     version (X86_64)
     {
