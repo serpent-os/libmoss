@@ -107,8 +107,8 @@ public:
      */
     final void promote(const(string) name) @safe
     {
-        import std.file;
-        import std.path;
+        import std.file : mkdirRecurse, rename;
+        import std.path : dirName;
 
         auto sourcePath = stagingPath(name);
         auto targetPath = fullPath(name);
