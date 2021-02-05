@@ -28,6 +28,7 @@ module moss.core.platform;
  */
 final enum PlatformType
 {
+    /** Fatal issue: Platform is not ported */
     Unsupported = 0,
 
     /** x86 with 64-bit extensions, i.e. AMD64 / IA */
@@ -47,9 +48,14 @@ final enum PlatformType
  */
 struct Platform
 {
-    PlatformType type; /* Primary architecture */
-    bool emul32 = false; /* Is emul32 supported? */
-    const string name; /* i.e. "x86_64" */
+    /** Primary architecture type */
+    PlatformType type;
+
+    /** Field is set to true if emul32 is supported here */
+    bool emul32 = false;
+
+    /** Constant string ID for the platform */
+    const string name;
 }
 
 /**
