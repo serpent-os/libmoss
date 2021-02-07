@@ -659,6 +659,7 @@ T* cliProcessor(T : BaseCommand)(ref string[] args)
 @CommandHelp("Display help topics")
 public struct HelpCommand
 {
+    /** Extend BaseCommand with the "help" verb behaviour */
     BaseCommand pt;
     alias pt this;
 
