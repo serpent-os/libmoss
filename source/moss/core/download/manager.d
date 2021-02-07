@@ -33,7 +33,7 @@ struct Download
     /** Where to find the file */
     string uri;
 
-    /* Expected hash when downloaded */
+    /** Expected hash when downloaded */
     string expectedHash;
 }
 
