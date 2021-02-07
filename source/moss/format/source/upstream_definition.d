@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.source.upstreamDefinition;
+module moss.format.source.upstream_definition;
 
 public import moss.format.source.schema;
 

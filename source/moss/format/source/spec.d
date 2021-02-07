@@ -29,7 +29,7 @@ public import moss.format.source.build_options;
 public import moss.format.source.package_definition;
 public import moss.format.source.schema;
 public import moss.format.source.source_definition;
-public import moss.format.source.upstreamDefinition;
+public import moss.format.source.upstream_definition;
 
 import dyaml;
 import moss.format.source.ymlHelper;
