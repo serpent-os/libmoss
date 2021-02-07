@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.source.buildDefinition;
+module moss.format.source.build_definition;
 
 public import moss.format.source.schema;
 
