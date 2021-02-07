@@ -61,4 +61,4 @@ struct PackageDefinition
      * custom subpackages to be created.
      */
     @YamlSchema("paths", false, YamlType.Array) string[] paths;
-};
+}
