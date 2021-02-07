@@ -77,8 +77,6 @@ public:
         us.encode(fp);
         us.toHostOrder();
 
-        import std.stdio : seek, flush;
-
         switch (us.compression)
         {
         case PayloadCompression.None:
