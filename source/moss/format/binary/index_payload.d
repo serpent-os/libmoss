@@ -29,7 +29,11 @@ import moss.format.binary.payload;
 public import std.stdio : File, FILE;
 public import moss.format.binary.index;
 
-const uint16_t IndexPayloadVersion = 1;
+/**
+ * Shared between implementations, the currently supported version for
+ * the IndexPayload
+ */
+const uint16_t indexPayloadVersion = 1;
 
 /**
  * The IndexPayload maps offsets within the Content payload with their
@@ -40,6 +44,7 @@ struct IndexPayload
 
 public:
 
+    /** Extend base Payload with IndexPayload specific functionality */
     Payload pt;
     alias pt this;
 
@@ -51,7 +56,7 @@ public:
         IndexPayload r;
         r.type = PayloadType.Index;
         r.compression = PayloadCompression.None;
-        r.payloadVersion = IndexPayloadVersion;
+        r.payloadVersion = indexPayloadVersion;
         r.length = 0;
         r.size = 0;
         r.numRecords = 0;
@@ -61,7 +66,7 @@ public:
     /**
      * Handle encoding datum
      */
-    final void addEntry(ref IndexEntry entry, string name) @trusted
+    void addEntry(ref IndexEntry entry, string name) @trusted
     {
         import std.string : toStringz;
 
@@ -77,7 +82,7 @@ public:
     /**
      * Encode our data to the archive
      */
-    final void encode(scope FILE* fp)
+    void encode(scope FILE* fp)
     {
         encodePayloadBuffer(fp, this, binary);
     }
