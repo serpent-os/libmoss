@@ -33,6 +33,11 @@ final class DownloadStore : DiskStore
 
     @disable this();
 
+    /**
+     * Construct a new DownloadStore with the given StoreType.
+     * The DownloadStore will then initialise the supertype
+     * constructor to use the relevant storage locations on disk.
+     */
     this(StoreType type)
     {
         super(type, "downloads", "v1");
