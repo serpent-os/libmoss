@@ -34,7 +34,7 @@ package void encodePayloadBuffer(scope FILE* fp, Payload us, ref ubyte[] binary)
 {
     import std.stdio : fwrite;
     import std.exception : enforce;
-    import std.digest.crc;
+    import std.digest.crc : CRC64ISO;
 
     if (us.numRecords < 0)
     {
@@ -48,7 +48,7 @@ package void encodePayloadBuffer(scope FILE* fp, Payload us, ref ubyte[] binary)
     switch (us.compression)
     {
     case PayloadCompression.Zlib:
-        import std.zlib;
+        import std.zlib : compress;
 
         ubyte[] comp = compress(binary);
         hash.put(comp);
@@ -62,7 +62,7 @@ package void encodePayloadBuffer(scope FILE* fp, Payload us, ref ubyte[] binary)
                 fp) == comp.length, "MetaPayload.encode(): Failed to write data");
         break;
     case PayloadCompression.Zstd:
-        import zstd;
+        import zstd : compress;
 
         ubyte[] comp = compress(binary, 8);
         hash.put(comp);
