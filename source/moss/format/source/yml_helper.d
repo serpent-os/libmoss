@@ -20,7 +20,7 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
-module moss.format.source.ymlHelper;
+module moss.format.source.yml_helper;
 
 import dyaml;
 import moss.format.source.schema;

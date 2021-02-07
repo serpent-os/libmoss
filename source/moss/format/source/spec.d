@@ -32,7 +32,7 @@ public import moss.format.source.source_definition;
 public import moss.format.source.upstream_definition;
 
 import dyaml;
-import moss.format.source.ymlHelper;
+import moss.format.source.yml_helper;
 import moss.format.source.script;
 
 /**
