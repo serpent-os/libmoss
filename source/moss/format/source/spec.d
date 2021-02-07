@@ -71,11 +71,18 @@ public:
     PackageDefinition rootPackage;
 
     /**
-     * Per package definitions */
+     * Per package definitions
+     */
     PackageDefinition[string] subPackages;
 
+    /**
+     * Set of upstream definitions
+     */
     UpstreamDefinition[string] upstreams;
 
+    /**
+     * Architectures supported within the build
+     */
     string[] architectures;
 
     /**
@@ -97,7 +104,7 @@ public:
     /**
      * Attempt to parse the input fiel
      */
-    final void parse() @system
+    void parse() @system
     {
         import std.exception : enforce;
 
@@ -132,7 +139,7 @@ public:
     /**
      * Returns true if the architecture is supported by this spec
      */
-    pure final bool supportedArchitecture(string architecture)
+    pure bool supportedArchitecture(string architecture)
     {
         import std.algorithm : canFind;
 
@@ -142,7 +149,7 @@ public:
     /**
      * Expand an UpstreamDefinition with our basic known variable set
      */
-    final UpstreamDefinition expand(UpstreamDefinition up) @trusted
+    UpstreamDefinition expand(UpstreamDefinition up) @trusted
     {
         final switch (up.type)
         {
@@ -160,10 +167,10 @@ public:
     /**
      * Return an expanded version of the PackageDefinition
      */
-    final PackageDefinition expand(PackageDefinition p) @safe
+    PackageDefinition expand(PackageDefinition p) @safe
     {
-        import std.algorithm;
-        import std.array;
+        import std.algorithm : map, uniq;
+        import std.array : array;
 
         p.name = _sbuilder.process(p.name);
         p.summary = _sbuilder.process(p.summary);
@@ -179,7 +186,7 @@ private:
     /**
      * Parse all tuning options
      */
-    final void parseTuningOptions(ref Node node)
+    void parseTuningOptions(ref Node node)
     {
         import std.exception : enforce;
 
@@ -211,10 +218,10 @@ private:
                 auto name = keys[0].as!string;
                 enforce(vals[0].nodeID == NodeID.scalar,
                         "Each tuning option must have 1 scalar value");
-                auto val = vals[0];
+                const auto val = vals[0];
                 try
                 {
-                    auto bval = val.as!bool;
+                    const auto bval = val.as!bool;
                     if (bval)
                     {
                         sel.type = TuningSelectionType.Enable;
@@ -243,7 +250,7 @@ private:
     /**
      * Find all PackageDefinition instances and set them up
      */
-    final void parsePackages(ref Node node)
+    void parsePackages(ref Node node)
     {
         import std.exception : enforce;
 
@@ -271,13 +278,13 @@ private:
         }
     }
 
-    final void parseArchitectures(ref Node node)
+    void parseArchitectures(ref Node node)
     {
         import std.exception : enforce;
 
         if (!node.containsKey("architectures"))
         {
-            import moss.core.platform;
+            import moss.core.platform : platform;
 
             auto plat = platform();
             auto emul32name = "emul32/" ~ plat.name;
@@ -307,7 +314,7 @@ private:
     /**
      * Find all BuildDefinition instances and set them up
      */
-    final void parseBuilds(ref Node node)
+    void parseBuilds(ref Node node)
     {
         import std.exception : enforce;
         import std.string : startsWith;
@@ -359,7 +366,7 @@ private:
     /**
      * Find all UpstreamDefinition instances and set them up
      */
-    final void parseUpstreams(ref Node node)
+    void parseUpstreams(ref Node node)
     {
         import std.exception : enforce;
         import std.algorithm : startsWith;
@@ -419,4 +426,4 @@ private:
 
     File _file;
     ScriptBuilder _sbuilder;
-};
+}
