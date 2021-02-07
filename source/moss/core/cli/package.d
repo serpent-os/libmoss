@@ -112,8 +112,8 @@ struct Option
 static string genGetOpt(T)(string passText = "std.getopt.config.passThrough")
 {
     import std.conv : text;
-    import std.getopt;
-    import std.traits;
+    import std.getopt : getopt;
+    import std.traits : moduleName, getUDAs;
 
     mixin("import " ~ moduleName!T ~ ";");
 
