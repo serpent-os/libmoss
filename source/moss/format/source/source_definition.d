@@ -62,4 +62,4 @@ struct SourceDefinition
      * We require SPDX identifiers too.
      */
     @YamlSchema("license", true, YamlType.Array) string[] license;
-};
+}
