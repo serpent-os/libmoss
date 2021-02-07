@@ -100,12 +100,23 @@ enum RecordTag : uint16_t
 extern (C) struct Record
 {
 align(1):
-    @AutoEndian uint32_t length; /** 4 bytes per record length*/
-    @AutoEndian RecordTag tag; /** 2 bytes for the tag */
-    RecordType type; /** 1 byte for the type */
+
+    /** 4 bytes, endian-aware, total length of the record value */
+    @AutoEndian uint32_t length;
+
+    /** 2 bytes, endian-aware, tag for the Record _contextual type_ */
+    @AutoEndian RecordTag tag;
+
+    /** 1 byte, key type for the record, i.e. data value type */
+    RecordType type;
+
+    /** Reserved, 1 byte padding */
     ubyte[1] padding = 0;
 
-    final void encode(scope ref ubyte[] p) @trusted
+    /**
+     * Encode the Record key into the given ubyte[] buffer
+     */
+    void encode(scope ref ubyte[] p) @trusted
     {
         p ~= (cast(ubyte*)&length)[0 .. length.sizeof];
         p ~= (cast(ubyte*)&tag)[0 .. tag.sizeof];
@@ -116,7 +127,7 @@ align(1):
     /**
      * Ensure Records aren't insane
      */
-    final void validate() @safe
+    void validate() @safe
     {
         import std.exception : enforce;
 
@@ -125,7 +136,7 @@ align(1):
         enforce(type != RecordType.Unknown, "Record.validate(): Unknown type");
         enforce(padding[0] == 0, "Record.validate(): Corrupt padding");
     }
-};
+}
 
 static assert(Record.sizeof == 8,
         "Record size must be 8 bytes, not " ~ Record.sizeof.stringof ~ " bytes");
