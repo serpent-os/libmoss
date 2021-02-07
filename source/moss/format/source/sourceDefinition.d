@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.source.sourceDefinition;
+module moss.format.source.source_definition;
 
 public import moss.format.source.schema;
 public import std.stdint : uint64_t;
