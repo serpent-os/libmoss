@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.binary.indexPayload;
+module moss.format.binary.index_payload;
 
 import moss.format.binary.endianness;
 import moss.format.binary.encoder;

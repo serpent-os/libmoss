@@ -143,7 +143,7 @@ public:
                 l.encode(fp);
                 break;
             case PayloadType.Index:
-                import moss.format.binary.indexPayload;
+                import moss.format.binary.index_payload;
 
                 auto i = cast(IndexPayload*) p;
                 i.encode(fp);

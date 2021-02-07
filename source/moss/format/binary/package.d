@@ -28,7 +28,7 @@ public import moss.format.binary.content_payload;
 public import moss.format.binary.endianness;
 public import moss.format.binary.header;
 public import moss.format.binary.index;
-public import moss.format.binary.indexPayload;
+public import moss.format.binary.index_payload;
 public import moss.format.binary.layout;
 public import moss.format.binary.layoutPayload;
 public import moss.format.binary.metaPayload;
