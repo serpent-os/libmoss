@@ -269,9 +269,9 @@ public:
      */
     TuningFlag[] buildFlags() @safe
     {
-        import std.algorithm : filter, canFind;
+        import std.algorithm : filter, canFind, uniq, map, each;
         import std.array : array;
-        import std.range : chain, each;
+        import std.range : chain;
 
         string[] enabledFlags = [];
         string[] disabledFlags = [];
