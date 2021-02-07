@@ -230,7 +230,7 @@ public:
     /**
      * Return the fullname (required) for this command
      */
-    pragma(inline, true) pure @property const string name() @safe @nogc nothrow
+    pragma(inline, true) pure @property string name() const @safe @nogc nothrow
     {
         return _name;
     }
@@ -238,7 +238,7 @@ public:
     /**
      * Return the short name (alias) for this command
      */
-    pragma(inline, true) pure @property const string shortName() @safe @nogc nothrow
+    pragma(inline, true) pure @property string shortName() const @safe @nogc nothrow
     {
         return _shortName;
     }
@@ -246,7 +246,7 @@ public:
     /**
      * Return the type name (encoded for lookups)
      */
-    pragma(inline, true) pure @property const string typeName() @safe @nogc nothrow
+    pragma(inline, true) pure @property string typeName() const @safe @nogc nothrow
     {
         return _typeName;
     }
@@ -254,7 +254,7 @@ public:
     /**
      * Return the usage text
      */
-    pragma(inline, true) pure @property const string usage() @safe @nogc nothrow
+    pragma(inline, true) pure @property string usage() const @safe @nogc nothrow
     {
         return _usage;
     }
@@ -262,7 +262,7 @@ public:
     /**
      * Return the help text
      */
-    pragma(inline, true) pure @property const string help() @safe @nogc nothrow
+    pragma(inline, true) pure @property string help() const @safe @nogc nothrow
     {
         return _help;
     }
@@ -270,7 +270,7 @@ public:
     /**
      * Return the short blurb help
      */
-    pragma(inline, true) pure @property const string blurb() @safe @nogc nothrow
+    pragma(inline, true) pure @property string blurb() const @safe @nogc nothrow
     {
         return _blurb;
     }
