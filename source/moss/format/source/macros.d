@@ -27,7 +27,7 @@ import dyaml;
 import moss.format.source.ymlHelper;
 import moss.format.source.package_definition;
 import moss.format.source.tuning_flag;
-import moss.format.source.tuningGroup;
+import moss.format.source.tuning_group;
 
 /**
  * A MacroFile can contain a set of macro definitions, actions and otherwise

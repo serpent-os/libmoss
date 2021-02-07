@@ -27,7 +27,7 @@ import std.exception : enforce;
 import moss.format.source.package_definition;
 import moss.format.source.macros : MacroFile;
 import moss.format.source.tuning_flag;
-import moss.format.source.tuningGroup;
+import moss.format.source.tuning_group;
 import std.string : strip;
 
 /**

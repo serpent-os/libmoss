@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.source.tuningGroup;
+module moss.format.source.tuning_group;
 
 public import moss.format.source.schema;
 
