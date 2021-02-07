@@ -24,10 +24,22 @@ module moss.format.source.tuning_flag;
 
 public import moss.format.source.schema;
 
-final struct CompilerFlags
+/**
+ * A CompilerFlags definition contains a set of compilation runtime flags
+ * that are enabled based on a given flag being "turned on".
+ *
+ * This allows complex flag combinations to be enabled for fine-grained
+ * control.
+ */
+struct CompilerFlags
 {
+    /** The CFLAGS variable to export */
     @YamlSchema("c") string cflags = null;
+
+    /** The CXXFLAGS variable to export */
     @YamlSchema("cxx") string cxxflags = null;
+
+    /** The LDFLAGS variable to export */
     @YamlSchema("ld") string ldflags = null;
 }
 
@@ -38,7 +50,7 @@ final enum Toolchain
 {
     LLVM = 0,
     GNU = 1,
-};
+}
 
 /**
  * A TuningFlag encapsulates common flags used for a given purpose,
@@ -47,7 +59,7 @@ final enum Toolchain
  * Our type adds dependencies + accessors to abstract
  * GNU vs LLVM differences
  */
-final struct TuningFlag
+struct TuningFlag
 {
     /**
      * GNU specific options
@@ -67,7 +79,7 @@ final struct TuningFlag
     /**
      * Return the CFLAGS
      */
-    pure final @property string cflags(Toolchain toolchain) @safe @nogc nothrow
+    pure @property string cflags(Toolchain toolchain) @safe @nogc nothrow
     {
         if (toolchain == Toolchain.GNU && gnu.cflags != null)
         {
@@ -83,7 +95,7 @@ final struct TuningFlag
     /**
      * Return the CXXFLAGS
      */
-    pure final @property string cxxflags(Toolchain toolchain) @safe @nogc nothrow
+    pure @property string cxxflags(Toolchain toolchain) @safe @nogc nothrow
     {
         if (toolchain == Toolchain.GNU && gnu.cxxflags != null)
         {
@@ -99,7 +111,7 @@ final struct TuningFlag
     /**
      * Return the LDFLAGS
      */
-    pure final @property string ldflags(Toolchain toolchain) @safe @nogc nothrow
+    pure @property string ldflags(Toolchain toolchain) @safe @nogc nothrow
     {
         if (toolchain == Toolchain.GNU && gnu.ldflags != null)
         {
