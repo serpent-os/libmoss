@@ -137,7 +137,7 @@ public:
                 c.encode(_file);
                 break;
             case PayloadType.Layout:
-                import moss.format.binary.layoutPayload;
+                import moss.format.binary.layout_payload;
 
                 auto l = cast(LayoutPayload*) p;
                 l.encode(fp);

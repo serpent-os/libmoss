@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.binary.layoutPayload;
+module moss.format.binary.layout_payload;
 
 import moss.format.binary.endianness;
 import moss.format.binary.encoder;
