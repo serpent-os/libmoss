@@ -65,11 +65,11 @@ enum MossFileType : uint8_t
 extern (C) struct Header
 {
 align(1):
-    @autoEndian uint32_t magic; /* 4 bytes */
-    @autoEndian uint16_t numPayloads; /* 2 bytes */
+    @AutoEndian uint32_t magic; /* 4 bytes */
+    @AutoEndian uint16_t numPayloads; /* 2 bytes */
     ubyte[21] padding;
     MossFileType type; /* 1-byte */
-    @autoEndian uint32_t versionNumber; /* 4 bytes */
+    @AutoEndian uint32_t versionNumber; /* 4 bytes */
 
     this(uint32_t versionNumber) @safe @nogc nothrow
     {

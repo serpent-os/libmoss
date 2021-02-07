@@ -142,20 +142,29 @@ package union autoEndianUint16
 /**
  * UDA to assist with translation between endian
  */
-struct autoEndian
+struct AutoEndian
 {
 }
 
+/**
+ * Return the correct endian helper for uint64_t
+ */
 static pure auto autoEndianConvert(uint64_t v) @safe @nogc nothrow
 {
     return autoEndianUint64(v);
 }
 
+/**
+ * Return the correct endian helper for uint32_t
+ */
 static pure auto autoEndianConvert(uint32_t v) @safe @nogc nothrow
 {
     return autoEndianUint32(v);
 }
 
+/**
+ * Return the correct endian helper for uint16_t
+ */
 static pure auto autoEndianConvert(uint16_t v) @safe @nogc nothrow
 {
     return autoEndianUint16(v);
@@ -166,7 +175,7 @@ static pure auto autoEndianConvert(uint16_t v) @safe @nogc nothrow
  */
 static void orderHelper(T, string funcer)(ref T v) @safe @nogc nothrow
 {
-    import std.traits;
+    import std.traits : allMembers, getMember;
 
     foreach (member; __traits(allMembers, T))
     {
@@ -174,12 +183,12 @@ static void orderHelper(T, string funcer)(ref T v) @safe @nogc nothrow
         {
             mixin("import " ~ moduleName!T ~ ";");
 
-            static if (mixin("hasUDA!(" ~ T.stringof ~ "." ~ member ~ ", autoEndian)"))
+            static if (mixin("hasUDA!(" ~ T.stringof ~ "." ~ member ~ ", AutoEndian)"))
             {
                 static assert(mixin("!is(typeof(" ~ T.stringof ~ "." ~ member ~ ") == uint8_t)"),
-                        "Do not @autoEndian a uint8_t: " ~ T.stringof ~ "." ~ member);
+                        "Do not @AutoEndian a uint8_t: " ~ T.stringof ~ "." ~ member);
                 static assert(mixin("(" ~ T.stringof ~ "." ~ member ~ ".sizeof != uint8_t.sizeof)"),
-                        "Do not @autoEndian a uint8_t derived enum: " ~ T.stringof ~ "." ~ member);
+                        "Do not @AutoEndian a uint8_t derived enum: " ~ T.stringof ~ "." ~ member);
                 mixin("auto e = autoEndianConvert(v." ~ member ~ ");");
                 mixin("e." ~ funcer ~ "();");
                 mixin("v." ~ member ~ " = cast(typeof(T." ~ member ~ ")) e.value;");

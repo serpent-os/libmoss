@@ -79,11 +79,11 @@ extern (C) struct Payload
 {
 align(1):
 
-    @autoEndian uint64_t length = 0; /* 8 bytes */
-    @autoEndian uint64_t size = 0; /* 8 bytes */
+    @AutoEndian uint64_t length = 0; /* 8 bytes */
+    @AutoEndian uint64_t size = 0; /* 8 bytes */
     ubyte[8] crc64 = 0; /* CRC64-ISO */
-    @autoEndian uint32_t numRecords = 0; /* 4 bytes */
-    @autoEndian uint16_t payloadVersion = 0; /* 2 bytes  */
+    @AutoEndian uint32_t numRecords = 0; /* 4 bytes */
+    @AutoEndian uint16_t payloadVersion = 0; /* 2 bytes  */
     PayloadType type = PayloadType.Unknown; /* 1 byte  */
     PayloadCompression compression = PayloadCompression.Unknown; /* 1 byte */
 

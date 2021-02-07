@@ -100,8 +100,8 @@ enum RecordTag : uint16_t
 extern (C) struct Record
 {
 align(1):
-    @autoEndian uint32_t length; /** 4 bytes per record length*/
-    @autoEndian RecordTag tag; /** 2 bytes for the tag */
+    @AutoEndian uint32_t length; /** 4 bytes per record length*/
+    @AutoEndian RecordTag tag; /** 2 bytes for the tag */
     RecordType type; /** 1 byte for the type */
     ubyte[1] padding = 0;
 
