@@ -24,7 +24,7 @@ module moss.format.source.script;
 
 import std.string : format, splitLines, startsWith, endsWith;
 import std.exception : enforce;
-import moss.format.source.packageDefinition;
+import moss.format.source.package_definition;
 import moss.format.source.macros : MacroFile;
 import moss.format.source.tuningFlag;
 import moss.format.source.tuningGroup;

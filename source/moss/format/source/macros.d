@@ -25,7 +25,7 @@ module moss.format.source.macros;
 public import std.stdio : File;
 import dyaml;
 import moss.format.source.ymlHelper;
-import moss.format.source.packageDefinition;
+import moss.format.source.package_definition;
 import moss.format.source.tuningFlag;
 import moss.format.source.tuningGroup;
 
