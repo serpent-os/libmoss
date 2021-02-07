@@ -123,16 +123,14 @@ void parseSection(T)(ref Node node, ref T section) @system
                 {
                     if (node.containsKey(yamlName))
                     {
-                        const auto yamlNode = node[yamlName];
-                        mixin("setValue(yamlNode, section." ~ member ~ ", udaID);");
+                        mixin("setValue(node[yamlName], section." ~ member ~ ", udaID);");
                     }
                 }
                 else static if (type == YamlType.Array)
                 {
                     if (node.containsKey(yamlName))
                     {
-                        const auto yamlNode = node[yamlName];
-                        mixin("setValueArray(yamlNode, section." ~ member ~ ");");
+                        mixin("setValueArray(node[yamlName], section." ~ member ~ ");");
                     }
                 }
             }
