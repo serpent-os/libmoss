@@ -34,7 +34,7 @@ import std.string : strip;
  * The private ParseContext is used by the Script to step through
  * scripts and replace macros with their equivalent data.
  */
-static struct ParseContext
+static package struct ParseContext
 {
     ulong macroStart;
     ulong macroEnd;
@@ -145,7 +145,7 @@ public:
     /**
      * Add a PackageDefinition to the group
      */
-    final void addPackage(string name, PackageDefinition pkg) @safe
+    void addPackage(string name, PackageDefinition pkg) @safe
     {
         packages[name] = pkg;
     }
@@ -153,7 +153,7 @@ public:
     /**
      * Insert definitions, exports + actions from a macro file.
      */
-    final void addFrom(in MacroFile* f) @system
+    void addFrom(in MacroFile* f) @system
     {
         /* Add all definitions */
         foreach (ref k, v; f.definitions)
@@ -209,10 +209,10 @@ public:
     /**
      * Enable a specific tuning group
      */
-    final void enableGroup(string name, string value = null) @safe
+    void enableGroup(string name, string value = null) @safe
     {
         import std.string : format;
-        import std.algorithm;
+        import std.algorithm : canFind, remove;
 
         enforce(name in groups, "enableGroup(): Unknown group: %s".format(name));
 
@@ -244,10 +244,10 @@ public:
     /**
      * Disable a specific tuning group
      */
-    final void disableGroup(string name) @safe
+    void disableGroup(string name) @safe
     {
         import std.string : format;
-        import std.algorithm;
+        import std.algorithm : canFind, remove;
 
         enforce(name in groups, "disableGroup(): Unknown group: %s".format(name));
 
@@ -267,11 +267,11 @@ public:
     /**
      * Build the final TuningFlag set
      */
-    final TuningFlag[] buildFlags() @safe
+    TuningFlag[] buildFlags() @safe
     {
-        import std.algorithm;
-        import std.array;
-        import std.range;
+        import std.algorithm : filter, canFind;
+        import std.array : array;
+        import std.range : chain, each;
 
         string[] enabledFlags = [];
         string[] disabledFlags = [];
@@ -372,7 +372,7 @@ public:
         foreach (const ref line; lines)
         {
             lastLine = line;
-            size_t len = line.length;
+            immutable size_t len = line.length;
             foreach (size_t i, const char c; line)
             {
                 switch (c)
