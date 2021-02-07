@@ -430,19 +430,19 @@ package:
 
         import std.algorithm;
 
-        static auto pad = 4;
-        auto longestName = commands.length > 0 ? commands.map!((c) => c.name.length).maxElement : 0;
-        auto longestAlias = commands.length > 0
+        static const auto pad = 4;
+        const auto longestName = commands.length > 0 ? commands.map!((c) => c.name.length).maxElement : 0;
+        const auto longestAlias = commands.length > 0
             ? commands.map!((c) => c.shortName.length).maxElement : 0;
-        auto longestFlagLong = root.goptions.length > 0
+        const auto longestFlagLong = root.goptions.length > 0
             ? root.goptions.map!((o) => o.optLong.length).maxElement : 0;
-        auto longestFlagShort = root.goptions.length > 0
+        const auto longestFlagShort = root.goptions.length > 0
             ? root.goptions.map!((o) => o.optShort.length).maxElement : 0;
 
-        auto widenessFactor = [
+        const auto widenessFactor = [
             longestName + longestAlias, longestFlagLong + longestFlagShort
         ].maxElement;
-        auto wideness = widenessFactor + pad;
+        const auto wideness = widenessFactor + pad;
 
         /* Helpful printer
          */
@@ -566,8 +566,8 @@ private:
         }
 
         /* Always passed, drop from processing */
-        string[] origArgv = argv;
-        string progName = argv[0];
+        const string[] origArgv = argv;
+        const string progName = argv[0];
         argv = argv[1 .. $];
 
         /* Possible option now */
@@ -590,7 +590,7 @@ private:
                 printHelp(root);
                 return 0;
             }
-            argv = origArgv;
+            argv = cast(string[]) origArgv;
             if (getoptInterrupt())
             {
                 return 1;
@@ -667,7 +667,6 @@ public struct HelpCommand
      */
     @CommandEntry() int run(ref string[] args)
     {
-        auto root = rootCommand;
         string[] argvN = ["help"];
         argvN ~= args;
         argvN ~= "-h";
