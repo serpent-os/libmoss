@@ -41,10 +41,19 @@ struct MacroFile
 
 public:
 
+    /** A mapping of string (key) to string (value) actions */
     string[string] actions;
+
+    /** A mapping of string (key) to string (value) global definitions */
     string[string] definitions;
+
+    /** A mapping of string (key) to TuningFlag combinations */
     TuningFlag[string] flags;
+
+    /** A tmapping of string (key) to TuningGroup group definitions */
     TuningGroup[string] groups;
+
+    /** A list of packages predefined in the macros file */
     PackageDefinition[] packages;
 
     /**
@@ -66,7 +75,7 @@ public:
     /**
      * Attempt to parse the input fiel
      */
-    final void parse() @system
+    void parse() @system
     {
         import std.exception : enforce;
 
@@ -89,7 +98,7 @@ public:
         }
         catch (Exception ex)
         {
-            import std.stdio;
+            import std.stdio : stderr, writefln;
 
             stderr.writefln("Failed to parse: %s", _file.name);
             throw ex;
@@ -101,7 +110,7 @@ private:
     /**
      * Parse all package entries
      */
-    final void parsePackages(ref Node root)
+    void parsePackages(ref Node root)
     {
         import std.exception : enforce;
 
@@ -144,7 +153,7 @@ private:
     /**
      * Parse all Flag types.
      */
-    final void parseFlags(ref Node root)
+    void parseFlags(ref Node root)
     {
         import std.exception : enforce;
 
@@ -192,7 +201,7 @@ private:
         }
     }
 
-    final void parseTuning(ref Node root)
+    void parseTuning(ref Node root)
     {
         import std.exception : enforce;
 
@@ -200,8 +209,6 @@ private:
         {
             return;
         }
-
-        import std.stdio;
 
         /* Grab root sequence */
         Node node = root["tuning"];
@@ -262,10 +269,10 @@ private:
         }
     }
 
-    final void parseMacros(string name, ref string[string] target, ref Node root)
+    void parseMacros(string name, ref string[string] target, ref Node root)
     {
         import std.exception : enforce;
-        import std.string;
+        import std.string : strip, endsWith;
 
         if (!root.containsKey(name))
         {
@@ -281,7 +288,6 @@ private:
         {
             enforce(k.nodeID == NodeID.mapping,
                     "parseMaros(): Expected mapping in sequence for " ~ name);
-            import std.stdio;
 
             auto mappingKeys = k.mappingKeys;
             auto mappingValues = k.mappingValues;
@@ -308,4 +314,4 @@ private:
     }
 
     File _file;
-};
+}
