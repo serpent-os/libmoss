@@ -29,7 +29,11 @@ import moss.format.binary.payload;
 public import std.stdio : File, FILE;
 public import moss.format.binary.layout;
 
-const uint16_t LayoutPayloadVersion = 1;
+/**
+ * Shared between implementations, the currently supported version for the
+ * LayoutPayload
+ */
+const uint16_t layoutPayloadVersion = 1;
 
 /**
  * The LayoutPayload contains a series of LayoutEntrys that are then
@@ -41,6 +45,7 @@ struct LayoutPayload
 
 public:
 
+    /** Extend base Payload with LayoutPayload specific functionality */
     Payload pt;
     alias pt this;
 
@@ -52,7 +57,7 @@ public:
         LayoutPayload r;
         r.type = PayloadType.Layout;
         r.compression = PayloadCompression.None;
-        r.payloadVersion = LayoutPayloadVersion;
+        r.payloadVersion = layoutPayloadVersion;
         r.length = 0;
         r.size = 0;
         r.numRecords = 0;
@@ -62,7 +67,7 @@ public:
     /**
      * Add directory entry
      */
-    final void addEntry(ref LayoutEntry entry, string target) @trusted
+    void addEntry(ref LayoutEntry entry, string target) @trusted
     {
         import std.exception : enforce;
 
@@ -74,7 +79,7 @@ public:
     /**
      * Add typical string entry (symlink, file)
      */
-    final void addEntry(ref LayoutEntry entry, string source, string target)
+    void addEntry(ref LayoutEntry entry, string source, string target)
     {
         import std.exception : enforce;
 
@@ -84,10 +89,10 @@ public:
     /**
      * Add special device entry
      */
-    final void addEntry(ref LayoutEntry entry, uint32_t source, string target) @trusted
+    void addEntry(ref LayoutEntry entry, uint32_t source, string target) @trusted
     {
         import std.exception : enforce;
-        import std.bitmanip;
+        import std.bitmanip : nativeToBigEndian;
 
         ubyte[4] bytes = 0;
         enforce(entry.type >= FileType.CharacterDevice
@@ -106,7 +111,7 @@ public:
     /**
      * Encode our data to the archive
      */
-    final void encode(scope FILE* fp)
+    void encode(scope FILE* fp)
     {
         encodePayloadBuffer(fp, this, binary);
     }
@@ -116,7 +121,7 @@ private:
     /**
      * Handle encoding datum
      */
-    final void addEntryInternal(ref LayoutEntry entry, ubyte[] source, string target) @trusted
+    void addEntryInternal(ref LayoutEntry entry, ubyte[] source, string target) @trusted
     {
         import std.string : toStringz;
 
