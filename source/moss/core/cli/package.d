@@ -431,7 +431,8 @@ package:
         import std.algorithm : map, each, maxElement, filter;
 
         static const auto pad = 4;
-        const auto longestName = commands.length > 0 ? commands.map!((c) => c.name.length).maxElement : 0;
+        const auto longestName = commands.length > 0
+            ? commands.map!((c) => c.name.length).maxElement : 0;
         const auto longestAlias = commands.length > 0
             ? commands.map!((c) => c.shortName.length).maxElement : 0;
         const auto longestFlagLong = root.goptions.length > 0
