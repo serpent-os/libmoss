@@ -96,7 +96,7 @@ void setValueArray(T)(ref Node node, ref T value)
  */
 void parseSection(T)(ref Node node, ref T section) @system
 {
-    import std.traits : getUDAs;
+    import std.traits : getUDAs, moduleName;
     import std.exception : enforce;
 
     /* Walk members */
