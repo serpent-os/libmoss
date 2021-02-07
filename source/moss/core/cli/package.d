@@ -26,53 +26,82 @@ import std.stdio;
 import std.getopt;
 
 /**
- * Generate the command name
+ * UDA to associcate a command _name_ with a structure. This is the primary
+ * key, such as "help", "install", etc.
  */
 struct CommandName
 {
+    /** Primary command name */
     string name;
 }
 
+/**
+ * UDA to associate command help with a structure. This is used to integrate
+ * an automatic help system into the CLI processor
+ */
 struct CommandHelp
 {
+    /** A short helpful description of what the command actually does */
     string blurb;
+
+    /** A multiline string containing information on command usage */
     string help;
 }
 
+/**
+ * UDA to associate command _usage_ with the struct. This is displayed by
+ * the help system with a string like, "usage: some-command [usage]"
+ *
+ * Use this to override the default usage text
+ */
 struct CommandUsage
 {
+    /** String describing the usage pattern of the command */
     string usage;
 }
 
 /**
- * Special UDA for any root command.
+ * UDA associated with the top-level command in a multi-level command
+ * line interface. This allows one to nest commands in a style similar
+ * to git sub commands.
  */
 struct RootCommand
 {
 }
 
 /**
- * Generate a command alias
+ * UDA to associate an alias with a CommandName. For example, a command named
+ * "install" may also have a short-hand alias such as "it" to simplify usage
+ * patterns.
  */
 struct CommandAlias
 {
+    /** String alias for a primary CommandName, such as "it". */
     string name;
 }
 
 /**
- * UDA to identify main entry point into a command
+ * UDA to identify main entry point into a command. Simply decorate a
+ * "main(string argv[])" method with this UDA to tag it as the primary
+ * run method of the struct/command.
  */
 struct CommandEntry
 {
 }
 
 /**
- * UDA for options
+ * UDA to associate with members of a struct. This will allow automatic
+ * generation of getopt style "options" at runtime command line processing.
  */
 struct Option
 {
+    /** Primary alias for the option, such as "o" */
     string name = null;
+
+    /** Secondary, longer alias for the option, such as "outputDir" */
     string longName = null;
+
+    /** Help text string on how to use this option correctly */
     string help = null;
 }
 
