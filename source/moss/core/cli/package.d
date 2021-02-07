@@ -149,7 +149,7 @@ static string genGetOpt(T)(string passText = "std.getopt.config.passThrough")
  */
 static T* newCommand(T : BaseCommand)()
 {
-    import std.traits;
+    import std.traits : moduleName, getUDAs;
     import std.string : format;
     import std.exception : enforce;
     import std.conv : text;
@@ -300,7 +300,7 @@ public:
     T* findAncestor(T)()
     {
         import std.exception : enforce;
-        import std.traits;
+        import std.traits : moduleName;
 
         BaseCommand* pr = parentCommand;
         static auto cmpName = moduleName!T ~ "." ~ T.stringof;
@@ -428,7 +428,7 @@ package:
         writeln();
         import std.string : format;
 
-        import std.algorithm;
+        import std.algorithm : map, each, maxElement, filter;
 
         static const auto pad = 4;
         const auto longestName = commands.length > 0 ? commands.map!((c) => c.name.length).maxElement : 0;
@@ -515,7 +515,7 @@ package:
         }
 
         import std.array : join;
-        import std.algorithm;
+        import std.algorithm : reverse;
 
         return names.reverse.join(" ");
     }
@@ -638,7 +638,7 @@ private:
  */
 T* cliProcessor(T : BaseCommand)(ref string[] args)
 {
-    import std.traits;
+    import std.traits : hasUDA;
 
     static assert(hasUDA!(T, RootCommand), "Cannot create cliProcessor for non-root command");
     auto com = newCommand!T;
