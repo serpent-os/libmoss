@@ -30,14 +30,14 @@ import moss.format.binary : MossFormatVersionNumber;
 /**
  * Standard file header: NUL M O S
  */
-const uint32_t MossFileHeader = 0x006d6f73;
+const uint32_t mossFileHeader = 0x006d6f73;
 
 /**
  * Hard-coded integrity check built into the first 32-byte header.
  * It never changes, it is just there to trivially detect early
  * corruption.
  */
-const ubyte[21] IntegrityCheck = [
+const ubyte[21] integrityCheck = [
     0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0, 4, 0, 0, 5, 0, 0, 6, 0, 0, 7
 ];
 
@@ -49,7 +49,7 @@ enum MossFileType : uint8_t
     Unknown = 0,
     Binary,
     Delta,
-};
+}
 
 /**
  * The header struct simply verifies the file as a valid moss package file.
@@ -65,17 +65,31 @@ enum MossFileType : uint8_t
 extern (C) struct Header
 {
 align(1):
-    @AutoEndian uint32_t magic; /* 4 bytes */
-    @AutoEndian uint16_t numPayloads; /* 2 bytes */
-    ubyte[21] padding;
-    MossFileType type; /* 1-byte */
-    @AutoEndian uint32_t versionNumber; /* 4 bytes */
 
+    /** 4-byte endian-aware field containing the magic number */
+    @AutoEndian uint32_t magic;
+
+    /** 2-byte endian-aware field containing the number of payloads */
+    @AutoEndian uint16_t numPayloads;
+
+    /** Padding, reserved, 21 bytes. Abused for an integrity check */
+    ubyte[21] padding;
+
+    /** 1-byte field denoting the _type_ of archive */
+    MossFileType type; /* 1-byte */
+
+    /** 4-byte endian-aware field containing the format version number */
+    @AutoEndian uint32_t versionNumber;
+
+    /**
+     * Construct a Header struct and initialise it from the given versionNumber
+     * argument, with sane default values set by default
+     */
     this(uint32_t versionNumber) @safe @nogc nothrow
     {
-        this.magic = MossFileHeader;
+        this.magic = mossFileHeader;
         this.numPayloads = 0;
-        this.padding = IntegrityCheck;
+        this.padding = integrityCheck;
         this.type = MossFileType.Binary;
         this.versionNumber = versionNumber;
     }
@@ -83,7 +97,7 @@ align(1):
     /**
      * Encode the Header to the underlying file stream
      */
-    final void encode(scope FILE* fp) @trusted
+    void encode(scope FILE* fp) @trusted
     {
         import std.stdio : fwrite;
         import std.exception : enforce;
@@ -101,17 +115,17 @@ align(1):
     /**
      * Ensure that a header is actually valid before proceeding
      */
-    final void validate() @safe
+    void validate() @safe
     {
         import std.exception : enforce;
 
-        enforce(magic == MossFileHeader, "Header.validate(): invalid magic");
-        enforce(padding == IntegrityCheck, "Header.validate(): corrupt integrity");
+        enforce(magic == mossFileHeader, "Header.validate(): invalid magic");
+        enforce(padding == integrityCheck, "Header.validate(): corrupt integrity");
         enforce(type != MossFileType.Unknown, "Header.validate(): unknown package type");
         enforce(versionNumber <= MossFormatVersionNumber,
                 "Header.validate(): unsupported package version");
     }
-};
+}
 
 /**
  * Make sure we don't introduce alignment bugs and kill the header
