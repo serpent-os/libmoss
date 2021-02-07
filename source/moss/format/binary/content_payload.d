@@ -77,6 +77,8 @@ public:
         us.encode(fp);
         us.toHostOrder();
 
+        import core.stdc.stdio : SEEK_SET, SEEK_CUR;
+
         switch (us.compression)
         {
         case PayloadCompression.None:
