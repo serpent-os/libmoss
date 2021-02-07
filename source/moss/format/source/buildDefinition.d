@@ -28,7 +28,7 @@ public import moss.format.source.schema;
  * A Build Definition provides the relevant steps to complete production
  * of a package. All steps are optional.
  */
-struct BuildDefinition
+public struct BuildDefinition
 {
     /**
      * Setup step.
@@ -82,7 +82,7 @@ struct BuildDefinition
     /**
      * Return the relevant setup step
      */
-    final string setup() @safe
+    string setup() @safe
     {
         BuildDefinition* node = &this;
 
@@ -100,7 +100,7 @@ struct BuildDefinition
     /**
      * Return the relevant build step
      */
-    final string build() @safe
+    string build() @safe
     {
         BuildDefinition* node = &this;
 
@@ -118,7 +118,7 @@ struct BuildDefinition
     /**
      * Return the relevant install step
      */
-    final string install() @safe
+    string install() @safe
     {
         BuildDefinition* node = &this;
 
@@ -136,7 +136,7 @@ struct BuildDefinition
     /**
      * Return the relevant check step
      */
-    final string check() @safe
+    string check() @safe
     {
         BuildDefinition* node = &this;
 
@@ -154,7 +154,7 @@ struct BuildDefinition
     /**
      * Return the relevant PGO workload step
      */
-    final string workload() @safe
+    string workload() @safe
     {
         BuildDefinition* node = &this;
 
@@ -169,4 +169,4 @@ struct BuildDefinition
         }
         return null;
     }
-};
+}
