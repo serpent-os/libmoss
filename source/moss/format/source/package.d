@@ -23,7 +23,7 @@
 module moss.format.source;
 
 public import moss.format.source.build_definition;
-public import moss.format.source.buildOptions;
+public import moss.format.source.build_options;
 public import moss.format.source.macros;
 public import moss.format.source.packageDefinition;
 public import moss.format.source.schema;

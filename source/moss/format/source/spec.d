@@ -25,7 +25,7 @@ module moss.format.source.spec;
 public import std.stdint;
 public import std.stdio : File;
 public import moss.format.source.build_definition;
-public import moss.format.source.buildOptions;
+public import moss.format.source.build_options;
 public import moss.format.source.packageDefinition;
 public import moss.format.source.schema;
 public import moss.format.source.sourceDefinition;
