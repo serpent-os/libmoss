@@ -36,9 +36,12 @@ public import moss.format.source.schema;
  * the full set of tuning flag *names* from either the enabled or disabled
  * states, condensing them, and building the full flag set from there.
  */
-final struct TuningOption
+struct TuningOption
 {
+    /** Set of TuningFlags to be enabled when this option is enabled */
     @YamlSchema("enabled", false, YamlType.Array) string[] onEnabled;
+
+    /** Set of TuningFlags to be enabled when this option is disabled */
     @YamlSchema("disabled", false, YamlType.Array) string[] onDisabled;
 }
 
@@ -46,11 +49,14 @@ final struct TuningOption
  * A TuningGroup may contain default boolean "on" "off" values, or
  * it may contain them via choices, i.e. "=speed"
  */
-final struct TuningGroup
+struct TuningGroup
 {
-    /* Root namespace group option */
+    /** Root namespace group option */
     TuningOption root;
+
+    /** Mapping of string (key) to TuningOption multiple choices */
     TuningOption[string] choices;
 
+    /** Default TuningOption to enable with multiple choice group */
     @YamlSchema("default") string defaultChoice = null;
 }
