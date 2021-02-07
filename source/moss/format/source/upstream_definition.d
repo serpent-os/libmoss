@@ -66,6 +66,9 @@ struct GitUpstreamDefinition
  */
 struct UpstreamDefinition
 {
+    /**
+     * Set to the relevant _type_ of upstream, i.e. git, plain, etc.
+     */
     UpstreamType type = UpstreamType.Plain;
 
     /** Origin URI, set from the YAML key automatically */
@@ -73,7 +76,10 @@ struct UpstreamDefinition
 
     union
     {
+        /** Plain upstream within the union */
         PlainUpstreamDefinition plain;
+
+        /** Git upstream within the union */
         GitUpstreamDefinition git;
-    };
-};
+    }
+}
