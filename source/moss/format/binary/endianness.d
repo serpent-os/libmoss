@@ -43,7 +43,7 @@ package union autoEndianUint64
     /**
      * On little-endian systems, convert to big-endian (network order)
      */
-    pragma(inline, true) pure auto toNetworkOrder() @safe @nogc nothrow
+    pragma(inline, true) pure void toNetworkOrder() @safe @nogc nothrow
     {
         version (LittleEndian)
         {
@@ -54,7 +54,7 @@ package union autoEndianUint64
     /**
      * On little-endian systems, convert back to little-endian (host order)
      */
-    pragma(inline, true) pure auto toHostOrder() @safe @nogc nothrow
+    pragma(inline, true) pure void toHostOrder() @safe @nogc nothrow
     {
         version (LittleEndian)
         {
@@ -81,7 +81,7 @@ package union autoEndianUint32
     /**
      * On little-endian systems, convert to big-endian (network order)
      */
-    pragma(inline, true) pure auto toNetworkOrder() @safe @nogc nothrow
+    pragma(inline, true) pure void toNetworkOrder() @safe @nogc nothrow
     {
         version (LittleEndian)
         {
@@ -92,7 +92,7 @@ package union autoEndianUint32
     /**
      * On little-endian systems, convert back to little-endian (host order)
      */
-    pragma(inline, true) pure auto toHostOrder() @safe @nogc nothrow
+    pragma(inline, true) pure void toHostOrder() @safe @nogc nothrow
     {
         version (LittleEndian)
         {
@@ -119,7 +119,7 @@ package union autoEndianUint16
     /**
      * On little-endian systems, convert to big-endian (network order)
      */
-    pragma(inline, true) pure auto toNetworkOrder() @safe @nogc nothrow
+    pragma(inline, true) pure void toNetworkOrder() @safe @nogc nothrow
     {
         version (LittleEndian)
         {
@@ -130,7 +130,7 @@ package union autoEndianUint16
     /**
      * On little-endian systems, convert back to little-endian (host order)
      */
-    pragma(inline, true) pure auto toHostOrder() @safe @nogc nothrow
+    pragma(inline, true) pure void toHostOrder() @safe @nogc nothrow
     {
         version (LittleEndian)
         {
