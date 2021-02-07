@@ -58,7 +58,7 @@ public:
      */
     void add(DownloadStore c) @safe
     {
-        import std.algorithm.sorting;
+        import std.algorithm.sorting : sort;
 
         stores ~= c;
 
@@ -97,8 +97,8 @@ public:
      */
     void fetch() @system
     {
-        import std.algorithm;
-        import std.array;
+        import std.algorithm : filter;
+        import std.array : array;
         import std.exception : enforce;
         import std.file : mkdirRecurse;
         import std.path : dirName;
@@ -107,14 +107,14 @@ public:
         enforce(writable.length >= 1, "DownloadManager.fetch(): No writable stores found");
         auto writeStore = writable[0];
 
-        import std.stdio;
+        import std.stdio : writefln, writeln;
 
         writefln("Using cache: %s", writeStore.directory);
 
         /* Ugly download code */
         foreach (ref d; toDownload)
         {
-            import std.net.curl;
+            import std.net.curl : download;
             import std.string : format;
 
             /* Download the staging file */
@@ -128,7 +128,7 @@ public:
             auto hash = checkHash(fullPath);
             if (hash != d.expectedHash)
             {
-                import std.file;
+                import std.file : remove;
 
                 remove(fullPath);
                 writeln(hash, " vs ", d.expectedHash);
@@ -146,8 +146,8 @@ public:
      */
     void share(const(string) hash, const(string) target) @system
     {
-        import std.algorithm;
-        import std.array;
+        import std.algorithm : filter;
+        import std.array : array;
         import std.exception : enforce;
         import std.file : mkdirRecurse;
         import std.string : format;
@@ -174,8 +174,8 @@ private:
      */
     string checkHash(const(string) path)
     {
-        import std.stdio;
-        import std.digest.sha;
+        import std.stdio : File;
+        import std.digest.sha : SHA256Digest, toHexString;
         import std.string : toLower;
 
         auto sha = new SHA256Digest();
