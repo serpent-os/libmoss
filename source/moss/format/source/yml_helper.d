@@ -29,7 +29,7 @@ import std.stdint;
 /**
  * Set value appropriately.
  */
-final void setValue(T)(ref Node node, ref T value, YamlSchema schema)
+void setValue(T)(ref Node node, ref T value, YamlSchema schema)
 {
     import std.exception : enforce;
     import std.algorithm : canFind;
@@ -67,7 +67,7 @@ final void setValue(T)(ref Node node, ref T value, YamlSchema schema)
 /**
  * Set value according to maps.
  */
-final void setValueArray(T)(ref Node node, ref T value)
+void setValueArray(T)(ref Node node, ref T value)
 {
     import std.exception : enforce;
 
@@ -90,9 +90,13 @@ final void setValueArray(T)(ref Node node, ref T value)
     }
 }
 
-final void parseSection(T)(ref Node node, ref T section) @system
+/**
+ * Parse a section in the YAML by the given input node + section, setting as
+ * many automatic values as possible using our UDA helper system
+ */
+void parseSection(T)(ref Node node, ref T section) @system
 {
-    import std.traits;
+    import std.traits : getUDAs;
     import std.exception : enforce;
 
     /* Walk members */
@@ -119,7 +123,7 @@ final void parseSection(T)(ref Node node, ref T section) @system
                 {
                     if (node.containsKey(yamlName))
                     {
-                        auto yamlNode = node[yamlName];
+                        const auto yamlNode = node[yamlName];
                         mixin("setValue(yamlNode, section." ~ member ~ ", udaID);");
                     }
                 }
@@ -127,7 +131,7 @@ final void parseSection(T)(ref Node node, ref T section) @system
                 {
                     if (node.containsKey(yamlName))
                     {
-                        auto yamlNode = node[yamlName];
+                        const auto yamlNode = node[yamlName];
                         mixin("setValueArray(yamlNode, section." ~ member ~ ");");
                     }
                 }
