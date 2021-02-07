@@ -175,7 +175,7 @@ static pure auto autoEndianConvert(uint16_t v) @safe @nogc nothrow
  */
 static void orderHelper(T, string funcer)(ref T v) @safe @nogc nothrow
 {
-    import std.traits : hasUDA;
+    import std.traits : hasUDA, moduleName;
 
     foreach (member; __traits(allMembers, T))
     {
