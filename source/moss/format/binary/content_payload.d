@@ -27,7 +27,11 @@ import moss.format.binary.payload;
 
 public import std.stdio : File, FILE;
 
-const uint16_t ContentPayloadVersion = 1;
+/**
+ * Shared between implementations, the currently supported version for
+ * the ContentPayload
+ */
+const uint16_t contentPayloadVersion = 1;
 
 /**
  * The ContentPayload contains concatenated data that may or may not
@@ -38,6 +42,7 @@ struct ContentPayload
 
 public:
 
+    /** Extend base Payload type with ContentPayload specifics */
     Payload pt;
     alias pt this;
 
@@ -49,7 +54,7 @@ public:
         ContentPayload r;
         r.type = PayloadType.Content;
         r.compression = PayloadCompression.None;
-        r.payloadVersion = ContentPayloadVersion;
+        r.payloadVersion = contentPayloadVersion;
         r.length = 0;
         r.size = 0;
         r.numRecords = 0;
@@ -59,7 +64,7 @@ public:
     /**
      * Encode our data to the archive
      */
-    final void encode(File file)
+    void encode(File file)
     {
         import std.exception : enforce;
 
@@ -72,7 +77,7 @@ public:
         us.encode(fp);
         us.toHostOrder();
 
-        import std.stdio;
+        import std.stdio : seek, flush;
 
         switch (us.compression)
         {
@@ -103,10 +108,10 @@ public:
     /**
      * Write all data with no compression
      */
-    final void encodeNoCompression(scope FILE* fp)
+    void encodeNoCompression(scope FILE* fp)
     {
         import std.stdio : fwrite;
-        import std.digest.crc;
+        import std.digest.crc : CRC64ISO;
 
         const auto ChunkSize = 16 * 1024 * 1024;
         CRC64ISO hash;
@@ -136,11 +141,11 @@ public:
     /**
      * Write all data with ZSTD compression
      */
-    final void encodeZstdCompression(scope FILE* fp)
+    void encodeZstdCompression(scope FILE* fp)
     {
         import std.stdio : fwrite;
-        import std.digest.crc;
-        import zstd;
+        import std.digest.crc : CRC64ISO;
+        import zstd : Compressor;
 
         ulong compSize = 0;
         ulong normSize = 0;
@@ -181,7 +186,7 @@ public:
      * Add a file to the content payload. It will not be loaded or
      * written until the archive is being flushed.
      */
-    final void addFile(string hashID, string sourcePath)
+    void addFile(string hashID, string sourcePath)
     {
         assert(!(hashID in content), "addFile(): must be a unique hash");
         content[hashID] = sourcePath;
@@ -192,7 +197,7 @@ public:
     /**
      * Return true if we have the file
      */
-    pure final bool hasFile(string hashID) @safe @nogc nothrow
+    pure bool hasFile(string hashID) @safe @nogc nothrow
     {
         if (hashID in content)
         {
