@@ -40,7 +40,7 @@ final enum TuningSelectionType
  */
 struct TuningSelection
 {
-    /* Name of the tuning group */
+    /** Name of the tuning group */
     string name;
 
     /**
@@ -75,6 +75,10 @@ struct BuildOptions
      */
     @YamlSchema("cspgo") bool csgpo = true;
 
+    /**
+     * A set of tuning selections to apply. Constructed at runtime through
+     * parsing
+     */
     TuningSelection[] tuneSelections = [];
 
     /**
@@ -91,4 +95,4 @@ struct BuildOptions
         }
         return false;
     }
-};
+}
