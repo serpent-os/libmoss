@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.source.tuningFlag;
+module moss.format.source.tuning_flag;
 
 public import moss.format.source.schema;
 
