@@ -31,7 +31,7 @@ public import moss.format.binary.index;
 public import moss.format.binary.index_payload;
 public import moss.format.binary.layout;
 public import moss.format.binary.layout_payload;
-public import moss.format.binary.metaPayload;
+public import moss.format.binary.meta_payload;
 public import moss.format.binary.payload;
 public import moss.format.binary.reader;
 public import moss.format.binary.record;

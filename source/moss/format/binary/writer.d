@@ -125,7 +125,7 @@ public:
             switch (p.type)
             {
             case PayloadType.Meta:
-                import moss.format.binary.metaPayload;
+                import moss.format.binary.meta_payload;
 
                 auto m = cast(MetaPayload*) p;
                 m.encode(fp);
