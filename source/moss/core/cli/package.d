@@ -222,7 +222,7 @@ static T* newCommand(T : BaseCommand)()
  * To implement a command, ensure you extend the BaseCommand
  * to satisfy storage constraints
  */
-struct BaseCommand
+public struct BaseCommand
 {
 
 public:
@@ -657,7 +657,7 @@ T* cliProcessor(T : BaseCommand)(ref string[] args)
 @CommandAlias("?")
 @CommandUsage("[topic]")
 @CommandHelp("Display help topics")
-final struct HelpCommand
+public struct HelpCommand
 {
     BaseCommand pt;
     alias pt this;
