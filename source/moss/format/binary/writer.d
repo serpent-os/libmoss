@@ -131,7 +131,7 @@ public:
                 m.encode(fp);
                 break;
             case PayloadType.Content:
-                import moss.format.binary.contentPayload;
+                import moss.format.binary.content_payload;
 
                 auto c = cast(ContentPayload*) p;
                 c.encode(_file);
