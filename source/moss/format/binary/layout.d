@@ -24,6 +24,13 @@ module moss.format.binary.layout;
 
 public import std.stdint;
 
+import moss.format.binary.endianness;
+
+/**
+ * A FileType is a simple tagging mechanism so that we're able to record the
+ * destination file type (*Nix) in the layout, so that it may be reapplied
+ * upon extraction.
+ */
 enum FileType : uint8_t
 {
     /* Catch errors */
@@ -73,26 +80,39 @@ extern (C) struct LayoutEntry
 {
 align(1):
 
-    uint64_t time; /* 8 bytes */
+    /** 8-bytes, endian aware, UNIX timestamp */
+    @AutoEndian uint64_t time;
 
-    uint32_t uid; /* 4 bytes */
-    uint32_t gid; /* 4 bytes */
-    uint32_t mode; /* 4 bytes */
-    uint32_t tag; /* 4 bytes */
+    /** 4-bytes, endian aware, owning user ID */
+    @AutoEndian uint32_t uid;
 
-    uint16_t sourceLength; /* 2 bytes */
-    uint16_t targetLength; /* 2 bytes */
+    /** 4-bytes, endian aware, owning group ID */
+    @AutoEndian uint32_t gid;
 
-    FileType type; /* 1 byte */
+    /** 4-bytes, endian aware, mode/permissions */
+    @AutoEndian uint32_t mode;
 
+    /** 4-bytes, endian aware, tag for the file meta type (usage) */
+    @AutoEndian uint32_t tag;
+
+    /** 2-bytes, endian aware, length for the source (ID) parameter */
+    @AutoEndian uint16_t sourceLength; /* 2 bytes */
+
+    /** 2-bytes, endian aware, length for the target (path) parameter */
+    @AutoEndian uint16_t targetLength; /* 2 bytes */
+
+    /** 1 byte, type of the destination file */
+    FileType type;
+
+    /** 3-byte array, reserved padding */
     ubyte[3] padding;
 
     /**
      * Encode the Header to the underlying file stream
      */
-    final void encode(ref ubyte[] p) @trusted nothrow
+    void encode(ref ubyte[] p) @trusted nothrow
     {
-
+        this.toNetworkOrder();
         p ~= (cast(ubyte*)&time)[0 .. time.sizeof];
         p ~= (cast(ubyte*)&uid)[0 .. uid.sizeof];
         p ~= (cast(ubyte*)&mode)[0 .. mode.sizeof];
@@ -101,6 +121,7 @@ align(1):
         p ~= (cast(ubyte*)&targetLength)[0 .. targetLength.sizeof];
         p ~= (cast(ubyte*)&type)[0 .. type.sizeof];
         p ~= padding;
+        this.toHostOrder();
     }
 }
 
