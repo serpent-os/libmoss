@@ -40,4 +40,4 @@ public import moss.format.binary.writer;
 /**
  * Current version of the package format that we target.
  */
-const uint32_t MossFormatVersionNumber = 1;
+const uint32_t mossFormatVersionNumber = 1;

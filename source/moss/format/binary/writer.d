@@ -24,7 +24,7 @@ module moss.format.binary.writer;
 
 public import std.stdio : File;
 
-import moss.format.binary : MossFormatVersionNumber;
+import moss.format.binary : mossFormatVersionNumber;
 import moss.format.binary.endianness;
 import moss.format.binary.header;
 import moss.format.binary.record;
@@ -48,7 +48,7 @@ public:
     /**
      * Construct a new Writer for the given filename
      */
-    this(File file, uint32_t versionNumber = MossFormatVersionNumber) @trusted
+    this(File file, uint32_t versionNumber = mossFormatVersionNumber) @trusted
     {
         _file = file;
         scope auto fp = _file.getFP();
