@@ -24,6 +24,8 @@ module moss.format.binary.index;
 
 public import std.stdint;
 
+import moss.format.binary.endianness;
+
 /**
  * An IndexEntry identifies a unique file within the file payload.
  * It records the size of the file - along with the number of times
@@ -36,32 +38,37 @@ extern (C) struct IndexEntry
 {
 align(1):
 
-    /** File size, in bytes */
-    uint64_t size; /* 8 bytes */
+    /** 8-bytes, endian aware, size of the file */
+    @AutoEndian uint64_t size;
 
-    uint64_t start; /* 8 bytes */
-    uint64_t end; /* 8 bytes */
+    /** 8-bytes, endian aware, start offset to the file */
+    @AutoEndian uint64_t start;
 
-    /* Length of the name/ID */
-    uint16_t length; /* 2 bytes */
+    /** 8-bytes, endian aware, end offset of the file */
+    @AutoEndian uint64_t end; /* 8 bytes */
 
-    /** How many times this file is used in the package */
-    uint32_t refcount; /* 4 bytes */
+    /** 2-bytes, endian aware, length of the file name */
+    @AutoEndian uint16_t length; /* 2 bytes */
 
-    ubyte[2] padding; /* 2 bytes */
+    /** 4-bytes, endian aware, how many times this unique file is referenced */
+    @AutoEndian uint32_t refcount; /* 4 bytes */
+
+    /** 2-byte array for reserved padding */
+    ubyte[2] padding;
 
     /**
      * Encode the Header to the underlying file stream
      */
-    final void encode(ref ubyte[] p) @trusted nothrow
+    void encode(ref ubyte[] p) @trusted nothrow
     {
-
+        this.toNetworkOrder();
         p ~= (cast(ubyte*)&size)[0 .. size.sizeof];
         p ~= (cast(ubyte*)&start)[0 .. start.sizeof];
         p ~= (cast(ubyte*)&end)[0 .. end.sizeof];
         p ~= (cast(ubyte*)&length)[0 .. length.sizeof];
         p ~= (cast(ubyte*)&refcount)[0 .. refcount.sizeof];
         p ~= padding;
+        this.toHostOrder();
     }
 }
 
