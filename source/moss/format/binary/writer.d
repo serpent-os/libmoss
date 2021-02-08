@@ -62,7 +62,7 @@ public:
     /**
      * Return the filetype for this Writer
      */
-    pure final @property MossFileType fileType() @safe @nogc nothrow
+    pure @property MossFileType fileType() @safe @nogc nothrow
     {
         return _header.type;
     }
@@ -70,7 +70,7 @@ public:
     /**
      * Set the filetype for this Writer
      */
-    final @property void fileType(MossFileType type) @safe @nogc nothrow
+    @property void fileType(MossFileType type) @safe @nogc nothrow
     {
         _header.type = type;
     }
@@ -83,7 +83,7 @@ public:
     /**
      * Flush and close the underying file.
      */
-    final void close() @safe
+    void close() @safe
     {
         if (!_file.isOpen())
         {
@@ -101,7 +101,7 @@ public:
     /**
      * Add the payload to the archive.
      */
-    final void addPayload(Payload* payload) @trusted
+    void addPayload(Payload* payload) @trusted
     {
         payloads ~= payload;
         _header.numPayloads++;
@@ -110,7 +110,7 @@ public:
     /**
      * Flush all payloads to disk.
      */
-    final void flush() @trusted
+    void flush() @trusted
     {
         _file.seek(0);
 
@@ -125,25 +125,25 @@ public:
             switch (p.type)
             {
             case PayloadType.Meta:
-                import moss.format.binary.meta_payload;
+                import moss.format.binary.meta_payload : MetaPayload;
 
                 auto m = cast(MetaPayload*) p;
                 m.encode(fp);
                 break;
             case PayloadType.Content:
-                import moss.format.binary.content_payload;
+                import moss.format.binary.content_payload : ContentPayload;
 
                 auto c = cast(ContentPayload*) p;
                 c.encode(_file);
                 break;
             case PayloadType.Layout:
-                import moss.format.binary.layout_payload;
+                import moss.format.binary.layout_payload : LayoutPayload;
 
                 auto l = cast(LayoutPayload*) p;
                 l.encode(fp);
                 break;
             case PayloadType.Index:
-                import moss.format.binary.index_payload;
+                import moss.format.binary.index_payload : IndexPayload;
 
                 auto i = cast(IndexPayload*) p;
                 i.encode(fp);
