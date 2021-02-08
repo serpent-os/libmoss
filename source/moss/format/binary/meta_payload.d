@@ -63,7 +63,7 @@ public:
      */
     void addRecord(R : RecordTag, T)(R key, auto const ref T datum) @trusted
     {
-        import std.traits : EnumMembers;
+        import std.traits : EnumMembers, OriginalType;
         import std.conv : to;
         import std.stdio : writeln;
 
