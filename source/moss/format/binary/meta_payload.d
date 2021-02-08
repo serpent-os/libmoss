@@ -27,7 +27,11 @@ import moss.format.binary.encoder;
 import moss.format.binary.payload;
 import moss.format.binary.record;
 
-const uint16_t MetaPayloadVersion = 1;
+/**
+ * Shared between implementations, the currently supported version for the
+ * MetaPayload
+ */
+const uint16_t metaPayloadVersion = 1;
 
 /**
  * The MetaPayload type allows us to encode metadata into a payload
@@ -38,6 +42,7 @@ struct MetaPayload
 
 public:
 
+    /** Extend base Payload type with MetaPayload functionality */
     Payload pt;
     alias pt this;
 
@@ -49,18 +54,18 @@ public:
         MetaPayload r;
         r.type = PayloadType.Meta;
         r.compression = PayloadCompression.None;
-        r.payloadVersion = MetaPayloadVersion;
+        r.payloadVersion = metaPayloadVersion;
         return r;
     }
 
     /**
      * Add Records with their associated data.
      */
-    final void addRecord(R : RecordTag, T)(R key, auto const ref T datum) @trusted
+    void addRecord(R : RecordTag, T)(R key, auto const ref T datum) @trusted
     {
-        import std.traits;
+        import std.traits : EnumMembers;
         import std.conv : to;
-        import std.stdio;
+        import std.stdio : writeln;
 
         Record record;
         void delegate() encoder;
@@ -91,7 +96,7 @@ public:
         {
             static if (!is(T == string))
             {
-                import std.bitmanip;
+                import std.bitmanip : nativeToBigEndian;
                 import std.stdio : fwrite;
                 import std.exception : enforce;
 
@@ -226,7 +231,7 @@ public:
     /**
      * Encode our data to the archive
      */
-    final void encode(scope FILE* fp)
+    void encode(scope FILE* fp)
     {
         encodePayloadBuffer(fp, this, binary);
     }
