@@ -32,8 +32,9 @@ import moss.format.binary.endianness;
  * Encapsulates the underlying Payload so we can provide some tracking
  * and iteration abiliies
  */
-final struct PayloadWrapper
+struct PayloadWrapper
 {
+    /** Extend Payload with PayloadWrapper functionality */
     Payload pt;
     alias pt this;
 
@@ -42,7 +43,7 @@ package:
     /**
      * Returns the 'read' property, i.e. was we decoded or not
      */
-    pure final @property bool read() @safe @nogc nothrow
+    pure @property bool read() @safe @nogc nothrow
     {
         return _read;
     }
@@ -50,7 +51,7 @@ package:
     /**
      * Update the read property
      */
-    pure final @property void read(bool b) @safe @nogc nothrow
+    pure @property void read(bool b) @safe @nogc nothrow
     {
         _read = b;
     }
@@ -135,7 +136,7 @@ public:
     /**
      * Return the current entry in the reader
      */
-    final @property PayloadWrapper front()
+    @property PayloadWrapper front()
     {
         if (requestedIndex != payloadIndex)
         {
@@ -152,7 +153,7 @@ public:
     /**
      * Return true if there are no more entries
      */
-    final @property bool empty()
+    @property bool empty()
     {
         return requestedIndex >= _header.numPayloads;
     }
@@ -160,7 +161,7 @@ public:
     /**
      * Pop the current entry and find the next
      */
-    final @property PayloadWrapper popFront()
+    @property PayloadWrapper popFront()
     {
         ++requestedIndex;
         return curPayload;
@@ -169,7 +170,7 @@ public:
     /**
      * Flush and close the underying file.
      */
-    final void close() @safe
+    void close() @safe
     {
         if (!_file.isOpen())
         {
