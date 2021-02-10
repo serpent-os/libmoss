@@ -27,8 +27,6 @@ public import std.stdio : File;
 import moss.format.binary.archive_header;
 import moss.format.binary : mossFormatVersionNumber;
 import moss.format.binary.endianness;
-import moss.format.binary.record;
-import moss.format.binary.payload;
 
 /**
  * The Writer is a low-level mechanism for writing Moss binary packages
@@ -40,7 +38,6 @@ private:
 
     File _file;
     ArchiveHeader _header;
-    Payload*[] payloads;
 
 public:
     @disable this();
@@ -99,15 +96,6 @@ public:
     }
 
     /**
-     * Add the payload to the archive.
-     */
-    void addPayload(Payload* payload) @trusted
-    {
-        payloads ~= payload;
-        _header.numPayloads++;
-    }
-
-    /**
      * Flush all payloads to disk.
      */
     void flush() @trusted
@@ -118,40 +106,6 @@ public:
         _header.toNetworkOrder();
         _header.encode(fp);
         _header.toHostOrder();
-
-        /* Dump all payloads. TODO: Add their records. */
-        foreach (ref p; payloads)
-        {
-            switch (p.type)
-            {
-            case PayloadType.Meta:
-                import moss.format.binary.meta_payload : MetaPayload;
-
-                auto m = cast(MetaPayload*) p;
-                m.encode(fp);
-                break;
-            case PayloadType.Content:
-                import moss.format.binary.content_payload : ContentPayload;
-
-                auto c = cast(ContentPayload*) p;
-                c.encode(_file);
-                break;
-            case PayloadType.Layout:
-                import moss.format.binary.layout_payload : LayoutPayload;
-
-                auto l = cast(LayoutPayload*) p;
-                l.encode(fp);
-                break;
-            case PayloadType.Index:
-                import moss.format.binary.index_payload : IndexPayload;
-
-                auto i = cast(IndexPayload*) p;
-                i.encode(fp);
-                break;
-            default:
-                assert(0, "Unsupported type: " ~ p.type.stringof);
-            }
-        }
 
         _file.flush();
     }
