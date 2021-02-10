@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.binary.header;
+module moss.format.binary.archive_header;
 
 public import std.stdint;
 public import std.stdio : FILE;
