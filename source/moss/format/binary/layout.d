@@ -108,7 +108,7 @@ align(1):
     ubyte[3] padding;
 
     /**
-     * Encode the Header to the underlying file stream
+     * Encode the LayoutEntry to the underlying byte buffer
      */
     void encode(ref ubyte[] p) @trusted nothrow
     {

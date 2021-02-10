@@ -24,9 +24,9 @@ module moss.format.binary.writer;
 
 public import std.stdio : File;
 
+import moss.format.binary.archive_header;
 import moss.format.binary : mossFormatVersionNumber;
 import moss.format.binary.endianness;
-import moss.format.binary.header;
 import moss.format.binary.record;
 import moss.format.binary.payload;
 
@@ -39,7 +39,7 @@ final class Writer
 private:
 
     File _file;
-    Header _header;
+    ArchiveHeader _header;
     Payload*[] payloads;
 
 public:
@@ -52,7 +52,7 @@ public:
     {
         _file = file;
         scope auto fp = _file.getFP();
-        _header = Header(versionNumber);
+        _header = ArchiveHeader(versionNumber);
         _header.numPayloads = 0;
         _header.toNetworkOrder();
         _header.encode(fp);

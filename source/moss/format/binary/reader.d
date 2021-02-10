@@ -23,8 +23,8 @@
 module moss.format.binary.reader;
 
 public import std.stdio : File;
+public import moss.format.binary.archive_header;
 public import moss.format.binary.payload;
-public import moss.format.binary.header;
 
 import moss.format.binary.endianness;
 
@@ -37,7 +37,7 @@ final class Reader
 private:
 
     File _file;
-    Header _header;
+    ArchiveHeader _header;
 
 public:
     @disable this();
@@ -56,8 +56,9 @@ public:
 
         auto size = _file.size;
         enforce(size != 0, "Reader(): empty file");
-        enforce(size > Header.sizeof, "Reader(): File too small");
-        enforce(fread(&_header, Header.sizeof, 1, fp) == 1, "Reader(): Failed to read Header");
+        enforce(size > ArchiveHeader.sizeof, "Reader(): File too small");
+        enforce(fread(&_header, ArchiveHeader.sizeof, 1, fp) == 1,
+                "Reader(): Failed to read ArchiveHeader");
 
         _header.toHostOrder();
         _header.validate();

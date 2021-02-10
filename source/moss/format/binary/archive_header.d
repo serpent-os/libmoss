@@ -52,7 +52,7 @@ enum MossFileType : uint8_t
 }
 
 /**
- * The header struct simply verifies the file as a valid moss package file.
+ * The ArchiveHeader struct simply verifies the file as a valid moss package file.
  * It additionally contains the number of records within the file, the
  * format version, and the type of package (currently delta or binary).
  * For super paranoid reasons we also include a fixed integrity check
@@ -62,7 +62,7 @@ enum MossFileType : uint8_t
  * and tagged with the relevant information, ensuring the format doesn't
  * become too restrictive.
  */
-extern (C) struct Header
+extern (C) struct ArchiveHeader
 {
 align(1):
 
@@ -95,35 +95,35 @@ align(1):
     }
 
     /**
-     * Encode the Header to the underlying file stream
+     * Encode the ArchiveHeader to the underlying file stream
      */
     void encode(scope FILE* fp) @trusted
     {
         import std.stdio : fwrite;
         import std.exception : enforce;
 
-        enforce(fwrite(&magic, magic.sizeof, 1, fp) == 1, "Failed to write Header.magic");
+        enforce(fwrite(&magic, magic.sizeof, 1, fp) == 1, "Failed to write ArchiveHeader.magic");
         enforce(fwrite(&numPayloads, numPayloads.sizeof, 1, fp) == 1,
-                "Failed to write Header.numPayloads");
+                "Failed to write ArchiveHeader.numPayloads");
         enforce(fwrite(padding.ptr, padding[0].sizeof, padding.length,
-                fp) == padding.length, "Failed to write Header.padding");
-        enforce(fwrite(&type, type.sizeof, 1, fp) == 1, "Failed to write Header.type");
+                fp) == padding.length, "Failed to write ArchiveHeader.padding");
+        enforce(fwrite(&type, type.sizeof, 1, fp) == 1, "Failed to write ArchiveHeader.type");
         enforce(fwrite(&versionNumber, versionNumber.sizeof, 1, fp) == 1,
-                "Failed to write Header.sizeof");
+                "Failed to write ArchiveHeader.sizeof");
     }
 
     /**
-     * Ensure that a header is actually valid before proceeding
+     * Ensure that a ArchiveHeader is actually valid before proceeding
      */
     void validate() @safe
     {
         import std.exception : enforce;
 
-        enforce(magic == mossFileHeader, "Header.validate(): invalid magic");
-        enforce(padding == integrityCheck, "Header.validate(): corrupt integrity");
-        enforce(type != MossFileType.Unknown, "Header.validate(): unknown package type");
+        enforce(magic == mossFileHeader, "ArchiveHeader.validate(): invalid magic");
+        enforce(padding == integrityCheck, "ArchiveHeader.validate(): corrupt integrity");
+        enforce(type != MossFileType.Unknown, "ArchiveHeader.validate(): unknown package type");
         enforce(versionNumber <= mossFormatVersionNumber,
-                "Header.validate(): unsupported package version");
+                "ArchiveHeader.validate(): unsupported package version");
     }
 }
 
@@ -131,5 +131,5 @@ align(1):
  * Make sure we don't introduce alignment bugs and kill the header
  * size.
  */
-static assert(Header.sizeof == 32,
-        "Header must be 32-bytes only, found " ~ Header.sizeof.stringof ~ " bytes");
+static assert(ArchiveHeader.sizeof == 32,
+        "ArchiveHeader must be 32-bytes only, found " ~ ArchiveHeader.sizeof.stringof ~ " bytes");
