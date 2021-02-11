@@ -101,7 +101,7 @@ public:
         foreach (p; payloads)
         {
             auto pHdr = PayloadHeader();
-            pHdr.payloadType = p.type;
+            pHdr.type = p.payloadType;
             pHdr.payloadVersion = p.payloadVersion;
 
             pHdr.toNetworkOrder();
