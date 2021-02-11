@@ -24,6 +24,7 @@ module moss.format.binary.payload.header;
 
 public import std.stdint;
 public import std.stdio : FILE;
+public import moss.format.binary.payload : PayloadType;
 import moss.format.binary.endianness;
 
 /**
