@@ -24,6 +24,9 @@ module moss.format.binary.payload;
 
 public import std.stdint : uint8_t;
 
+import moss.format.binary.reader : Reader;
+import moss.format.binary.writer : Writer;
+
 /**
  * Specific payload type. Non-standard payloads should be indexed above
  * value 100.
@@ -79,6 +82,18 @@ public:
     {
         return _payloadType;
     }
+
+    /**
+     * Subclasses must implement the decode method so that reading of the
+     * stream data is possible.
+     */
+    abstract void decode(scope Reader rdr);
+
+    /**
+     * Subclasses must implement the encode method so that writing of the
+     * stream data is possible.
+     */
+    abstract void encode(scope Writer wr);
 
 private:
 
