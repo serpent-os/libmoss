@@ -103,6 +103,7 @@ public:
             auto pHdr = PayloadHeader();
             pHdr.type = p.payloadType;
             pHdr.payloadVersion = p.payloadVersion;
+            pHdr.numRecords = p.recordCount;
 
             pHdr.toNetworkOrder();
             pHdr.encode(fp);

@@ -123,6 +123,14 @@ public:
     }
 
     /**
+     * Return the numner of records within a Data Payload
+     */
+    pure final @property uint32_t recordCount() @safe @nogc nothrow
+    {
+        return _recordCount;
+    }
+
+    /**
      * Subclasses must implement the decode method so that reading of the
      * stream data is possible.
      */
@@ -152,6 +160,14 @@ package:
         this._storageType = storageType;
     }
 
+    /**
+     * Set the number of records within the payload, implementation specific
+     */
+    pure final @property void recordCount(uint32_t recordCount) @safe @nogc nothrow
+    {
+        this._recordCount = recordCount;
+    }
+
 private:
 
     /**
@@ -168,6 +184,7 @@ private:
     PayloadType _payloadType = PayloadType.Unknown;
     StorageType _storageType = StorageType.Data;
     uint16_t _payloadVersion = 0;
+    uint32_t _recordCount = 0;
 }
 
 public import moss.format.binary.payload.header;
