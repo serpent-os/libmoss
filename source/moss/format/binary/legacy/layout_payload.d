@@ -23,7 +23,7 @@
 module moss.format.binary.legacy.layout_payload;
 
 import moss.format.binary.endianness;
-import moss.format.binary.encoder;
+import moss.format.binary.legacy.encoder;
 import moss.format.binary.legacy.payload;
 
 public import std.stdio : File, FILE;
