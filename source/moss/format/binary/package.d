@@ -27,7 +27,6 @@ public import std.stdint : uint32_t;
 public import moss.format.binary.archive_header;
 public import moss.format.binary.endianness;
 public import moss.format.binary.payload;
-public import moss.format.binary.payload_header;
 public import moss.format.binary.reader;
 public import moss.format.binary.writer;
 
