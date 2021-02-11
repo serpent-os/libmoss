@@ -44,7 +44,6 @@ public:
     this(File file, uint32_t versionNumber = mossFormatVersionNumber) @trusted
     {
         _file = file;
-        scope auto fp = _file.getFP();
         _header = ArchiveHeader(versionNumber);
         _header.numPayloads = 0;
     }
