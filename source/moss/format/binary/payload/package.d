@@ -53,6 +53,22 @@ enum PayloadType : uint8_t
 }
 
 /**
+ * Nearly all Payload implementations are simply Data, and can trivially
+ * be manipulated in memory. However, some (such as the ContentPayload) are
+ * exclusively content-based, and generally are too large to process directly
+ * in memory.
+ *
+ * In special cases, as described above, a Payload can indicate that it is
+ * backed by content only, so that the Reader/Writer can take specialised
+ * approaches.
+ */
+enum StorageType : uint8_t
+{
+    Data = 0,
+    Content,
+}
+
+/**
  * A Payload is an abstract supertype for all payload data within a moss
  * file or stream. In order to encode a Payload to a file, or indeed, to
  * decode a Payload from a file, you must first extend the Payload type.
@@ -72,10 +88,12 @@ public:
      * Each implementation must call the base constructor to ensure that
      * the PayloadType property has been correctly set.
      */
-    this(PayloadType payloadType, uint16_t payloadVersion) @safe
+    this(PayloadType payloadType, uint16_t payloadVersion,
+            StorageType storageType = StorageType.Data) @safe
     {
         this.payloadType = payloadType;
         this.payloadVersion = payloadVersion;
+        this.storageType = storageType;
     }
 
     /**
@@ -93,6 +111,15 @@ public:
     pure final @property uint16_t payloadVersion() @safe @nogc nothrow
     {
         return _payloadVersion;
+    }
+
+    /**
+     * Return the StorageType used by the Payload. Typically this is the
+     * Data type.
+     */
+    pure final @property StorageType storageType() @safe @nogc nothrow
+    {
+        return _storageType;
     }
 
     /**
@@ -117,6 +144,14 @@ package:
         _payloadVersion = payloadVersion;
     }
 
+    /**
+     * Set the StorageType to something other than Data, the default
+     */
+    pure final @property void storageType(StorageType storageType) @safe @nogc nothrow
+    {
+        this._storageType = storageType;
+    }
+
 private:
 
     /**
@@ -131,6 +166,7 @@ private:
     }
 
     PayloadType _payloadType = PayloadType.Unknown;
+    StorageType _storageType = StorageType.Data;
     uint16_t _payloadVersion = 0;
 }
 
