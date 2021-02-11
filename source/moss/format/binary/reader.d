@@ -24,7 +24,6 @@ module moss.format.binary.reader;
 
 public import std.stdio : File;
 public import moss.format.binary.archive_header;
-public import moss.format.binary.payload;
 
 import moss.format.binary.endianness;
 
