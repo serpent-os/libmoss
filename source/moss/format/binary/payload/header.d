@@ -20,36 +20,11 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.binary.payload_header;
+module moss.format.binary.payload.header;
 
 public import std.stdint;
 public import std.stdio : FILE;
 import moss.format.binary.endianness;
-
-/**
- * Specific payload type. Non-standard payloads should be indexed above
- * value 100.
- */
-enum PayloadType : uint8_t
-{
-    /** Catch errors: Payload type should be known */
-    Unknown = 0,
-
-    /** The Metadata store */
-    Meta = 1,
-
-    /** File store, i.e. hash indexed */
-    Content = 2,
-
-    /** Map Files to Disk with basic UNIX permissions + types */
-    Layout = 3,
-
-    /** For indexing the deduplicated store */
-    Index = 4,
-
-    /* Attribute storage */
-    Attributes = 5,
-}
 
 /**
  * A payload may optionally be compressed using some method like zstd.

@@ -20,7 +20,32 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.binary.payload;
+module source.moss.format.binary.payload;
+
+/**
+ * Specific payload type. Non-standard payloads should be indexed above
+ * value 100.
+ */
+enum PayloadType : uint8_t
+{
+    /** Catch errors: Payload type should be known */
+    Unknown = 0,
+
+    /** The Metadata store */
+    Meta = 1,
+
+    /** File store, i.e. hash indexed */
+    Content = 2,
+
+    /** Map Files to Disk with basic UNIX permissions + types */
+    Layout = 3,
+
+    /** For indexing the deduplicated store */
+    Index = 4,
+
+    /* Attribute storage */
+    Attributes = 5,
+}
 
 /**
  * A Payload is an abstract supertype for all payload data within a moss
@@ -68,3 +93,5 @@ private:
 
     PayloadType _payloadType;
 }
+
+public import moss.format.binary.payload.header;
