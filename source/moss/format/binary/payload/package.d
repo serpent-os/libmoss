@@ -22,7 +22,7 @@
 
 module moss.format.binary.payload;
 
-public import std.stdint : uint8_t;
+public import std.stdint : uint8_t, uint16_t;
 
 import moss.format.binary.reader : Reader;
 import moss.format.binary.writer : Writer;
@@ -66,13 +66,16 @@ abstract class Payload
 
 public:
 
+    @disable this();
+
     /**
      * Each implementation must call the base constructor to ensure that
      * the PayloadType property has been correctly set.
      */
-    this(PayloadType payloadType) @safe
+    this(PayloadType payloadType, uint16_t payloadVersion) @safe
     {
         this.payloadType = payloadType;
+        this.payloadVersion = payloadVersion;
     }
 
     /**
@@ -81,6 +84,15 @@ public:
     pure final @property PayloadType payloadType() @safe @nogc nothrow
     {
         return _payloadType;
+    }
+
+    /**
+     * Return the version property of the PayloadData to facilitate
+     * conditional processing
+     */
+    pure final @property uint16_t payloadVersion() @safe @nogc nothrow
+    {
+        return _payloadVersion;
     }
 
     /**
@@ -95,6 +107,16 @@ public:
      */
     abstract void encode(scope Writer wr);
 
+package:
+
+    /**
+     * Set the currently employed payloadVersion
+     */
+    pure final @property void payloadVersion(uint16_t payloadVersion) @safe @nogc nothrow
+    {
+        _payloadVersion = payloadVersion;
+    }
+
 private:
 
     /**
@@ -108,7 +130,8 @@ private:
         _payloadType = newType;
     }
 
-    PayloadType _payloadType;
+    PayloadType _payloadType = PayloadType.Unknown;
+    uint16_t _payloadVersion = 0;
 }
 
 public import moss.format.binary.payload.header;

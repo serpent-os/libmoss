@@ -100,6 +100,7 @@ public:
         {
             auto pHdr = PayloadHeader();
             pHdr.payloadType = p.payloadType;
+            pHdr.payloadVersion = p.payloadVersion;
 
             pHdr.toNetworkOrder();
             pHdr.encode(&_file);
