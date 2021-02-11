@@ -27,17 +27,13 @@ public import std.stdio : File;
 import moss.format.binary.archive_header;
 import moss.format.binary : mossFormatVersionNumber;
 import moss.format.binary.endianness;
+import moss.format.binary.payload;
 
 /**
  * The Writer is a low-level mechanism for writing Moss binary packages
  */
 final class Writer
 {
-
-private:
-
-    File _file;
-    ArchiveHeader _header;
 
 public:
     @disable this();
@@ -51,9 +47,6 @@ public:
         scope auto fp = _file.getFP();
         _header = ArchiveHeader(versionNumber);
         _header.numPayloads = 0;
-        _header.toNetworkOrder();
-        _header.encode(fp);
-        _header.toHostOrder();
     }
 
     /**
@@ -86,12 +79,7 @@ public:
         {
             return;
         }
-        _file.seek(0);
-        scope auto fp = _file.getFP();
-        _header.toNetworkOrder();
-        _header.encode(fp);
-        _file.flush();
-        _header.toHostOrder();
+        flush();
         _file.close();
     }
 
@@ -100,13 +88,61 @@ public:
      */
     void flush() @trusted
     {
-        _file.seek(0);
+        if (!headerWritten)
+        {
+            writeHeaderSegment();
+        }
 
+        /**
+         * Begin dumping all payloads to the stream, encoding their header first
+         * and then request that they encode themselves to the stream.
+         */
+        foreach (p; payloads)
+        {
+            auto pHdr = PayloadHeader();
+            pHdr.payloadType = p.payloadType;
+
+            pHdr.toNetworkOrder();
+            pHdr.encode(&_file);
+            _file.flush();
+        }
+
+        payloads = [];
+    }
+
+    /**
+     * Add Payload to the stream for encoding
+     */
+    void addPayload(Payload p) @safe
+    {
+        import std.exception : enforce;
+
+        enforce(!headerWritten, "Cannot addPayload once header has been written");
+        payloads ~= p;
+        _header.numPayloads++;
+    }
+
+    /**
+     * Write the ArchiveHeader segment for the moss archive. This can only be
+     * written once.
+     */
+    void writeHeaderSegment() @trusted
+    {
+        enforce(!headerWritten, "Cannot writeHeaderSegment twice");
         scope auto fp = _file.getFP();
-        _header.toNetworkOrder();
-        _header.encode(fp);
-        _header.toHostOrder();
+        ArchiveHeader hdrCpy = _header;
+        hdrCpy.toNetworkOrder();
+        hdrCpy.encode(fp);
 
         _file.flush();
+        headerWritten = true;
     }
+
+private:
+
+    File _file;
+    ArchiveHeader _header;
+    Payload[] payloads;
+    bool headerWritten = false;
+
 }
