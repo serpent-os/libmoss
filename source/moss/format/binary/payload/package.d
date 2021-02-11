@@ -24,8 +24,8 @@ module moss.format.binary.payload;
 
 public import std.stdint : uint8_t, uint16_t;
 
-import moss.format.binary.reader : Reader;
-import moss.format.binary.writer : Writer;
+public import moss.format.binary.reader : Reader;
+public import moss.format.binary.writer : Writer;
 
 /**
  * Specific payload type. Non-standard payloads should be indexed above
