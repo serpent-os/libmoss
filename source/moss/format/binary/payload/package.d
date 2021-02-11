@@ -22,6 +22,8 @@
 
 module moss.format.binary.payload;
 
+public import std.stdint : uint8_t;
+
 /**
  * Specific payload type. Non-standard payloads should be indexed above
  * value 100.
