@@ -99,7 +99,7 @@ public:
         foreach (p; payloads)
         {
             auto pHdr = PayloadHeader();
-            pHdr.payloadType = p.payloadType;
+            pHdr.payloadType = p.type;
             pHdr.payloadVersion = p.payloadVersion;
 
             pHdr.toNetworkOrder();
@@ -128,6 +128,8 @@ public:
      */
     void writeHeaderSegment() @trusted
     {
+        import std.exception : enforce;
+
         enforce(!headerWritten, "Cannot writeHeaderSegment twice");
         scope auto fp = _file.getFP();
         ArchiveHeader hdrCpy = _header;
