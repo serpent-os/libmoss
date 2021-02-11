@@ -20,11 +20,11 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.binary.encoder;
+module moss.format.binary.legacy.encoder;
 
 import moss.format.binary.endianness;
 
-public import moss.format.binary.payload;
+public import moss.format.binary.legacy.payload;
 public import std.stdio : FILE;
 
 /**
