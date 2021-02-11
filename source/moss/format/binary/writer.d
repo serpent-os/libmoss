@@ -87,6 +87,8 @@ public:
      */
     void flush() @trusted
     {
+        scope auto fp = _file.getFP();
+
         if (!headerWritten)
         {
             writeHeaderSegment();
@@ -103,7 +105,7 @@ public:
             pHdr.payloadVersion = p.payloadVersion;
 
             pHdr.toNetworkOrder();
-            pHdr.encode(&_file);
+            pHdr.encode(fp);
             _file.flush();
         }
 
