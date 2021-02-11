@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module source.moss.format.binary.payload;
+module moss.format.binary.payload;
 
 /**
  * Specific payload type. Non-standard payloads should be indexed above
