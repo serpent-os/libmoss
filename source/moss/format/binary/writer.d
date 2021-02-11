@@ -30,6 +30,25 @@ import moss.format.binary.endianness;
 import moss.format.binary.payload;
 
 /**
+ * A WriterToken instance is passed to each Payload as a way for them
+ * to safely encode data to the Archive.
+ */
+package struct WriterToken
+{
+
+    /**
+     * Merge data into our underlying buffer
+     */
+    pragma(inline, true) void appendData(ref ubyte[] data)
+    {
+        rawData ~= data;
+    }
+
+private:
+    ubyte[] rawData;
+}
+
+/**
  * The Writer is a low-level mechanism for writing Moss binary packages
  */
 final class Writer
@@ -105,11 +124,14 @@ public:
             pHdr.payloadVersion = p.payloadVersion;
             pHdr.numRecords = p.recordCount;
 
+            /* Begin encoding before emitting a header and copying */
+            WriterToken wk;
+            p.encode(&wk);
+
             pHdr.toNetworkOrder();
             pHdr.encode(fp);
 
-            /* Now encode the payload data */
-            p.encode(this);
+            /* TODO: Grab WriterToken data, CRC + compress it, write it */
             _file.flush();
         }
 

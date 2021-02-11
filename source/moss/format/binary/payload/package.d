@@ -25,7 +25,7 @@ module moss.format.binary.payload;
 public import std.stdint : uint8_t, uint16_t;
 
 public import moss.format.binary.reader : Reader;
-public import moss.format.binary.writer : Writer;
+public import moss.format.binary.writer : WriterToken;
 
 /**
  * Specific payload type. Non-standard payloads should be indexed above
@@ -140,7 +140,7 @@ public:
      * Subclasses must implement the encode method so that writing of the
      * stream data is possible.
      */
-    abstract void encode(scope Writer wr);
+    abstract void encode(scope WriterToken* wr);
 
 package:
 
