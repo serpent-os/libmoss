@@ -106,6 +106,9 @@ public:
 
             pHdr.toNetworkOrder();
             pHdr.encode(fp);
+
+            /* Now encode the payload data */
+            p.encode(this);
             _file.flush();
         }
 
