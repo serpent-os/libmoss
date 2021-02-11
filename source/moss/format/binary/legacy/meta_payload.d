@@ -20,12 +20,12 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.binary.meta_payload;
+module moss.format.binary.legacy.meta_payload;
 
 import moss.format.binary.endianness;
 import moss.format.binary.encoder;
-import moss.format.binary.payload;
-import moss.format.binary.record;
+import moss.format.binary.legacy.payload;
+import moss.format.binary.legacy.record;
 
 /**
  * Shared between implementations, the currently supported version for the

@@ -20,14 +20,14 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.binary.layout_payload;
+module moss.format.binary.legacy.layout_payload;
 
 import moss.format.binary.endianness;
 import moss.format.binary.encoder;
-import moss.format.binary.payload;
+import moss.format.binary.legacy.payload;
 
 public import std.stdio : File, FILE;
-public import moss.format.binary.layout;
+public import moss.format.binary.legacy.layout;
 
 /**
  * Shared between implementations, the currently supported version for the

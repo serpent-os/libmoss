@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.binary.record;
+module moss.format.binary.legacy.record;
 
 public import std.stdint;
 import moss.format.binary.endianness;

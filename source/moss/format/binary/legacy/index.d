@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.binary.index;
+module moss.format.binary.legacy.index;
 
 public import std.stdint;
 

@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.binary;
+module moss.format.binary.legacy;
 
 public import std.stdint : uint32_t;
 
@@ -33,3 +33,12 @@ public import moss.format.binary.writer;
  * Current version of the package format that we target.
  */
 const uint32_t mossFormatVersionNumber = 1;
+
+public import moss.format.binary.legacy.content_payload;
+public import moss.format.binary.legacy.index;
+public import moss.format.binary.legacy.index_payload;
+public import moss.format.binary.legacy.layout;
+public import moss.format.binary.legacy.layout_payload;
+public import moss.format.binary.legacy.meta_payload;
+public import moss.format.binary.legacy.payload;
+public import moss.format.binary.legacy.record;

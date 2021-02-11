@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.binary.payload;
+module moss.format.binary.legacy.payload;
 
 public import std.stdint;
 public import std.stdio : FILE;

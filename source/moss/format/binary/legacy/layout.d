@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.format.binary.layout;
+module moss.format.binary.legacy.layout;
 
 public import std.stdint;
 
