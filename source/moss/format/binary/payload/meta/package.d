@@ -68,7 +68,7 @@ public:
      */
     override void encode(scope Writer wr)
     {
-        import std.stdio : writlen;
+        import std.stdio : writeln;
 
         writeln("MetaPayload.encode(): IMPLEMENT ME");
     }
