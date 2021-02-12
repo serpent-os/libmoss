@@ -129,7 +129,6 @@ public:
             WriterToken wk;
             p.encode(&wk);
 
-            pHdr.toNetworkOrder();
             pHdr.encode(fp);
 
             /* TODO: Grab WriterToken data, CRC + compress it, write it */
