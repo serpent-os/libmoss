@@ -117,6 +117,19 @@ align(1):
     }
 
     /**
+     * Decode this ArchiveHeader from the underlying file stream
+     */
+    void decode(scope FILE* fp) @trusted
+    {
+        import std.exception : enforce;
+        import core.stdc.stdio : fread;
+
+        enforce(fread(&this, ArchiveHeader.sizeof, 1, fp) == 1,
+                "decode: Failed to read ArchiveHeader in stream");
+        this.toHostOrder();
+    }
+
+    /**
      * Ensure that a ArchiveHeader is actually valid before proceeding
      */
     void validate() @safe

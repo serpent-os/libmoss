@@ -84,7 +84,6 @@ public:
     this(File file) @trusted
     {
         import std.exception : enforce;
-        import std.stdio : fread;
 
         scope auto fp = file.getFP();
 
@@ -92,11 +91,8 @@ public:
 
         auto size = _file.size;
         enforce(size != 0, "Reader(): empty file");
-        enforce(size > ArchiveHeader.sizeof, "Reader(): File too small");
-        enforce(fread(&_header, ArchiveHeader.sizeof, 1, fp) == 1,
-                "Reader(): Failed to read ArchiveHeader");
+        _header.decode(fp);
 
-        _header.toHostOrder();
         _header.validate();
 
         spinPayloads();
