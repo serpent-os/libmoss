@@ -139,8 +139,9 @@ private:
             pHdr.writeln();
 
             /* TODO: Don't Skip payload datum */
-            auto whence = ftell(fp);
-            fseek(fp, whence + pHdr.length, SEEK_SET);
+            const auto whence = ftell(fp);
+            enforce(whence > 0, "spinPayloads: ftell failure");
+            enforce(fseek(fp, whence + pHdr.length, SEEK_SET) == 0, "spinPayloads: fseek failed");
         }
     }
 }
