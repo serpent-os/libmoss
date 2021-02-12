@@ -116,7 +116,7 @@ align(1):
         import core.stdc.stdio : fread;
 
         enforce(fread(&this, PayloadHeader.sizeof, 1, fp) == 1,
-                "spinPayloads: Failed to read PayloadHeader in stream");
+                "decode: Failed to read PayloadHeader in stream");
         this.toHostOrder();
     }
 }
