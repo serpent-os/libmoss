@@ -89,16 +89,21 @@ align(1):
         import std.stdio : fwrite;
         import std.exception : enforce;
 
-        enforce(fwrite(&length, length.sizeof, 1, fp) == 1, "Failed to write PayloadHeader.length");
-        enforce(fwrite(&size, size.sizeof, 1, fp) == 1, "Failed to write PayloadHeader.size");
-        enforce(fwrite(crc64.ptr, crc64[0].sizeof, crc64.length,
-                fp) == crc64.length, "Failed to write PayloadHeader.crc64");
-        enforce(fwrite(&numRecords, numRecords.sizeof, 1, fp) == 1,
+        /* Ensure correct endian encoding */
+        PayloadHeader cp = this;
+        cp.toNetworkOrder();
+
+        enforce(fwrite(&cp.length, cp.length.sizeof, 1, fp) == 1,
+                "Failed to write PayloadHeader.length");
+        enforce(fwrite(&cp.size, cp.size.sizeof, 1, fp) == 1, "Failed to write PayloadHeader.size");
+        enforce(fwrite(cp.crc64.ptr, cp.crc64[0].sizeof, cp.crc64.length, fp) == cp.crc64.length,
+                "Failed to write PayloadHeader.crc64");
+        enforce(fwrite(&cp.numRecords, cp.numRecords.sizeof, 1, fp) == 1,
                 "Failed to write PayloadHeader.numRecords");
-        enforce(fwrite(&payloadVersion, payloadVersion.sizeof, 1, fp) == 1,
-                "Failed to write PayloadHeader.payloadVersion");
-        enforce(fwrite(&type, type.sizeof, 1, fp) == 1, "Failed to write PayloadHeader.type");
-        enforce(fwrite(&compression, compression.sizeof, 1, fp) == 1,
+        enforce(fwrite(&cp.payloadVersion, cp.payloadVersion.sizeof, 1,
+                fp) == 1, "Failed to write PayloadHeader.payloadVersion");
+        enforce(fwrite(&cp.type, cp.type.sizeof, 1, fp) == 1, "Failed to write PayloadHeader.type");
+        enforce(fwrite(&cp.compression, cp.compression.sizeof, 1, fp) == 1,
                 "Failed to write PayloadHeader.compression");
     }
 }
