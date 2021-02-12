@@ -123,6 +123,7 @@ public:
             pHdr.type = p.payloadType;
             pHdr.payloadVersion = p.payloadVersion;
             pHdr.numRecords = p.recordCount;
+            pHdr.compression = PayloadCompression.None;
 
             /* Begin encoding before emitting a header and copying */
             WriterToken wk;
