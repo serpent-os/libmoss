@@ -26,6 +26,41 @@ public import std.stdio : File;
 public import moss.format.binary.archive_header;
 
 import moss.format.binary.endianness;
+import std.stdint : uint64_t;
+
+/**
+ * The PayloadEncapsulation type is used to keep track of each Payload that
+ * we encounter within the stream, so that we can build a set of Payload
+ * objects up.
+ *
+ * In turn, this allows us to have an introspective API where we can query
+ * a Payload from the collection via templated APIs.
+ */
+package struct PayloadEncapsulation
+{
+    /** The actual Payload which is able to read the data */
+    Payload payload;
+
+    /** The header */
+    PayloadHeader header;
+
+    /** Where in the stream does this Payload data start? (ftell) */
+    uint64_t startOffset = 0;
+
+    /**
+     * Calculate where in the stream this payload data ends
+     */
+    pragma(inline, true) pure @property uint64_t endOffset()
+    {
+        return startOffset + header.length;
+    }
+
+    /** Loaded data */
+    ubyte[] data = null;
+
+    /** Whether the data has yet been loaded */
+    bool loaded = false;
+}
 
 /**
  * The Reader is a low-level mechanism for parsing Moss binary packages.
@@ -37,6 +72,7 @@ private:
 
     File _file;
     ArchiveHeader _header;
+    PayloadEncapsulation*[] payloads;
 
 public:
     @disable this();
