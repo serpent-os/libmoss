@@ -56,6 +56,20 @@ package struct PayloadEncapsulation
         return startOffset + header.length;
     }
 
+    /**
+     * Read the data into the blob, decompress and make it usable
+     * for the Payload to consume
+     */
+    void readData(scope FILE* fp) @trusted
+    {
+        import std.exception : enforce;
+        import core.stdc.stdio : fseek, SEEK_CUR;
+
+        /* TODO: READ THE FARKIN DATA */
+        enforce(fseek(fp, header.length, SEEK_CUR) == 0, "readData: fseek failed");
+
+    }
+
     /** Loaded data */
     ubyte[] data = null;
 
@@ -182,7 +196,7 @@ private:
             scope auto fp = _file.getFP();
             pHdr.decode(fp);
 
-            /* TODO: Don't Skip payload datum */
+            /* Record offsets */
             const auto whence = ftell(fp);
             enforce(whence > 0, "spinPayloads: ftell failure");
 
@@ -195,7 +209,24 @@ private:
 
             writeln(*pEncap);
 
-            enforce(fseek(fp, whence + pHdr.length, SEEK_SET) == 0, "spinPayloads: fseek failed");
+            /* Always try to load Data segments */
+            if (pEncap.payload !is null && pEncap.payload.storageType == StorageType.Data)
+            {
+                pEncap.readData(fp);
+            }
+            else
+            {
+                /* Don't skip last payload, micro optimisation for Content loading */
+                if (payloadIndex == _header.numPayloads - 1)
+                {
+                    continue;
+                }
+
+                /* Otherwise, blindly seek */
+                enforce(fseek(fp, whence + pHdr.length, SEEK_SET) == 0,
+                        "spinPayloads: fseek failed");
+            }
+
         }
     }
 }
