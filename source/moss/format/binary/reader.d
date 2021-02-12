@@ -75,6 +75,8 @@ private:
     ArchiveHeader _header;
     PayloadEncapsulation*[] payloads;
 
+    static TypeInfo[PayloadType] registeredHandlers;
+
 public:
     @disable this();
 
@@ -113,6 +115,28 @@ public:
             return;
         }
         _file.close();
+    }
+
+    /**
+     * Register a payload type with the Reader system.
+     *
+     * When a Payload type is registered according to the Payload implementation,
+     * we can ensure that automatic decoding of Payloads with the correct implementation
+     * is possible.
+     */
+    static void registerPayloadType(P : Payload)(PayloadType type) @safe
+    {
+        import std.exception : enforce;
+
+        enforce(!(type in registeredHandlers),
+                "registerPayloadType: Cannot double-register a handler");
+
+        registeredHandlers[type] = typeid(P);
+
+        /* TODO: Remove this debug */
+        import std.stdio : writeln;
+
+        writeln("Registering Payload Handler: ", typeid(P).toString, " for type: ", type);
     }
 
 private:

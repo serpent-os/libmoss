@@ -52,6 +52,16 @@ public:
     }
 
     /**
+     * We ensure we're registered correctly with the Reader subsystem
+     */
+    static this()
+    {
+        import moss.format.binary.reader : Reader;
+
+        Reader.registerPayloadType!MetaPayload(PayloadType.Meta);
+    }
+
+    /**
      * Subclasses must implement the decode method so that reading of the
      * stream data is possible.
      */
