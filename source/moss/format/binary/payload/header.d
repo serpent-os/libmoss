@@ -106,6 +106,19 @@ align(1):
         enforce(fwrite(&cp.compression, cp.compression.sizeof, 1, fp) == 1,
                 "Failed to write PayloadHeader.compression");
     }
+
+    /**
+     * Decode this PayloadHeader from the underlying file stream
+     */
+    void decode(scope FILE* fp) @trusted
+    {
+        import std.exception : enforce;
+        import core.stdc.stdio : fread;
+
+        enforce(fread(&this, PayloadHeader.sizeof, 1, fp) == 1,
+                "spinPayloads: Failed to read PayloadHeader in stream");
+        this.toHostOrder();
+    }
 }
 
 static assert(PayloadHeader.sizeof == 32,

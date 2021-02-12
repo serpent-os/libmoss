@@ -128,15 +128,14 @@ private:
     void spinPayloads() @trusted
     {
         import std.exception : enforce;
-        import core.stdc.stdio : ftell, fseek, SEEK_SET, fread;
+        import core.stdc.stdio : ftell, fseek, SEEK_SET;
         import std.stdio : writeln;
 
         foreach (payloadIndex; 0 .. _header.numPayloads)
         {
             PayloadHeader pHdr;
             scope auto fp = _file.getFP();
-            enforce(fread(&pHdr, PayloadHeader.sizeof, 1, fp) == 1,
-                    "spinPayloads: Failed to read PayloadHeader in stream");
+            pHdr.decode(fp);
             pHdr.writeln();
 
             /* TODO: Don't Skip payload datum */
