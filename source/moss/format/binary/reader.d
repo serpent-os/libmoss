@@ -63,11 +63,19 @@ package struct PayloadEncapsulation
     void readData(scope FILE* fp) @trusted
     {
         import std.exception : enforce;
-        import core.stdc.stdio : fseek, SEEK_CUR;
+        import core.stdc.stdio : fread;
 
-        /* TODO: READ THE FARKIN DATA */
-        enforce(fseek(fp, header.length, SEEK_CUR) == 0, "readData: fseek failed");
+        /* Can't decode zero data */
+        if (header.size < 1)
+        {
+            return;
+        }
 
+        /* Need enough storage for the decompressed size */
+        data = new ubyte[header.size];
+
+        /* Read all the file data into the data buffer */
+        enforce(fread(data.ptr, data.length, 1, fp) == 1, "readData: fread failed");
     }
 
     /** Loaded data */
