@@ -142,6 +142,12 @@ private:
             const auto whence = ftell(fp);
             enforce(whence > 0, "spinPayloads: ftell failure");
             enforce(fseek(fp, whence + pHdr.length, SEEK_SET) == 0, "spinPayloads: fseek failed");
+
+            /* Store the Payload now */
+            auto pEncap = new PayloadEncapsulation();
+            pEncap.header = pHdr;
+            pEncap.startOffset = whence;
+            payloads ~= pEncap;
         }
     }
 }
