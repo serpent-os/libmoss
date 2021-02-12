@@ -160,9 +160,7 @@ public:
 
         enforce(!headerWritten, "Cannot writeHeaderSegment twice");
         scope auto fp = _file.getFP();
-        ArchiveHeader hdrCpy = _header;
-        hdrCpy.toNetworkOrder();
-        hdrCpy.encode(fp);
+        _header.encode(fp);
 
         _file.flush();
         headerWritten = true;

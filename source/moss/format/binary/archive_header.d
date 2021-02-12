@@ -102,13 +102,16 @@ align(1):
         import std.stdio : fwrite;
         import std.exception : enforce;
 
-        enforce(fwrite(&magic, magic.sizeof, 1, fp) == 1, "Failed to write ArchiveHeader.magic");
-        enforce(fwrite(&numPayloads, numPayloads.sizeof, 1, fp) == 1,
+        ArchiveHeader cp = this;
+
+        enforce(fwrite(&cp.magic, cp.magic.sizeof, 1, fp) == 1,
+                "Failed to write ArchiveHeader.magic");
+        enforce(fwrite(&cp.numPayloads, cp.numPayloads.sizeof, 1, fp) == 1,
                 "Failed to write ArchiveHeader.numPayloads");
-        enforce(fwrite(padding.ptr, padding[0].sizeof, padding.length,
-                fp) == padding.length, "Failed to write ArchiveHeader.padding");
-        enforce(fwrite(&type, type.sizeof, 1, fp) == 1, "Failed to write ArchiveHeader.type");
-        enforce(fwrite(&versionNumber, versionNumber.sizeof, 1, fp) == 1,
+        enforce(fwrite(cp.padding.ptr, cp.padding[0].sizeof, cp.padding.length,
+                fp) == cp.padding.length, "Failed to write ArchiveHeader.padding");
+        enforce(fwrite(&cp.type, cp.type.sizeof, 1, fp) == 1, "Failed to write ArchiveHeader.type");
+        enforce(fwrite(&cp.versionNumber, cp.versionNumber.sizeof, 1, fp) == 1,
                 "Failed to write ArchiveHeader.sizeof");
     }
 
