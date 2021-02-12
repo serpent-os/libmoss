@@ -103,6 +103,7 @@ align(1):
         import std.exception : enforce;
 
         ArchiveHeader cp = this;
+        cp.toNetworkOrder();
 
         enforce(fwrite(&cp.magic, cp.magic.sizeof, 1, fp) == 1,
                 "Failed to write ArchiveHeader.magic");
