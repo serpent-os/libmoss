@@ -66,7 +66,7 @@ public:
      * Subclasses must implement the encode method so that writing of the
      * stream data is possible.
      */
-    override void encode(scope Writer wr)
+    override void encode(scope WriterToken* wr)
     {
         import std.stdio : writeln;
 
