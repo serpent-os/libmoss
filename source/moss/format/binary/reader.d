@@ -26,6 +26,7 @@ public import std.stdio : File;
 public import moss.format.binary.archive_header;
 
 import moss.format.binary.endianness;
+import moss.format.binary.payload;
 import std.stdint : uint64_t;
 
 /**
@@ -97,6 +98,8 @@ public:
 
         _header.toHostOrder();
         _header.validate();
+
+        spinPayloads();
     }
 
     ~this() @safe
@@ -114,5 +117,31 @@ public:
             return;
         }
         _file.close();
+    }
+
+private:
+
+    /**
+     * Begin reading through each of the payload headers and begin
+     * associating Payload instances with them, loaded into a slice.
+     */
+    void spinPayloads() @trusted
+    {
+        import std.exception : enforce;
+        import core.stdc.stdio : ftell, fseek, SEEK_SET, fread;
+        import std.stdio : writeln;
+
+        foreach (payloadIndex; 0 .. _header.numPayloads)
+        {
+            PayloadHeader pHdr;
+            scope auto fp = _file.getFP();
+            enforce(fread(&pHdr, PayloadHeader.sizeof, 1, fp) == 1,
+                    "spinPayloads: Failed to read PayloadHeader in stream");
+            pHdr.writeln();
+
+            /* TODO: Don't Skip payload datum */
+            auto whence = ftell(fp);
+            fseek(fp, whence + pHdr.length, SEEK_SET);
+        }
     }
 }
