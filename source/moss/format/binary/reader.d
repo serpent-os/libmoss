@@ -139,6 +139,31 @@ public:
         writeln("Registering Payload Handler: ", typeid(P).toString, " for type: ", type);
     }
 
+    /**
+     * Tries to return a new instance of the Payload implementation for the given Payload
+     * type.
+     * If the type is not known to us, we'll return null and not support automatic
+     * reading of the payload data.
+     */
+    static Payload getPayloadImplForType(PayloadType type) @trusted
+    {
+        import std.exception : enforce;
+        import std.stdio : writeln;
+
+        /* It's ok to return NULL */
+        if (!(type in registeredHandlers))
+        {
+            return null;
+        }
+
+        auto tph = registeredHandlers[type];
+        auto pload = cast(Payload) Object.factory(tph.toString);
+        enforce(pload.payloadType == type,
+                "getPayloadImplForType: Unsupported implementation in " ~ tph.toString);
+
+        return pload;
+    }
+
 private:
 
     /**
@@ -156,18 +181,21 @@ private:
             PayloadHeader pHdr;
             scope auto fp = _file.getFP();
             pHdr.decode(fp);
-            pHdr.writeln();
 
             /* TODO: Don't Skip payload datum */
             const auto whence = ftell(fp);
             enforce(whence > 0, "spinPayloads: ftell failure");
-            enforce(fseek(fp, whence + pHdr.length, SEEK_SET) == 0, "spinPayloads: fseek failed");
 
             /* Store the Payload now */
             auto pEncap = new PayloadEncapsulation();
             pEncap.header = pHdr;
             pEncap.startOffset = whence;
+            pEncap.payload = getPayloadImplForType(pHdr.type);
             payloads ~= pEncap;
+
+            writeln(*pEncap);
+
+            enforce(fseek(fp, whence + pHdr.length, SEEK_SET) == 0, "spinPayloads: fseek failed");
         }
     }
 }
