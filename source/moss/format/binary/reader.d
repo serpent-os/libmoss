@@ -221,6 +221,7 @@ private:
             if (pEncap.payload !is null && pEncap.payload.storageType == StorageType.Data)
             {
                 pEncap.readData(fp);
+                pEncap.payload.decode(this);
             }
             else
             {
