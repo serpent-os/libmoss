@@ -39,7 +39,7 @@ extern (C) package struct RecordPair
     /**
      * Fixed type for the Record value *type*
      */
-    RecordTag type;
+    RecordType type;
 
     /**
      * Anonynous union containing all potential values so
