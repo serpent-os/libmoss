@@ -65,7 +65,7 @@ public:
      * Subclasses must implement the decode method so that reading of the
      * stream data is possible.
      */
-    override void decode(scope Reader rdr)
+    override void decode(scope Reader rdr) @safe
     {
         import std.stdio : writeln;
 
@@ -76,7 +76,7 @@ public:
      * Subclasses must implement the encode method so that writing of the
      * stream data is possible.
      */
-    override void encode(scope WriterToken* wr)
+    override void encode(scope WriterToken* wr) @safe
     {
         import std.stdio : writeln;
 
