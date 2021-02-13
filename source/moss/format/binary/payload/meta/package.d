@@ -24,6 +24,8 @@ module moss.format.binary.payload.meta;
 
 public import moss.format.binary.payload;
 
+import moss.format.binary.payload.meta.record_pair;
+
 /**
  * The currently writing version for MetaPayload
  */
@@ -82,4 +84,8 @@ public:
 
         writeln("MetaPayload.encode(): IMPLEMENT ME");
     }
+
+private:
+
+    RecordPair[] pairs;
 }
