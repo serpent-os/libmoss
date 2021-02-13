@@ -118,12 +118,13 @@ align(1):
      */
     void encode(scope ref ubyte[] p) @trusted
     {
-        this.toNetworkOrder();
-        p ~= (cast(ubyte*)&length)[0 .. length.sizeof];
-        p ~= (cast(ubyte*)&tag)[0 .. tag.sizeof];
-        p ~= (cast(ubyte*)&type)[0 .. type.sizeof];
-        p ~= (cast(ubyte*)&padding[0])[0 .. padding[0].sizeof];
-        this.toHostOrder();
+        Record cp = this;
+
+        cp.toNetworkOrder();
+        p ~= (cast(ubyte*)&cp.length)[0 .. cp.length.sizeof];
+        p ~= (cast(ubyte*)&cp.tag)[0 .. cp.tag.sizeof];
+        p ~= (cast(ubyte*)&cp.type)[0 .. cp.type.sizeof];
+        p ~= (cast(ubyte*)&cp.padding[0])[0 .. cp.padding[0].sizeof];
     }
 
     /**
