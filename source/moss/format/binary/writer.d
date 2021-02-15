@@ -72,6 +72,7 @@ package struct WriterToken
     void flush(scope PayloadHeader* pHdr, scope FILE* fp) @system
     {
         import core.stdc.stdio : fwrite, fflush;
+        import std.exception : enforce;
 
         /* Set PayloadHeader internal fields to match data */
         pHdr.length = rawData.length;
@@ -95,7 +96,8 @@ package struct WriterToken
 
             /* Emission */
             pHdr.encode(fp);
-            fwrite(comp.ptr, ubyte.sizeof, comp.length, fp);
+            enforce(fwrite(comp.ptr, ubyte.sizeof, comp.length,
+                    fp) == comp.length, "WriterToken.flush(): Failed to write data");
             break;
         case PayloadCompression.Zlib:
             /* zlib compression of payload */
@@ -106,14 +108,16 @@ package struct WriterToken
 
             /* Emission */
             pHdr.encode(fp);
-            fwrite(comp.ptr, ubyte.sizeof, comp.length, fp);
+            enforce(fwrite(comp.ptr, ubyte.sizeof, comp.length,
+                    fp) == comp.length, "WriterToken.flush(): Failed to write data");
             break;
         case PayloadCompression.None:
         case PayloadCompression.Unknown:
             /* Disabled compression */
             pHdr.compression = PayloadCompression.None;
             pHdr.encode(fp);
-            fwrite(rawData.ptr, ubyte.sizeof, rawData.length, fp);
+            enforce(fwrite(rawData.ptr, ubyte.sizeof, rawData.length,
+                    fp) == rawData.length, "WriterToken.flush(): Failed to write data");
             break;
         }
 
