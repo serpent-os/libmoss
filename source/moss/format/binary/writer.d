@@ -74,13 +74,48 @@ package struct WriterToken
 
         /* Set PayloadHeader internal fields to match data */
         pHdr.length = rawData.length;
-        pHdr.size = pHdr.length; /* Unused: No compression yet */
+        pHdr.size = pHdr.length;
         pHdr.crc64 = hash.finish();
 
-        /* Write the PayloadHeader */
-        pHdr.encode(fp);
+        /* TODO: Add automatic "best" compression based on segment size */
+        pHdr.compression = PayloadCompression.Zstd;
 
-        fwrite(rawData.ptr, ubyte.sizeof, rawData.length, fp);
+        /**
+         * Now handle compression of the entire payload
+         */
+        final switch (pHdr.compression)
+        {
+        case PayloadCompression.Zstd:
+            /* zstd compresion of payload */
+            import zstd : compress;
+
+            ubyte[] comp = compress(rawData, 8);
+            pHdr.size = comp.length;
+
+            /* Emission */
+            pHdr.encode(fp);
+            fwrite(comp.ptr, ubyte.sizeof, comp.length, fp);
+            break;
+        case PayloadCompression.Zlib:
+            /* zlib compression of payload */
+            import std.zlib : compress;
+
+            ubyte[] comp = compress(rawData);
+            pHdr.size = comp.length;
+
+            /* Emission */
+            pHdr.encode(fp);
+            fwrite(comp.ptr, ubyte.sizeof, comp.length, fp);
+            break;
+        case PayloadCompression.None:
+        case PayloadCompression.Unknown:
+            /* Disabled compression */
+            pHdr.compression = PayloadCompression.None;
+            pHdr.encode(fp);
+            fwrite(rawData.ptr, ubyte.sizeof, rawData.length, fp);
+            break;
+        }
+
         fflush(fp);
     }
 
