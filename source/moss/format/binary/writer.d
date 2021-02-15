@@ -66,7 +66,8 @@ package struct WriterToken
 
     /**
      * Flush the underlying data into the original output file
-     * TODO: Add CRC calulcation, size + compression
+     * This will calculate the CRC automatically as well as
+     * perform required compression.
      */
     void flush(scope PayloadHeader* pHdr, scope FILE* fp) @system
     {
