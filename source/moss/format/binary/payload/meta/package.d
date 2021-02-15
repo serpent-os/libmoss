@@ -78,11 +78,16 @@ public:
      * Subclasses must implement the encode method so that writing of the
      * stream data is possible.
      */
-    override void encode(scope WriterToken* wr) @safe
+    override void encode(scope WriterToken* wr) @trusted
     {
         import std.stdio : writeln;
 
-        writeln("MetaPayload.encode(): IMPLEMENT ME");
+        /* Ensure every pair is encoded via WriterToken API */
+        foreach (index; 0 .. pairs.length)
+        {
+            auto pair = &pairs[index];
+            pair.encode(wr);
+        }
     }
 
     /**
@@ -93,10 +98,13 @@ public:
         import std.traits : EnumMembers, OriginalType;
         import std.stdio : writeln;
         import std.conv : to;
+        import std.exception : enforce;
 
         pairs ~= RecordPair();
-        auto pair = &pairs[pairs.length - 1];
+        auto length = cast(long) pairs.length;
+        auto pair = &pairs[length - 1];
         pair.tag = key;
+        recordCount = cast(uint32_t) length;
 
         static foreach (i, m; EnumMembers!RecordTag)
         {
@@ -109,6 +117,7 @@ public:
                 static assert(attrs.length == 1,
                         "Missing validation tag for RecordTag." ~ to!string(memberName));
 
+                pair.type = attrs[0];
                 static if (is(T == string))
                 {
                     switch (attrs[0])
@@ -120,7 +129,6 @@ public:
                                 .stringof);
                         writeln("Writing key: ", key, " - value: ", datum);
                         pair.val_string = datum;
-                        pair.type = RecordType.String;
                         break;
                     default:
                         assert(0, "INCOMPLETE SUPPORT");
@@ -137,7 +145,6 @@ public:
                                 .stringof);
                         writeln("Writing key: ", key, " - value: ", datum);
                         pair.val_i8 = cast(int8_t) datum;
-                        pair.type = RecordType.Int8;
                         break;
                     case RecordType.Uint8:
                         assert(typeid(OriginalType!T) == typeid(uint8_t),
@@ -145,7 +152,6 @@ public:
                                 .stringof);
                         writeln("Writing key: ", key, " - value: ", datum);
                         pair.val_u8 = cast(uint8_t) datum;
-                        pair.type = RecordType.Uint8;
                         break;
 
                     case RecordType.Int16:
@@ -154,7 +160,6 @@ public:
                                 .stringof);
                         writeln("Writing key: ", key, " - value: ", datum);
                         pair.val_i16 = cast(int16_t) datum;
-                        pair.type = RecordType.Int16;
                         break;
                     case RecordType.Uint16:
                         assert(typeid(OriginalType!T) == typeid(uint16_t),
@@ -162,7 +167,6 @@ public:
                                 .stringof);
                         writeln("Writing key: ", key, " - value: ", datum);
                         pair.val_u16 = cast(uint16_t) datum;
-                        pair.type = RecordType.Uint16;
                         break;
                     case RecordType.Int32:
                         assert(typeid(OriginalType!T) == typeid(int32_t),
@@ -170,7 +174,6 @@ public:
                                 .stringof);
                         writeln("Writing key: ", key, " - value: ", datum);
                         pair.val_i32 = cast(int32_t) datum;
-                        pair.type = RecordType.Int32;
                         break;
                     case RecordType.Uint32:
                         assert(typeid(OriginalType!T) == typeid(uint32_t),
@@ -178,7 +181,6 @@ public:
                                 .stringof);
                         writeln("Writing key: ", key, " - value: ", datum);
                         pair.val_u32 = cast(uint32_t) datum;
-                        pair.type = RecordType.Uint32;
                         break;
                     case RecordType.Int64:
                         assert(typeid(OriginalType!T) == typeid(int64_t),
@@ -186,7 +188,6 @@ public:
                                 .stringof);
                         writeln("Writing key: ", key, " - value: ", datum);
                         pair.val_i64 = cast(int64_t) datum;
-                        pair.type = RecordType.Int64;
                         break;
                     case RecordType.Uint64:
                         assert(typeid(OriginalType!T) == typeid(uint64_t),
@@ -194,7 +195,6 @@ public:
                                 .stringof);
                         writeln("Writing key: ", key, " - value: ", datum);
                         pair.val_u64 = cast(uint64_t) datum;
-                        pair.type = RecordType.Uint64;
                         break;
                     default:
                         assert(0, "INCOMPLETE SUPPORT");
@@ -202,6 +202,8 @@ public:
                 }
             }
         }
+
+        enforce(pair.type != RecordType.Unknown, "Unable to marshal " ~ R.stringof);
     }
 
 private:

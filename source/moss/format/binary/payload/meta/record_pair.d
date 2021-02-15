@@ -25,6 +25,8 @@ module moss.format.binary.payload.meta.record_pair;
 public import std.stdint;
 public import moss.format.binary.payload.meta.record;
 
+import moss.format.binary.writer : WriterToken;
+
 /**
  * A RecordPair is used internally for encoding/decoding purposes with
  * the MetaPayload and each Record.
@@ -57,5 +59,18 @@ extern (C) package struct RecordPair
         int32_t val_i32;
         int64_t val_i64;
         string val_string;
-    };
+    }
+
+    /**
+     * Encode the RecordPair to the underlying stream
+     */
+    void encode(scope WriterToken* wr) @trusted
+    {
+        Record r = Record();
+        r.type = this.type;
+        r.tag = this.tag;
+
+        /* TODO: Set data length and encode value */
+        r.encode(wr);
+    }
 }

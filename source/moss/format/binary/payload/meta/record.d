@@ -24,6 +24,7 @@ module moss.format.binary.payload.meta.record;
 
 public import std.stdint;
 import moss.format.binary.endianness;
+import moss.format.binary.writer : WriterToken;
 
 /**
  * The type of record encountered.
@@ -114,17 +115,17 @@ align(1):
     ubyte[1] padding = 0;
 
     /**
-     * Encode the Record key into the given ubyte[] buffer
+     * Encode the Record key into the given WriterToken
      */
-    void encode(scope ref ubyte[] p) @trusted
+    void encode(scope WriterToken* wr) @trusted
     {
         Record cp = this;
 
         cp.toNetworkOrder();
-        p ~= (cast(ubyte*)&cp.length)[0 .. cp.length.sizeof];
-        p ~= (cast(ubyte*)&cp.tag)[0 .. cp.tag.sizeof];
-        p ~= (cast(ubyte*)&cp.type)[0 .. cp.type.sizeof];
-        p ~= (cast(ubyte*)&cp.padding[0])[0 .. cp.padding[0].sizeof];
+        wr.appendData((cast(ubyte*)&cp.length)[0 .. cp.length.sizeof]);
+        wr.appendData((cast(ubyte*)&cp.tag)[0 .. cp.tag.sizeof]);
+        wr.appendData((cast(ubyte*)&cp.type)[0 .. cp.type.sizeof]);
+        wr.appendData((cast(ubyte*)&cp.padding[0])[0 .. cp.padding[0].sizeof]);
     }
 
     /**

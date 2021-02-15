@@ -28,6 +28,7 @@ import moss.format.binary.archive_header;
 import moss.format.binary : mossFormatVersionNumber;
 import moss.format.binary.endianness;
 import moss.format.binary.payload;
+import std.digest.crc : CRC64ISO;
 
 /**
  * A WriterToken instance is passed to each Payload as a way for them
@@ -42,10 +43,41 @@ package struct WriterToken
     pragma(inline, true) void appendData(ref ubyte[] data)
     {
         rawData ~= data;
+        hash.put(data);
+    }
+
+    /**
+     * Copy data to buffer without reference
+     */
+    pragma(inline, true) void appendData(ubyte[] data)
+    {
+        rawData ~= data;
+        hash.put(data);
+    }
+
+    /**
+     * Flush the underlying data into the original output file
+     * TODO: Add CRC calulcation, size + compression
+     */
+    void flush(scope PayloadHeader* pHdr, scope FILE* fp) @system
+    {
+        import core.stdc.stdio : fwrite, fflush;
+
+        /* Set PayloadHeader internal fields to match data */
+        pHdr.length = rawData.length;
+        pHdr.size = pHdr.length; /* Unused: No compression yet */
+        pHdr.crc64 = hash.finish();
+
+        /* Write the PayloadHeader */
+        pHdr.encode(fp);
+
+        fwrite(rawData.ptr, ubyte.sizeof, rawData.length, fp);
+        fflush(fp);
     }
 
 private:
     ubyte[] rawData;
+    CRC64ISO hash;
 }
 
 /**
@@ -129,10 +161,8 @@ public:
             WriterToken wk;
             p.encode(&wk);
 
-            pHdr.encode(fp);
-
             /* TODO: Grab WriterToken data, CRC + compress it, write it */
-            _file.flush();
+            wk.flush(&pHdr, fp);
         }
 
         payloads = [];
