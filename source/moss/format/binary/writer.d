@@ -56,6 +56,15 @@ package struct WriterToken
     }
 
     /**
+     * Copy single byte to buffer
+     */
+    pragma(inline, true) void appendData(ubyte d)
+    {
+        rawData ~= d;
+        hash.put(d);
+    }
+
+    /**
      * Flush the underlying data into the original output file
      * TODO: Add CRC calulcation, size + compression
      */

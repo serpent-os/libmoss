@@ -70,7 +70,98 @@ extern (C) package struct RecordPair
         r.type = this.type;
         r.tag = this.tag;
 
-        /* TODO: Set data length and encode value */
-        r.encode(wr);
+        final switch (r.type)
+        {
+        case RecordType.Int8:
+            encodeNumeric(val_i8, &r, wr);
+            break;
+        case RecordType.Uint8:
+            encodeNumeric(val_u8, &r, wr);
+            break;
+        case RecordType.Int16:
+            encodeNumeric(val_i16, &r, wr);
+            break;
+        case RecordType.Uint16:
+            encodeNumeric(val_u16, &r, wr);
+            break;
+        case RecordType.Int32:
+            encodeNumeric(val_i32, &r, wr);
+            break;
+        case RecordType.Uint32:
+            encodeNumeric(val_u32, &r, wr);
+            break;
+        case RecordType.Int64:
+            encodeNumeric(val_i64, &r, wr);
+            break;
+        case RecordType.Uint64:
+            encodeNumeric(val_u64, &r, wr);
+            break;
+        case RecordType.String:
+            encodeString(val_string, &r, wr);
+            break;
+        case RecordType.Unknown:
+            assert(0 == 0,
+                    "RecordPair.encode(): Unknown encoding not supported");
+        }
+    }
+
+private:
+
+    /**
+     * Handle encoding of all our numeric data types in a generic way, also
+     * ensuring correct endian encoding.
+     */
+    void encodeNumeric(T)(ref T datum, scope Record* record, scope WriterToken* wr)
+    {
+        import std.bitmanip : nativeToBigEndian;
+        import std.stdio : fwrite;
+        import std.exception : enforce;
+
+        /* Stash length before writing record to file */
+        record.length = cast(uint32_t) T.sizeof;
+
+        /* Write record to file */
+        record.encode(wr);
+
+        /* Ensure we encode big-endian values only */
+        version (BigEndian)
+        {
+            wr.appendData((cast(ubyte*)&datum)[0 .. T.sizeof]);
+        }
+        else
+        {
+            static if (T.sizeof > 1)
+            {
+                ubyte[T.sizeof] b = nativeToBigEndian(datum);
+                wr.appendData(b);
+            }
+            else
+            {
+                /* Add single byte */
+                wr.appendData(datum);
+            }
+        }
+    }
+
+    /**
+     * Special-case handling, encode a string to the stream.
+     * Essentially we expect a UTF-8 array with no endian worries,
+     * and write this as a NUL terminated C string
+     */
+    void encodeString(ref string datum, scope Record* record, scope WriterToken* wr)
+    {
+        import std.exception : enforce;
+        import std.string : toStringz;
+
+        /* Stash length before writing record to file */
+        auto z = toStringz(datum);
+        assert(datum.length < uint32_t.max, "encodeString(): String Length too long");
+        record.length = cast(uint32_t) datum.length + 1;
+        auto len = record.length;
+
+        /* Write record + string value */
+        record.encode(wr);
+        ubyte[] emitted = (cast(ubyte*) z)[0 .. len];
+        wr.appendData(emitted);
     }
 }
