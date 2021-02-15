@@ -161,7 +161,7 @@ public:
             WriterToken wk;
             p.encode(&wk);
 
-            /* TODO: Grab WriterToken data, CRC + compress it, write it */
+            /* Grab WriterToken data, CRC + compress it, write it */
             wk.flush(&pHdr, fp);
         }
 
