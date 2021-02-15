@@ -71,7 +71,7 @@ package struct WriterToken
      */
     void flush(scope PayloadHeader* pHdr, scope FILE* fp) @system
     {
-        import core.stdc.stdio : fwrite, fflush;
+        import core.stdc.stdio : fwrite;
         import std.exception : enforce;
 
         /* Set PayloadHeader internal fields to match data */
@@ -120,8 +120,6 @@ package struct WriterToken
                     fp) == rawData.length, "WriterToken.flush(): Failed to write data");
             break;
         }
-
-        fflush(fp);
     }
 
 private:
