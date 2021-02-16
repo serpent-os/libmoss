@@ -42,6 +42,9 @@ package struct PayloadEncapsulation
     /** The actual Payload which is able to read the data */
     Payload payload;
 
+    /** "Similar" type lookup */
+    TypeInfo type;
+
     /** The header */
     PayloadHeader header;
 
@@ -186,6 +189,23 @@ public:
         return pload;
     }
 
+    /**
+     * Return first matching Payload instance type or null if not found
+     */
+    T payload(T : Payload)()
+    {
+        static auto genType = typeid(T);
+        foreach (ref p; payloads)
+        {
+            if (genType == p.type)
+            {
+                return cast(T) p.payload;
+            }
+        }
+
+        return null;
+    }
+
 private:
 
     /**
@@ -216,6 +236,12 @@ private:
             payloads ~= pEncap;
 
             writeln(*pEncap);
+
+            /* Set search type */
+            if (pEncap.payload !is null)
+            {
+                pEncap.type = registeredHandlers[pHdr.type];
+            }
 
             /* Always try to load Data segments */
             if (pEncap.payload !is null && pEncap.payload.storageType == StorageType.Data)
