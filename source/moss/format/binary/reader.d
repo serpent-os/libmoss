@@ -66,7 +66,10 @@ package struct PayloadEncapsulation
     void readData(scope FILE* fp) @trusted
     {
         import std.exception : enforce;
-        import core.stdc.stdio : fread;
+        import core.stdc.stdio : fread, fseek, SEEK_CUR;
+        import std.digest.crc : CRC64ISO;
+
+        CRC64ISO hash;
 
         /* Can't decode zero data */
         if (header.plainSize < 1)
@@ -74,11 +77,40 @@ package struct PayloadEncapsulation
             return;
         }
 
-        /* Need enough storage for the compressed size */
-        data = new ubyte[header.storedSize];
+        final switch (header.compression)
+        {
+        case PayloadCompression.None:
+            /* Read vanilla data in */
+            data = new ubyte[header.plainSize];
+            enforce(fread(data.ptr, data.length, 1, fp) == 1, "readData: fread failed");
+            break;
+        case PayloadCompression.Unknown:
+            /* TODO: Report inability to read */
+            enforce(fseek(fp, header.storedSize,
+                    SEEK_CUR) == 0, "readData: fseek failed");
+            break;
+        case PayloadCompression.Zstd:
+            auto compBytes = new ubyte[header.storedSize];
+            enforce(fread(compBytes.ptr, compBytes.length, 1, fp) == 1, "readData: fread failure");
 
-        /* Read all the file data into the data buffer */
-        enforce(fread(data.ptr, data.length, 1, fp) == 1, "readData: fread failed");
+            import zstd : uncompress;
+
+            data = cast(ubyte[]) uncompress(compBytes);
+            break;
+        case PayloadCompression.Zlib:
+            auto compBytes = new ubyte[header.storedSize];
+            enforce(fread(compBytes.ptr, compBytes.length, 1, fp) == 1, "readData: fread failure");
+
+            import std.zlib : uncompress;
+
+            data = cast(ubyte[]) uncompress(compBytes);
+            break;
+        }
+
+        hash.put(data);
+
+        auto hashed = hash.finish();
+        enforce(hashed == header.crc64, "readData: CRC64ISO checksum failure");
     }
 
     /** Loaded data */

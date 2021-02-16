@@ -95,7 +95,8 @@ align(1):
 
         enforce(fwrite(&cp.storedSize, cp.storedSize.sizeof, 1, fp) == 1,
                 "Failed to write PayloadHeader.storedSize");
-        enforce(fwrite(&cp.plainSize, cp.plainSize.sizeof, 1, fp) == 1, "Failed to write PayloadHeader.plainSize");
+        enforce(fwrite(&cp.plainSize, cp.plainSize.sizeof, 1, fp) == 1,
+                "Failed to write PayloadHeader.plainSize");
         enforce(fwrite(cp.crc64.ptr, cp.crc64[0].sizeof, cp.crc64.length, fp) == cp.crc64.length,
                 "Failed to write PayloadHeader.crc64");
         enforce(fwrite(&cp.numRecords, cp.numRecords.sizeof, 1, fp) == 1,
