@@ -44,7 +44,7 @@ extern (C) package struct RecordPair
     RecordType type;
 
     /**
-     * Anonynous union containing all potential values so
+     * Anonymous union containing all potential values so
      * that we can store a RecordPair in memory with its
      * associated value
      */
