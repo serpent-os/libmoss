@@ -103,7 +103,7 @@ package struct WriterToken
             /* zlib compression of payload */
             import std.zlib : compress;
 
-            ubyte[] comp = compress(rawData);
+            ubyte[] comp = compress(rawData, 6);
             pHdr.storedSize = comp.length;
 
             /* Emission */
