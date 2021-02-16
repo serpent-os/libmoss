@@ -194,7 +194,7 @@ public:
      */
     T payload(T : Payload)()
     {
-        static auto genType = typeid(T);
+        static const auto genType = typeid(T);
         foreach (ref p; payloads)
         {
             if (genType == p.type)
