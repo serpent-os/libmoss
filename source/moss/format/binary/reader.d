@@ -30,6 +30,15 @@ import moss.format.binary.payload;
 import std.stdint : uint64_t;
 
 /**
+ * The ReaderToken abstracts access to the Reader's resources in order
+ * to enable decoding for each Payload implementation
+ */
+public struct ReaderToken
+{
+
+}
+
+/**
  * The PayloadEncapsulation type is used to keep track of each Payload that
  * we encounter within the stream, so that we can build a set of Payload
  * objects up.
@@ -275,11 +284,14 @@ private:
                 pEncap.type = registeredHandlers[pHdr.type];
             }
 
+            /* TODO: Wrap the underlying buffer for ReaderToken */
+            ReaderToken rdr;
+
             /* Always try to load Data segments */
             if (pEncap.payload !is null && pEncap.payload.storageType == StorageType.Data)
             {
                 pEncap.readData(fp);
-                pEncap.payload.decode(this);
+                pEncap.payload.decode(&rdr);
             }
             else
             {
