@@ -61,10 +61,10 @@ extern (C) struct PayloadHeader
 align(1):
 
     /** 8-bytes, endian aware, length of the Payload data */
-    @AutoEndian uint64_t length = 0;
+    @AutoEndian uint64_t storedSize = 0;
 
     /** 8-bytes, endian-aware, size of usable Payload data */
-    @AutoEndian uint64_t size = 0;
+    @AutoEndian uint64_t plainSize = 0;
 
     /** 8-byte array containing the CRC64-ISO checksum */
     ubyte[8] crc64 = 0; /* CRC64-ISO */
@@ -93,9 +93,9 @@ align(1):
         PayloadHeader cp = this;
         cp.toNetworkOrder();
 
-        enforce(fwrite(&cp.length, cp.length.sizeof, 1, fp) == 1,
-                "Failed to write PayloadHeader.length");
-        enforce(fwrite(&cp.size, cp.size.sizeof, 1, fp) == 1, "Failed to write PayloadHeader.size");
+        enforce(fwrite(&cp.storedSize, cp.storedSize.sizeof, 1, fp) == 1,
+                "Failed to write PayloadHeader.storedSize");
+        enforce(fwrite(&cp.plainSize, cp.plainSize.sizeof, 1, fp) == 1, "Failed to write PayloadHeader.plainSize");
         enforce(fwrite(cp.crc64.ptr, cp.crc64[0].sizeof, cp.crc64.length, fp) == cp.crc64.length,
                 "Failed to write PayloadHeader.crc64");
         enforce(fwrite(&cp.numRecords, cp.numRecords.sizeof, 1, fp) == 1,

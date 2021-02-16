@@ -75,8 +75,8 @@ package struct WriterToken
         import std.exception : enforce;
 
         /* Set PayloadHeader internal fields to match data */
-        pHdr.length = rawData.length;
-        pHdr.size = pHdr.length;
+        pHdr.plainSize = rawData.length;
+        pHdr.storedSize = pHdr.plainSize;
         pHdr.crc64 = hash.finish();
 
         /* TODO: Add automatic "best" compression based on segment size */
@@ -92,7 +92,7 @@ package struct WriterToken
             import zstd : compress;
 
             ubyte[] comp = compress(rawData, 8);
-            pHdr.size = comp.length;
+            pHdr.storedSize = comp.length;
 
             /* Emission */
             pHdr.encode(fp);
@@ -104,7 +104,7 @@ package struct WriterToken
             import std.zlib : compress;
 
             ubyte[] comp = compress(rawData);
-            pHdr.size = comp.length;
+            pHdr.storedSize = comp.length;
 
             /* Emission */
             pHdr.encode(fp);

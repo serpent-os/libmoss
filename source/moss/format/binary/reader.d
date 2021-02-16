@@ -56,7 +56,7 @@ package struct PayloadEncapsulation
      */
     pragma(inline, true) pure @property uint64_t endOffset()
     {
-        return startOffset + header.length;
+        return startOffset + header.storedSize;
     }
 
     /**
@@ -69,13 +69,13 @@ package struct PayloadEncapsulation
         import core.stdc.stdio : fread;
 
         /* Can't decode zero data */
-        if (header.size < 1)
+        if (header.plainSize < 1)
         {
             return;
         }
 
-        /* Need enough storage for the decompressed size */
-        data = new ubyte[header.size];
+        /* Need enough storage for the compressed size */
+        data = new ubyte[header.storedSize];
 
         /* Read all the file data into the data buffer */
         enforce(fread(data.ptr, data.length, 1, fp) == 1, "readData: fread failed");
@@ -258,7 +258,7 @@ private:
                 }
 
                 /* Otherwise, blindly seek */
-                enforce(fseek(fp, whence + pHdr.length, SEEK_SET) == 0,
+                enforce(fseek(fp, whence + pHdr.storedSize, SEEK_SET) == 0,
                         "spinPayloads: fseek failed");
             }
 
