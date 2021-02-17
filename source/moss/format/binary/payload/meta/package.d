@@ -80,7 +80,6 @@ public:
         {
             RecordPair pair;
             pair.decode(rdr);
-            writeln(pair);
         }
 
         writeln("MetaPayload.decode(): IMPLEMENT ME");

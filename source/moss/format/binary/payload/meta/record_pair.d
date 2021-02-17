@@ -68,6 +68,8 @@ extern (C) package struct RecordPair
      */
     void decode(scope ReaderToken* rdr) @trusted
     {
+        import std.stdio : write, writeln;
+
         Record rcrd;
         rcrd.decode(rdr);
 
@@ -80,30 +82,39 @@ extern (C) package struct RecordPair
             return;
         }
 
-        /* Read the data as a slice  */
-        const auto data = rdr.readData(rcrd.length);
+        write(rcrd, " = ");
 
         final switch (type)
         {
         case RecordType.Int8:
+            decodeNumeric(val_i8, &rcrd, rdr);
             break;
         case RecordType.Uint8:
+            decodeNumeric(val_u8, &rcrd, rdr);
             break;
         case RecordType.Int16:
+            decodeNumeric(val_i16, &rcrd, rdr);
             break;
         case RecordType.Uint16:
+            decodeNumeric(val_u16, &rcrd, rdr);
             break;
         case RecordType.Int32:
+            decodeNumeric(val_i32, &rcrd, rdr);
             break;
         case RecordType.Uint32:
+            decodeNumeric(val_u32, &rcrd, rdr);
             break;
         case RecordType.Int64:
+            decodeNumeric(val_i64, &rcrd, rdr);
             break;
         case RecordType.Uint64:
+            decodeNumeric(val_u64, &rcrd, rdr);
             break;
         case RecordType.String:
-            auto strlength = cast(long)rcrd.length;
-            val_string = cast(string) data[0.. strlength-1];
+            const auto data = rdr.readData(rcrd.length);
+            auto strlength = cast(long) rcrd.length;
+            val_string = cast(string) data[0 .. strlength - 1];
+            writeln(val_string);
             break;
         case RecordType.Unknown:
             assert(0 == 0,
@@ -156,6 +167,40 @@ extern (C) package struct RecordPair
     }
 
 private:
+
+    /**
+     * Endian-aware helper that can decode the range of numerics we support
+     * from the underlying stream data
+     */
+    void decodeNumeric(T)(ref T datum, scope Record* record, scope ReaderToken* rdr)
+    {
+        import std.exception : enforce;
+        import std.bitmanip : bigEndianToNative;
+
+        enforce(record.length == T.sizeof, "Record size mistmatch");
+
+        auto readData = rdr.readData(T.sizeof);
+
+        static if (T.sizeof > 1)
+        {
+            version (LittleEndian)
+            {
+                datum = bigEndianToNative!(T, T.sizeof)(readData[0 .. T.sizeof]);
+            }
+            else
+            {
+                datum = *cast(T*) readData.ptr;
+            }
+        }
+        else
+        {
+            datum = *cast(T*) readData.ptr;
+        }
+
+        import std.stdio : writeln;
+
+        writeln(datum);
+    }
 
     /**
      * Handle encoding of all our numeric data types in a generic way, also
