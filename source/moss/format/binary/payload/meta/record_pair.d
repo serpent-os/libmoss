@@ -25,6 +25,7 @@ module moss.format.binary.payload.meta.record_pair;
 public import std.stdint;
 public import moss.format.binary.payload.meta.record;
 
+import moss.format.binary.reader : ReaderToken;
 import moss.format.binary.writer : WriterToken;
 
 /**
@@ -59,6 +60,22 @@ extern (C) package struct RecordPair
         int32_t val_i32;
         int64_t val_i64;
         string val_string;
+    }
+
+    /**
+     * Decode ourselves, Record and associated value, from the input
+     * ReaderToken
+     */
+    void decode(scope ReaderToken* rdr) @trusted
+    {
+        Record rcrd;
+        rcrd.decode(rdr);
+
+        tag = rcrd.tag;
+        type = rcrd.type;
+
+        /* For now, skip the data */
+        const auto ignored = rdr.readData(rcrd.length);
     }
 
     /**

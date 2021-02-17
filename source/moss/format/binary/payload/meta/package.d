@@ -78,12 +78,9 @@ public:
 
         foreach (recordIndex; 0 .. recordCount)
         {
-            Record rcrd;
-            rcrd.decode(rdr);
-            writeln(rcrd);
-
-            /* For now, skip the data */
-            const auto ignored = rdr.readData(rcrd.length);
+            RecordPair pair;
+            pair.decode(rdr);
+            writeln(pair);
         }
 
         writeln("MetaPayload.decode(): IMPLEMENT ME");
