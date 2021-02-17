@@ -68,8 +68,6 @@ extern (C) package struct RecordPair
      */
     void decode(scope ReaderToken* rdr) @trusted
     {
-        import std.stdio : write, writeln;
-
         Record rcrd;
         rcrd.decode(rdr);
 
@@ -81,8 +79,6 @@ extern (C) package struct RecordPair
         {
             return;
         }
-
-        write(rcrd, " = ");
 
         final switch (type)
         {
@@ -114,7 +110,6 @@ extern (C) package struct RecordPair
             const auto data = rdr.readData(rcrd.length);
             auto strlength = cast(long) rcrd.length;
             val_string = cast(string) data[0 .. strlength - 1];
-            writeln(val_string);
             break;
         case RecordType.Unknown:
             assert(0 == 0,
@@ -196,10 +191,6 @@ private:
         {
             datum = *cast(T*) readData.ptr;
         }
-
-        import std.stdio : writeln;
-
-        writeln(datum);
     }
 
     /**
