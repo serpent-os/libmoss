@@ -74,8 +74,41 @@ extern (C) package struct RecordPair
         tag = rcrd.tag;
         type = rcrd.type;
 
-        /* For now, skip the data */
-        const auto ignored = rdr.readData(rcrd.length);
+        /* Don't decode empty values */
+        if (rcrd.length < 1)
+        {
+            return;
+        }
+
+        /* Read the data as a slice  */
+        const auto data = rdr.readData(rcrd.length);
+
+        final switch (type)
+        {
+        case RecordType.Int8:
+            break;
+        case RecordType.Uint8:
+            break;
+        case RecordType.Int16:
+            break;
+        case RecordType.Uint16:
+            break;
+        case RecordType.Int32:
+            break;
+        case RecordType.Uint32:
+            break;
+        case RecordType.Int64:
+            break;
+        case RecordType.Uint64:
+            break;
+        case RecordType.String:
+            auto strlength = cast(long)rcrd.length;
+            val_string = cast(string) data[0.. strlength-1];
+            break;
+        case RecordType.Unknown:
+            assert(0 == 0,
+                    "RecordPair.encode(): Unknown encoding not supported");
+        }
     }
 
     /**
