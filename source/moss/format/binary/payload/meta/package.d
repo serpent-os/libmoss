@@ -69,8 +69,6 @@ public:
      */
     override void decode(scope ReaderToken* rdr) @trusted
     {
-        import std.stdio : writeln;
-
         import moss.format.binary.endianness : toHostOrder;
 
         /* Match number of records */
@@ -78,11 +76,11 @@ public:
 
         foreach (recordIndex; 0 .. recordCount)
         {
-            RecordPair pair;
+            pairs ~= RecordPair();
+            auto length = cast(long) pairs.length;
+            auto pair = &pairs[length - 1];
             pair.decode(rdr);
         }
-
-        writeln("MetaPayload.decode(): IMPLEMENT ME");
     }
 
     /**
