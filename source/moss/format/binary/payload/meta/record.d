@@ -24,6 +24,7 @@ module moss.format.binary.payload.meta.record;
 
 public import std.stdint;
 import moss.format.binary.endianness;
+import moss.format.binary.reader : ReaderToken;
 import moss.format.binary.writer : WriterToken;
 
 /**
@@ -126,6 +127,16 @@ align(1):
         wr.appendData((cast(ubyte*)&cp.tag)[0 .. cp.tag.sizeof]);
         wr.appendData((cast(ubyte*)&cp.type)[0 .. cp.type.sizeof]);
         wr.appendData((cast(ubyte*)&cp.padding[0])[0 .. cp.padding[0].sizeof]);
+    }
+
+    /**
+     * Decode the record itself from a given input stream
+     */
+    void decode(scope ReaderToken* rd) @trusted
+    {
+        auto cp = rd.readDataToStruct!Record;
+        cp.toHostOrder();
+        this = cp;
     }
 
     /**

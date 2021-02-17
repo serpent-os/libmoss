@@ -67,9 +67,24 @@ public:
      * Subclasses must implement the decode method so that reading of the
      * stream data is possible.
      */
-    override void decode(scope ReaderToken* rdr) @safe
+    override void decode(scope ReaderToken* rdr) @trusted
     {
         import std.stdio : writeln;
+
+        import moss.format.binary.endianness : toHostOrder;
+
+        /* Match number of records */
+        recordCount = rdr.header.numRecords;
+
+        foreach (recordIndex; 0 .. recordCount)
+        {
+            Record rcrd;
+            rcrd.decode(rdr);
+            writeln(rcrd);
+
+            /* For now, skip the data */
+            const auto ignored = rdr.readData(rcrd.length);
+        }
 
         writeln("MetaPayload.decode(): IMPLEMENT ME");
     }

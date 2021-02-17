@@ -36,6 +36,47 @@ import std.stdint : uint64_t;
 public struct ReaderToken
 {
 
+    /**
+     * readData will return a slice containing data from the underlying buffer
+     * with the given length, seeking forward where possible
+     */
+    ubyte[] readData(ulong length)
+    {
+        import std.exception : enforce;
+
+        enforce(readLength - (readIndex + length) >= 0, "Cannot read past stream boundary");
+
+        /* Return slice by length */
+        ubyte[] ret = pEncap.data[readIndex .. readIndex + length];
+        readIndex = readIndex + length;
+        return ret;
+    }
+
+    /**
+     * Return a struct from the next set of input data
+     */
+    T readDataToStruct(T)()
+    {
+        const ubyte[] data = readData(T.sizeof);
+        T* cpPtr = cast(T*) data.ptr;
+        T cp = *cpPtr;
+        return cp;
+    }
+
+    /**
+     * Provide access to the underlying PayloadHeader for decode()
+     * implementations to update record count, etc.
+     */
+    pragma(inline, true) pure @property PayloadHeader header() @safe @nogc nothrow
+    {
+        return pEncap.header;
+    }
+
+private:
+
+    PayloadEncapsulation* pEncap;
+    ulong readIndex = 0;
+    ulong readLength = 0;
 }
 
 /**
@@ -286,11 +327,13 @@ private:
 
             /* TODO: Wrap the underlying buffer for ReaderToken */
             ReaderToken rdr;
+            rdr.pEncap = pEncap;
 
             /* Always try to load Data segments */
             if (pEncap.payload !is null && pEncap.payload.storageType == StorageType.Data)
             {
                 pEncap.readData(fp);
+                rdr.readLength = pEncap.data.length;
                 pEncap.payload.decode(&rdr);
             }
             else
