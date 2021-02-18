@@ -87,7 +87,7 @@ public:
     RangedEntryPair front() @trusted @nogc nothrow const
     {
         RangedEntryPair ret;
-        auto pair = &pairs[iterationIndex];
+        const auto pair = &pairs[iterationIndex];
         ret.entry = pair.entry;
         ret.id = pair.id;
         return ret;
