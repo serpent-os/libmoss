@@ -78,3 +78,5 @@ public:
         writeln("IndexPayload.decode(): Implement me");
     }
 }
+
+public import moss.format.binary.payload.index.entry;
