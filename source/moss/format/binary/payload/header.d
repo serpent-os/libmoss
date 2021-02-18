@@ -127,4 +127,4 @@ align(1):
 }
 
 static assert(PayloadHeader.sizeof == 32,
-        "Payload size must be 16 bytes, not " ~ PayloadHeader.sizeof.stringof ~ " bytes");
+        "Payload size must be 32 bytes, not " ~ PayloadHeader.sizeof.stringof ~ " bytes");
