@@ -64,6 +64,31 @@ public:
     }
 
     /**
+     * Return true when the Range is complete.
+     */
+    pure @property bool empty() @safe @nogc nothrow
+    {
+        const long pairLength = cast(long) pairs.length;
+        return (pairs.length < 1 || iterationIndex > pairLength - 1);
+    }
+
+    /**
+     * Pop the front RecordPair from the list and proceed to the next one.
+     */
+    void popFront() @safe @nogc nothrow
+    {
+        ++iterationIndex;
+    }
+
+    /**
+     * Return the front item of the list
+     */
+    ref const(RecordPair) front() @trusted @nogc nothrow const
+    {
+        return pairs[iterationIndex];
+    }
+
+    /**
      * Subclasses must implement the decode method so that reading of the
      * stream data is possible.
      */
@@ -218,6 +243,7 @@ public:
 private:
 
     RecordPair[] pairs;
+    ulong iterationIndex = 0;
 }
 
 public import moss.format.binary.payload.meta.record;
