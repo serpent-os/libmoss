@@ -116,9 +116,13 @@ align(1):
         import std.exception : enforce;
         import core.stdc.stdio : fread;
 
-        enforce(fread(&this, PayloadHeader.sizeof, 1, fp) == 1,
+        PayloadHeader cp;
+
+        enforce(fread(&cp, PayloadHeader.sizeof, 1, fp) == 1,
                 "decode: Failed to read PayloadHeader in stream");
-        this.toHostOrder();
+        cp.toHostOrder();
+
+        this = cp;
     }
 }
 
