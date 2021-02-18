@@ -59,13 +59,41 @@ public:
     }
 
     /**
+     * Return true when the Range is complete.
+     */
+    pure @property bool empty() @safe @nogc nothrow
+    {
+        const long pairLength = cast(long) pairs.length;
+        return (pairs.length < 1 || iterationIndex > pairLength - 1);
+    }
+
+    /**
+     * Pop the front EntryPair from the list and proceed to the next one.
+     */
+    void popFront() @safe @nogc nothrow
+    {
+        ++iterationIndex;
+    }
+
+    /**
+     * Return the front item of the list
+     */
+    ref const(EntryPair) front() @trusted @nogc nothrow const
+    {
+        return pairs[iterationIndex];
+    }
+
+    /**
      * Encode the IndexPayload to the WriterToken
      */
     override void encode(scope WriterToken* wr) @trusted
     {
-        import std.stdio : writeln;
-
-        writeln("IndexPayload.encode(): Implement me");
+        /* Ensure every pair is encoded via WriterToken API */
+        foreach (index; 0 .. pairs.length)
+        {
+            auto pair = &pairs[index];
+            pair.encode(wr);
+        }
     }
 
     /**
@@ -73,10 +101,36 @@ public:
      */
     override void decode(scope ReaderToken* rdr) @trusted
     {
-        import std.stdio : writeln;
+        /* Match number of records */
+        recordCount = rdr.header.numRecords;
 
-        writeln("IndexPayload.decode(): Implement me");
+        foreach (recordIndex; 0 .. recordCount)
+        {
+            pairs ~= EntryPair();
+            auto length = cast(long) pairs.length;
+            auto pair = &pairs[length - 1];
+            pair.decode(rdr);
+        }
     }
+
+    /**
+     * Add an Index by ID to the underlying pair set.
+     */
+    void addIndex(IndexEntry entry, const(string) id) @trusted
+    {
+        pairs ~= EntryPair();
+        auto length = cast(long) pairs.length;
+        auto pair = &pairs[length - 1];
+        recordCount = cast(uint32_t) length;
+        pair.entry = entry;
+        pair.id = id;
+    }
+
+private:
+
+    EntryPair[] pairs;
+    ulong iterationIndex = 0;
 }
 
 public import moss.format.binary.payload.index.entry;
+public import moss.format.binary.payload.index.pair;
