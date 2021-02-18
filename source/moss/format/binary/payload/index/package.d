@@ -23,11 +23,17 @@
 module moss.format.binary.payload.index;
 
 public import moss.format.binary.payload;
+public import std.typecons : Tuple;
 
 /**
  * The currently writing version for IndexPayload
  */
 const uint16_t indexPayloadVersion = 1;
+
+/**
+ * Nice iterable type in foreach aggregate
+ */
+alias RangedEntryPair = Tuple!(IndexEntry, "entry", string, "id");
 
 /**
  * An IndexPayload contains a set of offsets to unique files contained within
@@ -78,9 +84,13 @@ public:
     /**
      * Return the front item of the list
      */
-    ref const(EntryPair) front() @trusted @nogc nothrow const
+    RangedEntryPair front() @trusted @nogc nothrow const
     {
-        return pairs[iterationIndex];
+        RangedEntryPair ret;
+        auto pair = &pairs[iterationIndex];
+        ret.entry = pair.entry;
+        ret.id = pair.id;
+        return ret;
     }
 
     /**
