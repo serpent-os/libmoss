@@ -124,9 +124,12 @@ align(1):
         import std.exception : enforce;
         import core.stdc.stdio : fread;
 
-        enforce(fread(&this, ArchiveHeader.sizeof, 1, fp) == 1,
+        ArchiveHeader cp;
+
+        enforce(fread(&cp, ArchiveHeader.sizeof, 1, fp) == 1,
                 "decode: Failed to read ArchiveHeader in stream");
-        this.toHostOrder();
+        cp.toHostOrder();
+        this = cp;
     }
 
     /**
