@@ -70,6 +70,7 @@ extern (C) package struct RecordPair
     {
         Record rcrd;
         rcrd.decode(rdr);
+        rcrd.validate();
 
         tag = rcrd.tag;
         type = rcrd.type;
