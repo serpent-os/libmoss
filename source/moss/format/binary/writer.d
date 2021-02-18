@@ -74,6 +74,16 @@ package struct WriterToken
         import core.stdc.stdio : fwrite;
         import std.exception : enforce;
 
+        /* Handle empty payload cases */
+        if (rawData is null || rawData.length < 1)
+        {
+            pHdr.plainSize = 0;
+            pHdr.storedSize = 0;
+            pHdr.compression = PayloadCompression.None;
+            pHdr.encode(fp);
+            return;
+        }
+
         /* Set PayloadHeader internal fields to match data */
         pHdr.plainSize = rawData.length;
         pHdr.storedSize = pHdr.plainSize;
