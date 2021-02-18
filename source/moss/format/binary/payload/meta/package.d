@@ -94,8 +94,6 @@ public:
      */
     override void decode(scope ReaderToken* rdr) @trusted
     {
-        import moss.format.binary.endianness : toHostOrder;
-
         /* Match number of records */
         recordCount = rdr.header.numRecords;
 
@@ -114,8 +112,6 @@ public:
      */
     override void encode(scope WriterToken* wr) @trusted
     {
-        import std.stdio : writeln;
-
         /* Ensure every pair is encoded via WriterToken API */
         foreach (index; 0 .. pairs.length)
         {
