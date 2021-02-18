@@ -239,11 +239,6 @@ public:
                 "registerPayloadType: Cannot double-register a handler");
 
         registeredHandlers[type] = typeid(P);
-
-        /* TODO: Remove this debug */
-        import std.stdio : writeln;
-
-        writeln("Registering Payload Handler: ", typeid(P).toString, " for type: ", type);
     }
 
     /**
@@ -316,8 +311,6 @@ private:
             pEncap.startOffset = whence;
             pEncap.payload = getPayloadImplForType(pHdr.type);
             payloads ~= pEncap;
-
-            writeln(*pEncap);
 
             /* Set search type */
             if (pEncap.payload !is null)
