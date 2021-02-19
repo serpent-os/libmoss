@@ -71,7 +71,7 @@ align(1):
         wr.appendData((cast(ubyte*)&cp.end)[0 .. cp.end.sizeof]);
         wr.appendData((cast(ubyte*)&cp.length)[0 .. cp.length.sizeof]);
         wr.appendData((cast(ubyte*)&cp.refcount)[0 .. cp.refcount.sizeof]);
-        wr.appendData(padding);
+        wr.appendData(cp.padding);
     }
 
     /**
