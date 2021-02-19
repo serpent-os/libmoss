@@ -52,31 +52,31 @@ extern (C) struct LayoutEntry
 align(1):
 
     /** 8-bytes, endian aware, UNIX timestamp */
-    @AutoEndian uint64_t time;
+    @AutoEndian uint64_t time = 0;
 
     /** 4-bytes, endian aware, owning user ID */
-    @AutoEndian uint32_t uid;
+    @AutoEndian uint32_t uid = 0;
 
     /** 4-bytes, endian aware, owning group ID */
-    @AutoEndian uint32_t gid;
+    @AutoEndian uint32_t gid = 0;
 
     /** 4-bytes, endian aware, mode/permissions */
-    @AutoEndian uint32_t mode;
+    @AutoEndian uint32_t mode = 0;
 
     /** 4-bytes, endian aware, tag for the file meta type (usage) */
-    @AutoEndian uint32_t tag;
+    @AutoEndian uint32_t tag = 0;
 
     /** 2-bytes, endian aware, length for the source (ID) parameter */
-    @AutoEndian uint16_t sourceLength; /* 2 bytes */
+    @AutoEndian uint16_t sourceLength = 0; /* 2 bytes */
 
     /** 2-bytes, endian aware, length for the target (path) parameter */
-    @AutoEndian uint16_t targetLength; /* 2 bytes */
+    @AutoEndian uint16_t targetLength = 0; /* 2 bytes */
 
     /** 1 byte, type of the destination file */
-    FileType type;
+    FileType type = FileType.Unknown;
 
     /** 3-byte array, reserved padding */
-    ubyte[3] padding;
+    ubyte[3] padding = [0, 0, 0];
 
     /**
      * Encode the LayoutEntry to the underlying byte buffer
