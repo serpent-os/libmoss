@@ -25,7 +25,6 @@ module moss.format.binary.payload.index.entry;
 public import std.stdint;
 
 import moss.format.binary.endianness;
-import moss.format.binary.endianness;
 import moss.format.binary.reader : ReaderToken;
 import moss.format.binary.writer : WriterToken;
 
