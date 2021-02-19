@@ -25,38 +25,7 @@ module moss.format.binary.legacy.layout;
 public import std.stdint;
 
 import moss.format.binary.endianness;
-
-/**
- * A FileType is a simple tagging mechanism so that we're able to record the
- * destination file type (*Nix) in the layout, so that it may be reapplied
- * upon extraction.
- */
-enum FileType : uint8_t
-{
-    /* Catch errors */
-    Unknown = 0,
-
-    /** Regular file **/
-    Regular = 1,
-
-    /** Symbolic link to another location */
-    Symlink = 2,
-
-    /** Directory */
-    Directory = 3,
-
-    /** Character Device */
-    CharacterDevice = 4,
-
-    /** Block device */
-    BlockDevice = 5,
-
-    /** Fifo pipe */
-    Fifo = 6,
-
-    /** Socket */
-    Socket = 7,
-}
+import moss.format.binary : FileType;
 
 /**
  * A LayoutEntry is a multipart key that defines the origin of

@@ -25,6 +25,7 @@ module moss.format.binary.legacy.layout_payload;
 import moss.format.binary.endianness;
 import moss.format.binary.legacy.encoder;
 import moss.format.binary.legacy.payload;
+import moss.format.binary : FileType;
 
 public import std.stdio : File, FILE;
 public import moss.format.binary.legacy.layout;
