@@ -88,6 +88,7 @@ align(1):
 
         wr.appendData((cast(ubyte*)&cp.time)[0 .. cp.time.sizeof]);
         wr.appendData((cast(ubyte*)&cp.uid)[0 .. cp.uid.sizeof]);
+        wr.appendData((cast(ubyte*)&cp.gid)[0 .. cp.gid.sizeof]);
         wr.appendData((cast(ubyte*)&cp.mode)[0 .. cp.mode.sizeof]);
         wr.appendData((cast(ubyte*)&cp.tag)[0 .. cp.tag.sizeof]);
         wr.appendData((cast(ubyte*)&cp.sourceLength)[0 .. cp.sourceLength.sizeof]);
@@ -101,7 +102,7 @@ align(1):
      */
     void decode(scope ReaderToken* rd) @trusted
     {
-        auto cp = rd.readDataToStruct!LayoutEntry;
+        auto cp = rd.readDataToStruct!LayoutEntry();
         cp.toHostOrder();
         this = cp;
     }

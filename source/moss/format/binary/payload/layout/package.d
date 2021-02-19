@@ -63,9 +63,12 @@ public:
      */
     override void encode(scope WriterToken* wr) @trusted
     {
-        import std.stdio : writeln;
-
-        writeln("LayoutPayload.encode(): Implement me");
+        /* Ensure every set is encoded via WriterToken API */
+        foreach (index; 0 .. sets.length)
+        {
+            auto set = &sets[index];
+            set.encode(wr);
+        }
     }
 
     /**
@@ -73,8 +76,88 @@ public:
      */
     override void decode(scope ReaderToken* rdr) @trusted
     {
+        /* Match number of records */
+        recordCount = rdr.header.numRecords;
+
+        foreach (recordIndex; 0 .. recordCount)
+        {
+            sets ~= EntrySet();
+            auto length = cast(long) sets.length;
+            auto set = &sets[length - 1];
+            set.decode(rdr);
+
+            import std.stdio;
+
+            writeln(*set);
+        }
+    }
+
+    /**
+     * Add a layout entry. Every entry MUST have at least a source OR target,
+     * they cannot both be empty.
+     *
+     * For symlinks, source AND target must be set.
+     * For special files, entry.tag MUST be non-0, and source NULL
+     * For directories, target must be set and source MUST be null
+     * For regular files, source MUST be an ID, and target MUST be NULL.
+     */
+    void addLayout(LayoutEntry entry, string source, string target = null)
+    {
+        import std.exception : enforce;
+        import moss.format.binary : FileType;
+
+        sets ~= EntrySet();
+        auto length = cast(long) sets.length;
+        auto set = &sets[length - 1];
+
+        set.entry = entry;
+        set.source = source;
+        set.target = target;
+
+        final switch (entry.type)
+        {
+        case FileType.Regular:
+            enforce(source !is null && target !is null,
+                    "addLayout: Regular file needs SOURCE and TARGET");
+            break;
+        case FileType.Symlink:
+            enforce(source !is null && target !is null,
+                    "addLayout: Symlink needs SOURCE and TARGET");
+            break;
+        case FileType.Directory:
+            enforce(source is null && target !is null,
+                    "addLayout: Directory needs TARGET only");
+            break;
+        case FileType.CharacterDevice:
+        case FileType.BlockDevice:
+            enforce(source is null
+                    && target !is null, "addLayout: Device needs TARGET only");
+            enforce(entry.tag != 0, "addLayout: Device tag (origin) not set");
+            break;
+        case FileType.Fifo:
+            enforce(source !is null && target !is null,
+                    "addLayout: FIFO needs TARGET only");
+            break;
+        case FileType.Socket:
+            enforce(source is null && target !is null,
+                    "addLayout: Socket needs TARGET only");
+            break;
+        case FileType.Unknown:
+            enforce(0 == 1, "Refusing to add unknown FileType");
+            break;
+        }
+
+        recordCount = cast(uint32_t) length;
+
         import std.stdio : writeln;
 
-        writeln("LayoutPayload.decode(): Implement me");
+        writeln(*set);
     }
+
+private:
+
+    EntrySet[] sets;
 }
+
+public import moss.format.binary.payload.layout.entry;
+public import moss.format.binary.payload.layout.entryset;

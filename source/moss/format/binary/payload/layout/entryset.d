@@ -102,7 +102,7 @@ extern (C) package struct EntrySet
             encoded ~= (cast(ubyte*) z)[0 .. entry.targetLength];
         }
 
-        /* Write record + string value */
+        /* Write record + value */
         entry.encode(wr);
         wr.appendData(encoded);
     }
