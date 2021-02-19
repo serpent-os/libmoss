@@ -23,11 +23,17 @@
 module moss.format.binary.payload.layout;
 
 public import moss.format.binary.payload;
+import std.typecons : Tuple;
 
 /**
  * The currently writing version for LayoutPayload
  */
 const uint16_t layoutPayloadVersion = 1;
+
+/**
+ * Nice iterable type in foreach aggregate
+ */
+alias RangedEntrySet = Tuple!(LayoutEntry, "entry", string, "source", string, "target");
 
 /**
  * A LayoutPayload contains a series of definintions on how to apply a particular
@@ -59,6 +65,36 @@ public:
     }
 
     /**
+     * Return true when the Range is complete.
+     */
+    pure @property bool empty() @safe @nogc nothrow
+    {
+        const long setsLength = cast(long) sets.length;
+        return (sets.length < 1 || iterationIndex > setsLength - 1);
+    }
+
+    /**
+     * Pop the front EntryPair from the list and proceed to the next one.
+     */
+    void popFront() @safe @nogc nothrow
+    {
+        ++iterationIndex;
+    }
+
+    /**
+     * Return the front item of the list
+     */
+    RangedEntrySet front() @trusted @nogc nothrow const
+    {
+        RangedEntrySet ret;
+        const auto set = &sets[iterationIndex];
+        ret.entry = set.entry;
+        ret.source = set.source;
+        ret.target = set.target;
+        return ret;
+    }
+
+    /**
      * Encode the LayoutPayload to the WriterToken
      */
     override void encode(scope WriterToken* wr) @trusted
@@ -85,10 +121,6 @@ public:
             auto length = cast(long) sets.length;
             auto set = &sets[length - 1];
             set.decode(rdr);
-
-            import std.stdio;
-
-            writeln(*set);
         }
     }
 
@@ -148,15 +180,12 @@ public:
         }
 
         recordCount = cast(uint32_t) length;
-
-        import std.stdio : writeln;
-
-        writeln(*set);
     }
 
 private:
 
     EntrySet[] sets;
+    ulong iterationIndex = 0;
 }
 
 public import moss.format.binary.payload.layout.entry;
