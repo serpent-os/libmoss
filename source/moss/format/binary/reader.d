@@ -283,6 +283,18 @@ public:
         return null;
     }
 
+    /**
+     * The headers property returns a copy of the headers as found in the stream,
+     * sequentially.
+     */
+    @property PayloadHeader[] headers() @safe nothrow
+    {
+        import std.algorithm : map;
+        import std.array : array;
+
+        return payloads.map!((p) => p.header).array;
+    }
+
 private:
 
     /**
