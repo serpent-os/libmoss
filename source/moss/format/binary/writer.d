@@ -101,7 +101,7 @@ package struct WriterToken
             /* zstd compresion of payload */
             import zstd : compress;
 
-            ubyte[] comp = compress(rawData, 8);
+            ubyte[] comp = compress(rawData, 16);
             pHdr.storedSize = comp.length;
 
             /* Emission */
