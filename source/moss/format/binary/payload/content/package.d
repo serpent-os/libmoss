@@ -72,10 +72,7 @@ public:
      */
     override void encode(scope WriterToken* wr) @trusted
     {
-        import std.stdio : writeln;
         import std.algorithm : each;
-
-        writeln("ContentPayload.encode(): Implement me");
 
         encoderQueue.each!((e) => encodeOne(e, wr));
     }
