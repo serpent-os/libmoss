@@ -99,6 +99,8 @@ public:
         queable.hash = id;
         queable.originPath = path;
         encoderQueue ~= queable;
+
+        recordCount = cast(uint32_t) encoderQueue.length;
     }
 
     /**
