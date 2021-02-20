@@ -26,9 +26,7 @@ public import std.stdio : File;
 
 import moss.format.binary.archive_header;
 import moss.format.binary : mossFormatVersionNumber;
-import moss.format.binary.endianness;
 import moss.format.binary.payload;
-import std.digest.crc : CRC64ISO;
 
 /**
  * The Writer is a low-level mechanism for writing Moss binary packages
