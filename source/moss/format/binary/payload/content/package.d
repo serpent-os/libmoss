@@ -49,7 +49,7 @@ public:
      */
     this() @safe
     {
-        super(PayloadType.Index, contentPayloadVersion);
+        super(PayloadType.Content, contentPayloadVersion);
     }
 
     /**
