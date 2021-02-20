@@ -25,7 +25,7 @@ module moss.format.binary.payload;
 public import std.stdint : uint8_t, uint16_t;
 
 public import moss.format.binary.reader : ReaderToken;
-public import moss.format.binary.writer : WriterToken;
+public import moss.format.binary.writer.token : WriterToken;
 
 /**
  * Specific payload type. Non-standard payloads should be indexed above

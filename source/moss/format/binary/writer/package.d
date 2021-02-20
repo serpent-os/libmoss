@@ -31,113 +31,6 @@ import moss.format.binary.payload;
 import std.digest.crc : CRC64ISO;
 
 /**
- * A WriterToken instance is passed to each Payload as a way for them
- * to safely encode data to the Archive.
- */
-public struct WriterToken
-{
-
-    /**
-     * Merge data into our underlying buffer
-     */
-    pragma(inline, true) void appendData(ref ubyte[] data)
-    {
-        rawData ~= data;
-        hash.put(data);
-    }
-
-    /**
-     * Copy data to buffer without reference
-     */
-    pragma(inline, true) void appendData(ubyte[] data)
-    {
-        rawData ~= data;
-        hash.put(data);
-    }
-
-    /**
-     * Copy single byte to buffer
-     */
-    pragma(inline, true) void appendData(ubyte d)
-    {
-        rawData ~= d;
-        hash.put(d);
-    }
-
-    /**
-     * Flush the underlying data into the original output file
-     * This will calculate the CRC automatically as well as
-     * perform required compression.
-     */
-    void flush(scope PayloadHeader* pHdr, scope FILE* fp) @system
-    {
-        import core.stdc.stdio : fwrite;
-        import std.exception : enforce;
-
-        /* Handle empty payload cases */
-        if (rawData is null || rawData.length < 1)
-        {
-            pHdr.plainSize = 0;
-            pHdr.storedSize = 0;
-            pHdr.compression = PayloadCompression.None;
-            pHdr.encode(fp);
-            return;
-        }
-
-        /* Set PayloadHeader internal fields to match data */
-        pHdr.plainSize = rawData.length;
-        pHdr.storedSize = pHdr.plainSize;
-        pHdr.crc64 = hash.finish();
-
-        /* TODO: Add automatic "best" compression based on segment size */
-        pHdr.compression = PayloadCompression.Zstd;
-
-        /**
-         * Now handle compression of the entire payload
-         */
-        final switch (pHdr.compression)
-        {
-        case PayloadCompression.Zstd:
-            /* zstd compresion of payload */
-            import zstd : compress;
-
-            ubyte[] comp = compress(rawData, 16);
-            pHdr.storedSize = comp.length;
-
-            /* Emission */
-            pHdr.encode(fp);
-            enforce(fwrite(comp.ptr, ubyte.sizeof, comp.length,
-                    fp) == comp.length, "WriterToken.flush(): Failed to write data");
-            break;
-        case PayloadCompression.Zlib:
-            /* zlib compression of payload */
-            import std.zlib : compress;
-
-            ubyte[] comp = compress(rawData, 6);
-            pHdr.storedSize = comp.length;
-
-            /* Emission */
-            pHdr.encode(fp);
-            enforce(fwrite(comp.ptr, ubyte.sizeof, comp.length,
-                    fp) == comp.length, "WriterToken.flush(): Failed to write data");
-            break;
-        case PayloadCompression.None:
-        case PayloadCompression.Unknown:
-            /* Disabled compression */
-            pHdr.compression = PayloadCompression.None;
-            pHdr.encode(fp);
-            enforce(fwrite(rawData.ptr, ubyte.sizeof, rawData.length,
-                    fp) == rawData.length, "WriterToken.flush(): Failed to write data");
-            break;
-        }
-    }
-
-private:
-    ubyte[] rawData;
-    CRC64ISO hash;
-}
-
-/**
  * The Writer is a low-level mechanism for writing Moss binary packages
  */
 final class Writer
@@ -261,3 +154,5 @@ private:
     bool headerWritten = false;
 
 }
+
+public import moss.format.binary.writer.token;
