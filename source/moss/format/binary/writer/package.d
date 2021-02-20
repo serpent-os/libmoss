@@ -34,7 +34,7 @@ import std.digest.crc : CRC64ISO;
  * A WriterToken instance is passed to each Payload as a way for them
  * to safely encode data to the Archive.
  */
-package struct WriterToken
+public struct WriterToken
 {
 
     /**
