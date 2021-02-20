@@ -29,6 +29,11 @@ public import moss.format.binary.payload;
  */
 const uint16_t contentPayloadVersion = 1;
 
+package struct ContentEntry
+{
+    string hash;
+    string originPath;
+}
 /**
  * A ContentPayload is responsible for storing the actual content of a moss
  * archive in a deduplicated fashion. It is only permitted to store unique
@@ -68,8 +73,11 @@ public:
     override void encode(scope WriterToken* wr) @trusted
     {
         import std.stdio : writeln;
+        import std.algorithm : each;
 
         writeln("ContentPayload.encode(): Implement me");
+
+        encoderQueue.each!((e) => encodeOne(e, wr));
     }
 
     /**
@@ -81,4 +89,34 @@ public:
 
         writeln("ContentPayload.decode(): Implement me");
     }
+
+    /**
+     * Enqueue a file for processing/encoding
+     */
+    void addFile(const(string) id, const(string) path) @trusted
+    {
+        ContentEntry queable;
+        queable.hash = id;
+        queable.originPath = path;
+        encoderQueue ~= queable;
+    }
+
+    /**
+     * Encode a single file to the stream
+     */
+    void encodeOne(ref ContentEntry entry, scope WriterToken* wr) @trusted
+    {
+        import std.stdio : File, writefln;
+
+        writefln(" -> Encoding: %s", entry.originPath);
+        File fi = File(entry.originPath, "rb");
+        foreach (ubyte[] buffer; fi.byChunk(16 * 1024))
+        {
+            wr.appendData(buffer);
+        }
+    }
+
+private:
+
+    ContentEntry[] encoderQueue;
 }
