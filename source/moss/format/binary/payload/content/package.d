@@ -106,9 +106,8 @@ public:
      */
     void encodeOne(ref ContentEntry entry, scope WriterToken* wr) @trusted
     {
-        import std.stdio : File, writefln;
+        import std.stdio : File;
 
-        writefln(" -> Encoding: %s", entry.originPath);
         File fi = File(entry.originPath, "rb");
         foreach (ubyte[] buffer; fi.byChunk(16 * 1024))
         {
