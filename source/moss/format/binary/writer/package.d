@@ -86,12 +86,16 @@ public:
      */
     void flush() @trusted
     {
-        scope auto fp = _file.getFP();
+        import std.exception : enforce;
+        import core.stdc.stdio : fseek, SEEK_CUR, SEEK_SET;
 
         if (!headerWritten)
         {
             writeHeaderSegment();
         }
+
+        /* Store correctedHeaders for re-emission */
+        PayloadHeader[] correctedHeaders;
 
         /**
          * Begin dumping all payloads to the stream, encoding their header first
@@ -103,16 +107,37 @@ public:
             pHdr.type = p.payloadType;
             pHdr.payloadVersion = p.payloadVersion;
             pHdr.numRecords = p.recordCount;
-            pHdr.compression = PayloadCompression.None;
-
-            /* Begin encoding before emitting a header and copying */
             WriterToken wk;
-            p.encode(&wk);
 
-            /* Grab WriterToken data, CRC + compress it, write it */
-            wk.flush(&pHdr, fp);
+            /* TODO: Set this up more dynamically */
+            pHdr.compression = PayloadCompression.None;
+            wk = new PlainWriterToken(_file.getFP());
+            /* Begin encoding before emitting a header and copying */
+            wk.begin();
+            p.encode(wk);
+            wk.end();
+
+            pHdr.plainSize = wk.sizePlain;
+            pHdr.storedSize = wk.sizeCompressed;
+            pHdr.crc64 = wk.crc64iso;
+
+            correctedHeaders ~= pHdr;
         }
 
+        /* Rewind the archive */
+        auto fp = _file.getFP();
+        _file.flush();
+        enforce(fseek(fp, ArchiveHeader.sizeof, SEEK_SET) == 0, "flush(): Failed to rewind archive");
+
+        /* Dump each header, skip past the content, write the new header again */
+        foreach (ref hdr; correctedHeaders)
+        {
+            hdr.encode(fp);
+            enforce(fseek(fp, hdr.storedSize, SEEK_CUR) == 0,
+                    "flush(): Failed to skip PayloadHeader");
+        }
+
+        _file.flush();
         payloads = [];
     }
 

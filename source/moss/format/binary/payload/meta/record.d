@@ -118,7 +118,7 @@ align(1):
     /**
      * Encode the Record key into the given WriterToken
      */
-    void encode(scope WriterToken* wr) @trusted
+    void encode(scope WriterToken wr) @trusted
     {
         Record cp = this;
 

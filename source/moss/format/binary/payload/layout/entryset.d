@@ -79,7 +79,7 @@ extern (C) package struct EntrySet
     /**
      * Encode the EntrySet to the underlying stream
      */
-    void encode(scope WriterToken* wr) @trusted
+    void encode(scope WriterToken wr) @trusted
     {
         import std.exception : enforce;
         import std.string : toStringz;

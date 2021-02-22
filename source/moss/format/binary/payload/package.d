@@ -50,6 +50,9 @@ enum PayloadType : uint8_t
 
     /* Attribute storage */
     Attributes = 5,
+
+    /* For Writer interim */
+    Dumb = 6,
 }
 
 /**
@@ -140,7 +143,7 @@ public:
      * Subclasses must implement the encode method so that writing of the
      * stream data is possible.
      */
-    abstract void encode(scope WriterToken* wr);
+    abstract void encode(scope WriterToken wr);
 
 package:
 

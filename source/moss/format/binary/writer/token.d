@@ -28,108 +28,197 @@ import std.digest.crc : CRC64ISO;
 import moss.format.binary.payload.header;
 
 /**
- * A WriterToken instance is passed to each Payload as a way for them
- * to safely encode data to the Archive.
+ * A WriterToken implementation knows how to perform various compression
+ * techniques, CRC64ISO verification, etc.
  */
-public struct WriterToken
+public abstract class WriterToken
 {
 
+    @disable this();
+
     /**
-     * Merge data into our underlying buffer
+     * Super constructor for all WriterTokens.
      */
-    pragma(inline, true) void appendData(ref ubyte[] data)
+    this(FILE* fp) @safe @nogc nothrow
     {
-        rawData ~= data;
-        hash.put(data);
+        this._fp = fp;
     }
 
     /**
-     * Copy data to buffer without reference
+     * Implementations should simply override encodeData to return the newly
+     * compressed data using whatever method is deemed appropriate.
+     * For "no compression" we just return the same data.
      */
-    pragma(inline, true) void appendData(ubyte[] data)
+    abstract ubyte[] encodeData(ref ubyte[] data) @trusted
     {
-        rawData ~= data;
-        hash.put(data);
+        return data;
     }
 
     /**
-     * Copy single byte to buffer
+     * Flush all encodings, returning the remainder
      */
-    pragma(inline, true) void appendData(ubyte d)
+    abstract ubyte[] flushData() @trusted
     {
-        rawData ~= d;
-        hash.put(d);
+        return null;
     }
 
     /**
-     * Flush the underlying data into the original output file
-     * This will calculate the CRC automatically as well as
-     * perform required compression.
+     * Append data to the stream, updating the known sizes + checksum
      */
-    void flush(scope PayloadHeader* pHdr, scope FILE* fp) @system
+    final void appendData(ubyte[] data)
     {
-        import core.stdc.stdio : fwrite;
         import std.exception : enforce;
+        import core.stdc.stdio : fwrite;
 
-        /* Handle empty payload cases */
-        if (rawData is null || rawData.length < 1)
+        _sizePlain += data.length;
+        auto encoded = this.encodeData(data);
+        _sizeCompressed += encoded.length;
+        checksum.put(data);
+
+        enforce(fp !is null, "WriterToken.appendData(): No filepointer!");
+
+        /* Dump what we have to the stream */
+        enforce(fwrite(encoded.ptr, ubyte.sizeof, encoded.length,
+                fp) == encoded.length, "WriterToken.appendData(): Failed to write data");
+    }
+
+    /**
+     * Append a single byte to the stream.
+     */
+    final void appendData(ubyte datum)
+    {
+        ubyte[1] data = [datum];
+        appendData(data);
+    }
+
+package:
+
+    /**
+     * Begin encoding by emitting a Dumb header
+     */
+    final void begin() @trusted
+    {
+        /* Forcibly encode a dumb header for this session */
+        auto hdr = PayloadHeader();
+        hdr.type = PayloadType.Dumb;
+        hdr.compression = PayloadCompression.None;
+        hdr.encode(fp);
+
+        /* Reset current knowledge. */
+        sizePlain = 0;
+        sizeCompressed = 0;
+        crc64iso = [0, 0, 0, 0, 0, 0, 0, 0];
+    }
+
+    /**
+     * End encoding by flushing underlying streams
+     */
+    final void end() @trusted
+    {
+        auto flushedSet = flushData();
+        if (flushedSet !is null && flushedSet.length > 0)
         {
-            pHdr.plainSize = 0;
-            pHdr.storedSize = 0;
-            pHdr.compression = PayloadCompression.None;
-            pHdr.encode(fp);
-            return;
+            appendData(flushedSet);
         }
+        crc64iso = checksum.finish();
+    }
 
-        /* Set PayloadHeader internal fields to match data */
-        pHdr.plainSize = rawData.length;
-        pHdr.storedSize = pHdr.plainSize;
-        pHdr.crc64 = hash.finish();
+    /**
+     * Return the file pointer property
+     */
+    pragma(inline, true) pure final @property FILE* fp() @safe @nogc nothrow
+    {
+        return _fp;
+    }
 
-        /* TODO: Add automatic "best" compression based on segment size */
-        pHdr.compression = PayloadCompression.Zstd;
+    /**
+     * Return the total size when decompressed
+     */
+    pragma(inline, true) pure final @property uint64_t sizePlain() @safe @nogc nothrow
+    {
+        return _sizePlain;
+    }
 
-        /**
-         * Now handle compression of the entire payload
-         */
-        final switch (pHdr.compression)
-        {
-        case PayloadCompression.Zstd:
-            /* zstd compresion of payload */
-            import zstd : compress;
+    /**
+     * Return the total size when compressed
+     */
+    pragma(inline, true) pure final @property uint64_t sizeCompressed() @safe @nogc nothrow
+    {
+        return _sizeCompressed;
+    }
 
-            ubyte[] comp = compress(rawData, 16);
-            pHdr.storedSize = comp.length;
-
-            /* Emission */
-            pHdr.encode(fp);
-            enforce(fwrite(comp.ptr, ubyte.sizeof, comp.length,
-                    fp) == comp.length, "WriterToken.flush(): Failed to write data");
-            break;
-        case PayloadCompression.Zlib:
-            /* zlib compression of payload */
-            import std.zlib : compress;
-
-            ubyte[] comp = compress(rawData, 6);
-            pHdr.storedSize = comp.length;
-
-            /* Emission */
-            pHdr.encode(fp);
-            enforce(fwrite(comp.ptr, ubyte.sizeof, comp.length,
-                    fp) == comp.length, "WriterToken.flush(): Failed to write data");
-            break;
-        case PayloadCompression.None:
-        case PayloadCompression.Unknown:
-            /* Disabled compression */
-            pHdr.compression = PayloadCompression.None;
-            pHdr.encode(fp);
-            enforce(fwrite(rawData.ptr, ubyte.sizeof, rawData.length,
-                    fp) == rawData.length, "WriterToken.flush(): Failed to write data");
-            break;
-        }
+    /**
+     * Return the calculated CRC64ISO value
+     */
+    pragma(inline, true) pure final @property ubyte[8] crc64iso() @safe @nogc nothrow
+    {
+        return _crc64iso;
     }
 
 private:
-    ubyte[] rawData;
-    CRC64ISO hash;
+
+    /**
+     * Update the file pointer property
+     */
+    pragma(inline, true) pure @property void fp(FILE* fp) @safe @nogc nothrow
+    {
+        _fp = fp;
+    }
+
+    /**
+     * Set the compressed size
+     */
+    pragma(inline, true) pure @property void sizeCompressed(uint64_t newSize) @safe @nogc nothrow
+    {
+        _sizeCompressed = newSize;
+    }
+
+    /**
+     * Set the plain size
+     */
+    pragma(inline, true) pure @property void sizePlain(uint64_t newSize) @safe @nogc nothrow
+    {
+        _sizePlain = newSize;
+    }
+
+    /**
+     * Set the known CRC64ISO value
+     */
+    pragma(inline, true) pure @property void crc64iso(ubyte[8] newChecksum) @safe @nogc nothrow
+    {
+        _crc64iso = newChecksum;
+    }
+
+    FILE* _fp = null;
+    CRC64ISO checksum;
+    uint64_t _sizeCompressed = 0;
+    uint64_t _sizePlain = 0;
+    ubyte[8] _crc64iso = [0, 0, 0, 0, 0, 0, 0, 0];
+}
+
+/**
+ * A PlainWriterToken encodes directly to the stream without any compression.
+ */
+final class PlainWriterToken : WriterToken
+{
+
+    @disable this();
+
+    /**
+     * Construct new PlainWriterToken from the given file pointer
+     */
+    this(FILE* fp) @safe @nogc nothrow
+    {
+        super(fp);
+    }
+
+    override ubyte[] encodeData(ref ubyte[] data) @safe @nogc nothrow
+    {
+        return data;
+    }
+
+    override ubyte[] flushData() @safe @nogc nothrow
+    {
+        return null;
+    }
 }

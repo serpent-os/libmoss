@@ -64,7 +64,7 @@ extern (C) package struct EntryPair
     /**
      * Encode the EntryPair to the underlying stream
      */
-    void encode(scope WriterToken* wr) @trusted
+    void encode(scope WriterToken wr) @trusted
     {
         import std.exception : enforce;
         import std.string : toStringz;

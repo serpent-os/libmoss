@@ -61,7 +61,7 @@ align(1):
     /**
      * Encode the IndexEntry to the underlying stream
      */
-    void encode(scope WriterToken* wr) @trusted
+    void encode(scope WriterToken wr) @trusted
     {
         IndexEntry cp = this;
 

@@ -110,7 +110,7 @@ public:
      * Subclasses must implement the encode method so that writing of the
      * stream data is possible.
      */
-    override void encode(scope WriterToken* wr) @trusted
+    override void encode(scope WriterToken wr) @trusted
     {
         /* Ensure every pair is encoded via WriterToken API */
         foreach (index; 0 .. pairs.length)

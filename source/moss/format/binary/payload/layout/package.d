@@ -97,7 +97,7 @@ public:
     /**
      * Encode the LayoutPayload to the WriterToken
      */
-    override void encode(scope WriterToken* wr) @trusted
+    override void encode(scope WriterToken wr) @trusted
     {
         /* Ensure every set is encoded via WriterToken API */
         foreach (index; 0 .. sets.length)

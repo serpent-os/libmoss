@@ -121,7 +121,7 @@ extern (C) package struct RecordPair
     /**
      * Encode the RecordPair to the underlying stream
      */
-    void encode(scope WriterToken* wr) @trusted
+    void encode(scope WriterToken wr) @trusted
     {
         Record r = Record();
         r.type = this.type;
@@ -198,7 +198,7 @@ private:
      * Handle encoding of all our numeric data types in a generic way, also
      * ensuring correct endian encoding.
      */
-    void encodeNumeric(T)(ref T datum, scope Record* record, scope WriterToken* wr)
+    void encodeNumeric(T)(ref T datum, scope Record* record, scope WriterToken wr)
     {
         import std.bitmanip : nativeToBigEndian;
         import std.stdio : fwrite;
@@ -235,7 +235,7 @@ private:
      * Essentially we expect a UTF-8 array with no endian worries,
      * and write this as a NUL terminated C string
      */
-    void encodeString(ref string datum, scope Record* record, scope WriterToken* wr)
+    void encodeString(ref string datum, scope Record* record, scope WriterToken wr)
     {
         import std.exception : enforce;
         import std.string : toStringz;

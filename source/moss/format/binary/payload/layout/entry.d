@@ -81,7 +81,7 @@ align(1):
     /**
      * Encode the LayoutEntry to the underlying byte buffer
      */
-    void encode(scope WriterToken* wr) @trusted
+    void encode(scope WriterToken wr) @trusted
     {
         LayoutEntry cp = this;
         cp.toNetworkOrder();

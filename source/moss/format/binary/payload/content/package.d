@@ -70,7 +70,7 @@ public:
     /**
      * Encode the ContentPayload to the WriterToken
      */
-    override void encode(scope WriterToken* wr) @trusted
+    override void encode(scope WriterToken wr) @trusted
     {
         import std.algorithm : each;
 
@@ -103,7 +103,7 @@ public:
     /**
      * Encode a single file to the stream
      */
-    void encodeOne(ref ContentEntry entry, scope WriterToken* wr) @trusted
+    void encodeOne(ref ContentEntry entry, scope WriterToken wr) @trusted
     {
         import std.stdio : File;
 

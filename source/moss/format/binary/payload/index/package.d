@@ -96,7 +96,7 @@ public:
     /**
      * Encode the IndexPayload to the WriterToken
      */
-    override void encode(scope WriterToken* wr) @trusted
+    override void encode(scope WriterToken wr) @trusted
     {
         /* Ensure every pair is encoded via WriterToken API */
         foreach (index; 0 .. pairs.length)
