@@ -71,7 +71,7 @@ public abstract class WriterToken
         import core.stdc.stdio : fwrite;
 
         _sizePlain += data.length;
-        auto encoded = this.encodeData(data);
+        auto encoded = encodeData(data);
         _sizeCompressed += encoded.length;
         checksum.put(data);
 
@@ -115,11 +115,26 @@ package:
      */
     final void end() @trusted
     {
+        import std.exception : enforce;
+        import core.stdc.stdio : fwrite;
+
         auto flushedSet = flushData();
-        if (flushedSet !is null && flushedSet.length > 0)
+        if (flushedSet is null || flushedSet.length < 1)
         {
-            appendData(flushedSet);
+            crc64iso = checksum.finish();
+            return;
         }
+
+        /* Got something left to write... */
+        _sizeCompressed += flushedSet.length;
+
+        enforce(fp !is null, "WriterToken.end(): No filepointer!");
+
+        /* Dump what we have to the stream */
+        enforce(fwrite(flushedSet.ptr, ubyte.sizeof, flushedSet.length,
+                fp) == flushedSet.length, "WriterToken.end(): Failed to write data");
+
+        /* Update plain-data checksum */
         crc64iso = checksum.finish();
     }
 
