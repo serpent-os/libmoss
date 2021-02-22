@@ -179,4 +179,5 @@ private:
 }
 
 public import moss.format.binary.writer.token;
+public import moss.format.binary.writer.zlib_token;
 public import moss.format.binary.writer.zstd_token;
