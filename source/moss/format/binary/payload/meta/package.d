@@ -156,7 +156,6 @@ public:
                         assert(typeid(OriginalType!T) == typeid(string),
                                 "addRecord(RecordTag." ~ memberName ~ ") expects string, not " ~ typeof(datum)
                                 .stringof);
-                        writeln("Writing key: ", key, " - value: ", datum);
                         pair.val_string = datum;
                         break;
                     default:
