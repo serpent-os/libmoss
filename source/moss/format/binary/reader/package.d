@@ -29,20 +29,13 @@ import moss.format.binary.endianness;
 import moss.format.binary.payload;
 import std.stdint : uint64_t;
 
+import std.mmfile : MmFile;
+
 /**
  * The Reader is a low-level mechanism for parsing Moss binary packages.
  */
-final class Reader
+public final class Reader
 {
-
-private:
-
-    File _file;
-    ArchiveHeader _header;
-
-    static TypeInfo[PayloadType] registeredHandlers;
-
-public:
     @disable this();
 
     /**
@@ -52,15 +45,18 @@ public:
     {
         import std.exception : enforce;
 
-        scope auto fp = file.getFP();
-
         _file = file;
+        mappedFile = new MmFile(_file);
 
-        auto size = _file.size;
-        enforce(size != 0, "Reader(): empty file");
-        _header.decode(fp);
+        fileLength = _file.size;
+        enforce(fileLength != 0, "Reader(): empty file");
 
+        /* Read through the header */
+        readPointer = 0;
+        readPointer += _header.decode(cast(ubyte[]) mappedFile[readPointer .. $]);
         _header.validate();
+
+        iteratePayloads();
     }
 
     ~this() @safe
@@ -138,6 +134,37 @@ public:
     {
         return null;
     }
+
+private:
+
+    File _file;
+    MmFile mappedFile;
+    ArchiveHeader _header;
+
+    ulong readPointer = 0;
+    ulong fileLength = 0;
+
+    static TypeInfo[PayloadType] registeredHandlers;
+
+    /**
+     * Walk through the payloads in the stream and process them
+     */
+    void iteratePayloads() @trusted
+    {
+        import std.stdio : writeln;
+        import std.exception : enforce;
+
+        foreach (payloadIndex; 0 .. _header.numPayloads)
+        {
+            PayloadHeader ph;
+            readPointer += ph.decode(cast(ubyte[]) mappedFile[readPointer .. $]);
+            readPointer += ph.storedSize; /* Skip contents to next PayloadHeader  */
+            enforce(readPointer <= fileLength, "Reader: Insufficient storage for reading Payloads");
+            writeln(ph);
+        }
+        enforce(readPointer == fileLength, "Reader: Garbage at end of stream");
+    }
+
 }
 
 public import moss.format.binary.reader.token;

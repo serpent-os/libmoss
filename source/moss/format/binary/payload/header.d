@@ -111,18 +111,21 @@ align(1):
     /**
      * Decode this PayloadHeader from the underlying file stream
      */
-    void decode(scope FILE* fp) @trusted
+    uint64_t decode(scope ubyte[] byteStream) @trusted
     {
         import std.exception : enforce;
-        import core.stdc.stdio : fread;
 
+        enforce(byteStream.length >= PayloadHeader.sizeof,
+                "PayloadHeader.decode(): Insufficient storage for PayloadHeader");
         PayloadHeader cp;
-
-        enforce(fread(&cp, PayloadHeader.sizeof, 1, fp) == 1,
-                "decode: Failed to read PayloadHeader in stream");
+        PayloadHeader* inp = cast(PayloadHeader*) byteStream[0 .. PayloadHeader.sizeof];
+        cp = *inp;
         cp.toHostOrder();
 
         this = cp;
+
+        /* Skip readPointer on */
+        return PayloadHeader.sizeof;
     }
 }
 

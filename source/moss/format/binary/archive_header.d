@@ -119,17 +119,20 @@ align(1):
     /**
      * Decode this ArchiveHeader from the underlying file stream
      */
-    void decode(scope FILE* fp) @trusted
+    uint64_t decode(scope ubyte[] byteStream) @trusted
     {
         import std.exception : enforce;
-        import core.stdc.stdio : fread;
 
+        enforce(byteStream.length >= ArchiveHeader.sizeof,
+                "ArchiveHeader.decode(): Insufficient storage for ArchiveHeader");
         ArchiveHeader cp;
-
-        enforce(fread(&cp, ArchiveHeader.sizeof, 1, fp) == 1,
-                "decode: Failed to read ArchiveHeader in stream");
+        ArchiveHeader* inp = cast(ArchiveHeader*) byteStream[0 .. ArchiveHeader.sizeof];
+        cp = *inp;
         cp.toHostOrder();
         this = cp;
+
+        /* Skip read pointer on */
+        return ArchiveHeader.sizeof;
     }
 
     /**
