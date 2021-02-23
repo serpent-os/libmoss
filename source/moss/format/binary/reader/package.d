@@ -61,8 +61,6 @@ public:
         _header.decode(fp);
 
         _header.validate();
-
-        spinPayloads();
     }
 
     ~this() @safe
