@@ -97,6 +97,22 @@ package struct PayloadWrapper
         _header = header;
     }
 
+    /**
+     * Return true if we've been loaded before
+     */
+    pragma(inline, true) pure @property bool loaded() @safe @nogc nothrow
+    {
+        return _loaded;
+    }
+
+    /**
+     * Updated loaded status
+     */
+    pragma(inline, true) pure @property void loaded(bool b) @safe @nogc nothrow
+    {
+        _loaded = b;
+    }
+
     TypeInfo type;
 
 private:
@@ -104,6 +120,7 @@ private:
     uint64_t _start = 0;
     PayloadHeader _header;
     Payload _payload;
+    bool _loaded = false;
 }
 
 /**
@@ -202,6 +219,10 @@ public final class Reader
         {
             if (w.type == typeid(T))
             {
+                if (w.payload !is null && !w.loaded && w.payload.storageType == StorageType.Data)
+                {
+                    loadPayload(w);
+                }
                 return cast(T) w.payload;
             }
         }
@@ -266,6 +287,18 @@ private:
         enforce(readPointer == fileLength, "Reader.iteratePayloads(): Garbage at end of stream");
     }
 
+    /**
+     * Load the specified payload on demand
+     *
+     * We only load a Payload once and only for a Data type storage.
+     */
+    void loadPayload(scope PayloadWrapper* wrapper) @trusted
+    {
+        scope (exit)
+        {
+            wrapper.loaded = true;
+        }
+    }
 }
 
 public import moss.format.binary.reader.token;
