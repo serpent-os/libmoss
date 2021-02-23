@@ -30,147 +30,6 @@ import moss.format.binary.payload;
 import std.stdint : uint64_t;
 
 /**
- * The ReaderToken abstracts access to the Reader's resources in order
- * to enable decoding for each Payload implementation
- */
-public struct ReaderToken
-{
-
-    /**
-     * readData will return a slice containing data from the underlying buffer
-     * with the given length, seeking forward where possible
-     */
-    ubyte[] readData(ulong length)
-    {
-        import std.exception : enforce;
-
-        enforce(readLength - (readIndex + length) >= 0, "Cannot read past stream boundary");
-
-        /* Return slice by length */
-        ubyte[] ret = pEncap.data[readIndex .. readIndex + length];
-        readIndex = readIndex + length;
-        return ret;
-    }
-
-    /**
-     * Return a struct from the next set of input data
-     */
-    T readDataToStruct(T)()
-    {
-        const ubyte[] data = readData(T.sizeof);
-        T* cpPtr = cast(T*) data.ptr;
-        T cp = *cpPtr;
-        return cp;
-    }
-
-    /**
-     * Provide access to the underlying PayloadHeader for decode()
-     * implementations to update record count, etc.
-     */
-    pragma(inline, true) pure @property PayloadHeader header() @safe @nogc nothrow
-    {
-        return pEncap.header;
-    }
-
-private:
-
-    PayloadEncapsulation* pEncap;
-    ulong readIndex = 0;
-    ulong readLength = 0;
-}
-
-/**
- * The PayloadEncapsulation type is used to keep track of each Payload that
- * we encounter within the stream, so that we can build a set of Payload
- * objects up.
- *
- * In turn, this allows us to have an introspective API where we can query
- * a Payload from the collection via templated APIs.
- */
-package struct PayloadEncapsulation
-{
-    /** The actual Payload which is able to read the data */
-    Payload payload;
-
-    /** "Similar" type lookup */
-    TypeInfo type;
-
-    /** The header */
-    PayloadHeader header;
-
-    /** Where in the stream does this Payload data start? (ftell) */
-    uint64_t startOffset = 0;
-
-    /**
-     * Calculate where in the stream this payload data ends
-     */
-    pragma(inline, true) pure @property uint64_t endOffset()
-    {
-        return startOffset + header.storedSize;
-    }
-
-    /**
-     * Read the data into the blob, decompress and make it usable
-     * for the Payload to consume
-     */
-    void readData(scope FILE* fp) @trusted
-    {
-        import std.exception : enforce;
-        import core.stdc.stdio : fread, fseek, SEEK_CUR;
-        import std.digest.crc : CRC64ISO;
-
-        CRC64ISO hash;
-
-        /* Can't decode zero data */
-        if (header.plainSize < 1)
-        {
-            return;
-        }
-
-        final switch (header.compression)
-        {
-        case PayloadCompression.None:
-            /* Read vanilla data in */
-            data = new ubyte[header.plainSize];
-            enforce(fread(data.ptr, data.length, 1, fp) == 1, "readData: fread failed");
-            break;
-        case PayloadCompression.Unknown:
-            /* TODO: Report inability to read */
-            enforce(fseek(fp, header.storedSize,
-                    SEEK_CUR) == 0, "readData: fseek failed");
-            break;
-        case PayloadCompression.Zstd:
-            auto compBytes = new ubyte[header.storedSize];
-            enforce(fread(compBytes.ptr, compBytes.length, 1, fp) == 1, "readData: fread failure");
-
-            import zstd : uncompress;
-
-            data = cast(ubyte[]) uncompress(compBytes);
-            break;
-        case PayloadCompression.Zlib:
-            auto compBytes = new ubyte[header.storedSize];
-            enforce(fread(compBytes.ptr, compBytes.length, 1, fp) == 1, "readData: fread failure");
-
-            import std.zlib : uncompress;
-
-            data = cast(ubyte[]) uncompress(compBytes);
-            break;
-        }
-
-        hash.put(data);
-
-        auto hashed = hash.finish();
-        enforce(hashed == header.crc64, "readData: CRC64ISO checksum failure");
-    }
-
-    /** Loaded data */
-    ubyte[] data = null;
-
-    /** Whether the data has yet been loaded */
-    bool loaded = false;
-}
-
-/**
  * The Reader is a low-level mechanism for parsing Moss binary packages.
  */
 final class Reader
@@ -180,7 +39,6 @@ private:
 
     File _file;
     ArchiveHeader _header;
-    PayloadEncapsulation*[] payloads;
 
     static TypeInfo[PayloadType] registeredHandlers;
 
@@ -271,15 +129,6 @@ public:
      */
     T payload(T : Payload)()
     {
-        static const auto genType = typeid(T);
-        foreach (ref p; payloads)
-        {
-            if (genType == p.type)
-            {
-                return cast(T) p.payload;
-            }
-        }
-
         return null;
     }
 
@@ -289,71 +138,6 @@ public:
      */
     @property PayloadHeader[] headers() @safe nothrow
     {
-        import std.algorithm : map;
-        import std.array : array;
-
-        return payloads.map!((p) => p.header).array;
-    }
-
-private:
-
-    /**
-     * Begin reading through each of the payload headers and begin
-     * associating Payload instances with them, loaded into a slice.
-     */
-    void spinPayloads() @trusted
-    {
-        import std.exception : enforce;
-        import core.stdc.stdio : ftell, fseek, SEEK_SET;
-        import std.stdio : writeln;
-
-        foreach (payloadIndex; 0 .. _header.numPayloads)
-        {
-            PayloadHeader pHdr;
-            scope auto fp = _file.getFP();
-            pHdr.decode(fp);
-
-            /* Record offsets */
-            const auto whence = ftell(fp);
-            enforce(whence > 0, "spinPayloads: ftell failure");
-
-            /* Store the Payload now */
-            auto pEncap = new PayloadEncapsulation();
-            pEncap.header = pHdr;
-            pEncap.startOffset = whence;
-            pEncap.payload = getPayloadImplForType(pHdr.type);
-            payloads ~= pEncap;
-
-            /* Set search type */
-            if (pEncap.payload !is null)
-            {
-                pEncap.type = registeredHandlers[pHdr.type];
-            }
-
-            /* TODO: Wrap the underlying buffer for ReaderToken */
-            ReaderToken rdr;
-            rdr.pEncap = pEncap;
-
-            /* Always try to load Data segments */
-            if (pEncap.payload !is null && pEncap.payload.storageType == StorageType.Data)
-            {
-                pEncap.readData(fp);
-                rdr.readLength = pEncap.data.length;
-                pEncap.payload.decode(&rdr);
-            }
-            else
-            {
-                /* Don't skip last payload, micro optimisation for Content loading */
-                if (payloadIndex == _header.numPayloads - 1)
-                {
-                    continue;
-                }
-
-                /* Otherwise, blindly seek */
-                enforce(fseek(fp, whence + pHdr.storedSize, SEEK_SET) == 0,
-                        "spinPayloads: fseek failed");
-            }
-
-        }
+        return null;
     }
 }
