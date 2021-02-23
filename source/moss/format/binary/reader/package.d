@@ -97,6 +97,8 @@ package struct PayloadWrapper
         _header = header;
     }
 
+    TypeInfo type;
+
 private:
 
     uint64_t _start = 0;
@@ -196,6 +198,14 @@ public final class Reader
      */
     T payload(T : Payload)()
     {
+        foreach (ref w; wrappers)
+        {
+            if (w.type == typeid(T))
+            {
+                return cast(T) w.payload;
+            }
+        }
+
         return null;
     }
 
@@ -238,6 +248,13 @@ private:
             auto wrap = new PayloadWrapper();
             wrap.header = ph;
             wrap.start = readPointer;
+
+            /* Instaniate the Payload object */
+            wrap.payload = getPayloadImplForType(wrap.header.type);
+            if (wrap.payload !is null)
+            {
+                wrap.type = registeredHandlers[wrap.header.type];
+            }
 
             /* Skip to next PayloadHeader now for next read */
             readPointer += ph.storedSize;
