@@ -45,7 +45,7 @@ extern (C) package struct EntryPair
      * Decode ourselves, IndexEntry and associated value, from the input
      * ReaderToken
      */
-    void decode(scope ReaderToken* rdr) @trusted
+    void decode(scope ReaderToken rdr) @trusted
     {
         entry.decode(rdr);
 

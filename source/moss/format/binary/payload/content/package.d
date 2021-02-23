@@ -80,7 +80,7 @@ public:
     /**
      * Decode the IndexPayload from the ReaderToken
      */
-    override void decode(scope ReaderToken* rdr) @trusted
+    override void decode(scope ReaderToken rdr) @trusted
     {
         import std.stdio : writeln;
 

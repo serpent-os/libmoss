@@ -24,7 +24,7 @@ module moss.format.binary.payload;
 
 public import std.stdint : uint8_t, uint16_t;
 
-public import moss.format.binary.reader : ReaderToken;
+public import moss.format.binary.reader.token : ReaderToken;
 public import moss.format.binary.writer.token : WriterToken;
 
 /**
@@ -137,7 +137,7 @@ public:
      * Subclasses must implement the decode method so that reading of the
      * stream data is possible.
      */
-    abstract void decode(scope ReaderToken* rdr);
+    abstract void decode(scope ReaderToken rdr);
 
     /**
      * Subclasses must implement the encode method so that writing of the

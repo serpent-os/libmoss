@@ -132,7 +132,7 @@ align(1):
     /**
      * Decode the record itself from a given input stream
      */
-    void decode(scope ReaderToken* rd) @trusted
+    void decode(scope ReaderToken rd) @trusted
     {
         auto cp = rd.readDataToStruct!Record;
         cp.toHostOrder();

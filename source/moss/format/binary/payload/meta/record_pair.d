@@ -66,7 +66,7 @@ extern (C) package struct RecordPair
      * Decode ourselves, Record and associated value, from the input
      * ReaderToken
      */
-    void decode(scope ReaderToken* rdr) @trusted
+    void decode(scope ReaderToken rdr) @trusted
     {
         Record rcrd;
         rcrd.decode(rdr);
@@ -168,7 +168,7 @@ private:
      * Endian-aware helper that can decode the range of numerics we support
      * from the underlying stream data
      */
-    void decodeNumeric(T)(ref T datum, scope Record* record, scope ReaderToken* rdr)
+    void decodeNumeric(T)(ref T datum, scope Record* record, scope ReaderToken rdr)
     {
         import std.exception : enforce;
         import std.bitmanip : bigEndianToNative;

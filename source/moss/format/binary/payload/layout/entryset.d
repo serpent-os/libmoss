@@ -53,7 +53,7 @@ extern (C) package struct EntrySet
      * Decode ourselves, LayoutEntry and associated source/target, from the input
      * ReaderToken
      */
-    void decode(scope ReaderToken* rdr) @trusted
+    void decode(scope ReaderToken rdr) @trusted
     {
         entry.decode(rdr);
 

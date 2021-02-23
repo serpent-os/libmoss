@@ -139,3 +139,5 @@ public:
         return null;
     }
 }
+
+public import moss.format.binary.reader.token;

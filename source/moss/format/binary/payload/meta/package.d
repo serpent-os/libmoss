@@ -92,7 +92,7 @@ public:
      * Subclasses must implement the decode method so that reading of the
      * stream data is possible.
      */
-    override void decode(scope ReaderToken* rdr) @trusted
+    override void decode(scope ReaderToken rdr) @trusted
     {
         /* Match number of records */
         recordCount = rdr.header.numRecords;
