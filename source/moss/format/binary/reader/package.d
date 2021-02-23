@@ -159,10 +159,11 @@ private:
             PayloadHeader ph;
             readPointer += ph.decode(cast(ubyte[]) mappedFile[readPointer .. $]);
             readPointer += ph.storedSize; /* Skip contents to next PayloadHeader  */
-            enforce(readPointer <= fileLength, "Reader: Insufficient storage for reading Payloads");
+            enforce(readPointer <= fileLength,
+                    "Reader.iteratePayloads(): Insufficient storage for reading Payloads");
             writeln(ph);
         }
-        enforce(readPointer == fileLength, "Reader: Garbage at end of stream");
+        enforce(readPointer == fileLength, "Reader.iteratePayloads(): Garbage at end of stream");
     }
 
 }
