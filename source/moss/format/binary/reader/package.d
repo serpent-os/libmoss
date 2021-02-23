@@ -32,6 +32,79 @@ import std.stdint : uint64_t;
 import std.mmfile : MmFile;
 
 /**
+ * Each PayloadWrapper manages an instance of Payload, which can be dynamically
+ * initialised with the appropriate storage type.
+ *
+ * It is also used to track the offsets for a Payload blob for extraction to
+ * actually work.
+ */
+package struct PayloadWrapper
+{
+
+    /**
+     * Return the start offset for the Payload
+     */
+    pragma(inline, true) pure @property uint64_t start() @safe @nogc nothrow
+    {
+        return _start;
+    }
+
+    /**
+     * Set the start offset for the Payload
+     */
+    pragma(inline, true) pure @property void start(uint64_t start) @safe @nogc nothrow
+    {
+        _start = start;
+    }
+
+    /**
+     * Return the end offset for the Payload
+     */
+    pragma(inline, true) @property uint64_t end() @safe @nogc nothrow
+    {
+        return _start + header.storedSize;
+    }
+
+    /**
+     * Return the underlying payload instance
+     */
+    pragma(inline, true) pure @property Payload payload() @safe @nogc nothrow
+    {
+        return _payload;
+    }
+
+    /**
+     * Update the Payload instance
+     */
+    pragma(inline, true) pure @property void payload(Payload p) @safe @nogc nothrow
+    {
+        _payload = p;
+    }
+
+    /**
+     * Expose Header property
+     */
+    pragma(inline, true) pure @property ref PayloadHeader header() @safe @nogc nothrow return
+    {
+        return _header;
+    }
+
+    /**
+     * Set the header explicitly
+     */
+    pragma(inline, true) pure @property void header(PayloadHeader header) @safe @nogc nothrow
+    {
+        _header = header;
+    }
+
+private:
+
+    uint64_t _start = 0;
+    PayloadHeader _header;
+    Payload _payload;
+}
+
+/**
  * The Reader is a low-level mechanism for parsing Moss binary packages.
  */
 public final class Reader
@@ -127,12 +200,14 @@ public final class Reader
     }
 
     /**
-     * The headers property returns a copy of the headers as found in the stream,
+     * The headers property returns a slice of the headers as found in the stream,
      * sequentially.
      */
-    @property PayloadHeader[] headers() @safe nothrow
+    @property auto headers() @safe nothrow
     {
-        return null;
+        import std.algorithm : map;
+
+        return wrappers.map!((w) => w.header());
     }
 
 private:
@@ -140,6 +215,7 @@ private:
     File _file;
     MmFile mappedFile;
     ArchiveHeader _header;
+    PayloadWrapper*[] wrappers;
 
     ulong readPointer = 0;
     ulong fileLength = 0;
@@ -151,17 +227,24 @@ private:
      */
     void iteratePayloads() @trusted
     {
-        import std.stdio : writeln;
         import std.exception : enforce;
 
+        /* Read numPayloads worth of payloads. */
         foreach (payloadIndex; 0 .. _header.numPayloads)
         {
             PayloadHeader ph;
             readPointer += ph.decode(cast(ubyte[]) mappedFile[readPointer .. $]);
-            readPointer += ph.storedSize; /* Skip contents to next PayloadHeader  */
+
+            auto wrap = new PayloadWrapper();
+            wrap.header = ph;
+            wrap.start = readPointer;
+
+            /* Skip to next PayloadHeader now for next read */
+            readPointer += ph.storedSize;
             enforce(readPointer <= fileLength,
                     "Reader.iteratePayloads(): Insufficient storage for reading Payloads");
-            writeln(ph);
+
+            wrappers ~= wrap;
         }
         enforce(readPointer == fileLength, "Reader.iteratePayloads(): Garbage at end of stream");
     }
