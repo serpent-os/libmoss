@@ -298,6 +298,14 @@ private:
         {
             wrapper.loaded = true;
         }
+
+        /* TODO: Initialise a ReaderToken based on the range of available data */
+        ReaderToken rt = null;
+        ubyte[] rangedData = cast(ubyte[]) mappedFile[wrapper.start .. wrapper.end];
+
+        rt = new ZstdReaderToken(rangedData);
+        rt.header = wrapper.header;
+        wrapper.payload.decode(rt);
     }
 }
 

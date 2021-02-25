@@ -35,13 +35,29 @@ public import moss.format.binary.payload.header;
  */
 public abstract class ReaderToken
 {
+    @disable this();
+
+    /**
+     * Supertype constructor to handle data storage
+     */
+    this(ref ubyte[] rangedData)
+    {
+
+    }
 
     /**
      * TODO: Remove or rework this API
+     *
+     * Attempts to read data from the stream and deserialise into a C-style
+     * struct.
      */
     T readDataToStruct(T)()
     {
-        return cast(T) 0;
+        T tmpVar;
+        const ubyte[] data = readData(T.sizeof);
+        T* tmpPtr = cast(T*) data.ptr;
+        tmpVar = *tmpPtr;
+        return tmpVar;
     }
 
     /**
@@ -49,7 +65,7 @@ public abstract class ReaderToken
      */
     ubyte[] readData(uint64_t length)
     {
-        return null;
+        throw new Exception("readData(): Not yet implemented");
     }
 
     /**
@@ -60,7 +76,37 @@ public abstract class ReaderToken
         return _header;
     }
 
+package:
+
+    /**
+     * Set the internal PayloadHeader for decoding purposes
+     */
+    pure @property void header(PayloadHeader header) @safe @nogc nothrow
+    {
+        _header = header;
+    }
+
 private:
 
     PayloadHeader _header;
 }
+
+/**
+ * PlainReaderToken provides the default implementation of ReaderToken that
+ * works with plain (non-compressed) data.
+ */
+public final class PlainReaderToken : ReaderToken
+{
+    @disable this();
+
+    /**
+     * Construct a new PlainReaderToken with the range of data made available
+     * from the memory mapped file.
+     */
+    this(ref ubyte[] rangedData)
+    {
+        super(rangedData);
+    }
+}
+
+public import moss.format.binary.reader.zstd_token;
