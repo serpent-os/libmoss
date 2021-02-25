@@ -44,6 +44,7 @@ public abstract class ReaderToken
     this(ref ubyte[] rangedData)
     {
         this.rangedData = rangedData;
+        checksum.start();
     }
 
     /**
@@ -66,9 +67,20 @@ public abstract class ReaderToken
      */
     final ubyte[] readData(uint64_t length)
     {
-        auto data = this.decodeData(length);
+        ubyte[] data = decodeData(length);
         checksum.put(data);
         return data;
+    }
+
+    /**
+     * Finish reading
+     */
+    final void finish() @trusted
+    {
+        import std.exception : enforce;
+
+        crc64iso = checksum.finish();
+        enforce(filePointer == rangedData.length, "Incorrect length read");
     }
 
     /**
@@ -94,11 +106,50 @@ package:
         _header = header;
     }
 
+    /**
+     * Helper function to read a raw number of bytes without conversion, and
+     * enforce safety limits
+     */
+    final ubyte[] readRaw(uint64_t length) @safe
+    {
+        import std.exception : enforce;
+
+        /* Ensure we update the filePointer on successful reads */
+        scope (exit)
+        {
+            filePointer += length;
+        }
+
+        enforce(filePointer + length <= rangedData.length,
+                "ReaderToken.readRaw(): Cannot pull additional bytes past EOF");
+
+        return rangedData[filePointer .. $];
+    }
+
+    /**
+     * Return the calculated CRC64ISO value
+     */
+    pragma(inline, true) pure final @property ubyte[8] crc64iso() @safe @nogc nothrow
+    {
+        return _crc64iso;
+    }
+
 private:
+
+    /**
+     * Set the known CRC64ISO value
+     */
+    pragma(inline, true) pure @property void crc64iso(ubyte[8] newChecksum) @safe @nogc nothrow
+    {
+        _crc64iso = newChecksum;
+    }
 
     PayloadHeader _header;
     ubyte[] rangedData;
     CRC64ISO checksum;
+    ubyte[8] _crc64iso = [0, 0, 0, 0, 0, 0, 0, 0];
+
+    uint64_t filePointer = 0;
 }
 
 /**
@@ -123,7 +174,7 @@ public final class PlainReaderToken : ReaderToken
      */
     override ubyte[] decodeData(uint64_t length) @trusted
     {
-        throw new Exception("Not yet implemented");
+        return super.readRaw(length);
     }
 }
 

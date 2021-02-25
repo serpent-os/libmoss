@@ -118,10 +118,15 @@ package:
         import std.exception : enforce;
         import core.stdc.stdio : fwrite;
 
+        /* Always update the checksum */
+        scope (exit)
+        {
+            crc64iso = checksum.finish();
+        }
+
         auto flushedSet = flushData();
         if (flushedSet is null || flushedSet.length < 1)
         {
-            crc64iso = checksum.finish();
             return;
         }
 
@@ -133,9 +138,6 @@ package:
         /* Dump what we have to the stream */
         enforce(fwrite(flushedSet.ptr, ubyte.sizeof, flushedSet.length,
                 fp) == flushedSet.length, "WriterToken.end(): Failed to write data");
-
-        /* Update plain-data checksum */
-        crc64iso = checksum.finish();
     }
 
     /**

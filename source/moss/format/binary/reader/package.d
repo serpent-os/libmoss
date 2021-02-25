@@ -294,6 +294,10 @@ private:
      */
     void loadPayload(scope PayloadWrapper* wrapper) @trusted
     {
+        import std.string : format;
+        import std.exception : enforce;
+        import std.conv : to;
+
         scope (exit)
         {
             wrapper.loaded = true;
@@ -306,6 +310,8 @@ private:
         rt = new PlainReaderToken(rangedData);
         rt.header = wrapper.header;
         wrapper.payload.decode(rt);
+        rt.finish();
+        //enforce(rt.crc64iso == wrapper.header.crc64, "Reader: Invalid checksum on payload %s".format(to!string(wrapper.type)));
     }
 }
 
