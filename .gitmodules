@@ -4,3 +4,6 @@
 [submodule "external/tinyendian"]
 	path = external/tinyendian
 	url = https://github.com/dlang-community/tinyendian.git
+[submodule "external/zstd-d"]
+	path = external/zstd-d
+	url = https://github.com/weka-io/zstd-d.git
