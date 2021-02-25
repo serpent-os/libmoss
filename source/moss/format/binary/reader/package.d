@@ -303,7 +303,7 @@ private:
         ReaderToken rt = null;
         ubyte[] rangedData = cast(ubyte[]) mappedFile[wrapper.start .. wrapper.end];
 
-        rt = new ZstdReaderToken(rangedData);
+        rt = new PlainReaderToken(rangedData);
         rt.header = wrapper.header;
         wrapper.payload.decode(rt);
     }
