@@ -1,52 +1,32 @@
 ### moss-format
 
-This repository contains the D Modules required by [moss](https://github.com/serpent-linux/moss) and [boulder](https://github.com/serpent-linux/boulder)
-to read and write the binary and source formats, respectively.
+Agnostic format library for package management. Roll your own package manager. Right now we have two main modules, and you can build either as a dependency (`moss-format:binary` or `moss-format:source`).
 
-#### `moss.format.source`
+#### Binary Format (`moss.format.binary`)
 
-The source module requires `dyyaml` and is capable of parsing a `stone.yml`
-file. The `stone.yml` file uses a very strict approach to parsing, and provides
-a declarative, structured approach to building distribution packages from source.
+The binary archive provides an agnostic streaming system via the `Reader` and `Writer` classes. No default limitations are imposed on the format other than complying with the `Payload` API. In the **default** implementation (i.e. in [boulder](https:/github.com/serpent-linux/boulder)) - the core Payload types are included by default. It is possible to reuse this library for a lightweight, well organised binary package format without using any of the default Payloads.
 
-Our `stone.yml` format is hugely inspired by the Solus `package.yml` format,
-with some extra multi-arch considerations and tweaks.
+##### `MetaPayload`
 
-To read a `stone.yml` file, you should **always** use this library, as it also
-applies a schema to the source files. Additionally, script parsing is not possible
-without the `ScriptBuilder` type in this repository.
+The meta payload is a simple, strongly typed, variable length key value store.
 
-#### `moss.format.binary`
+##### `IndexPayload`
 
-The binary module requires `zstd` and may support more compression methods in
-future. It is a low level API to read and write the binary format required by
-Moss's `.stone` packages.
+The Index payload stores offsets to files within the `ContentPayload`
 
-The format is designed to be self deduplicating, with multiple payloads defined
-per file. Each payload can be compressed, and has built-in CRC64 checks. No part
-of the format is plain text and requires special handling to read + write.
+##### `ContentPayload`
 
-At minimum we require 4 payloads:
+The Content payload is simply a concatenated series of unique files as seen within the package to permit deduplication.
 
-#####  Index
+##### `LayoutPayload`
 
-The Index payload contains metadata on each entry in the Content payload, such
-as the size + offset, and the unique hash key.
+The layout payload consists of encoded entries which define how to apply a file from the `ContentPayload` (or relative links, devices, etc) to the target filesystem.
 
-##### Content
+Together these payloads allow a well defined + structured binary format with automatic support for stream (de)compression, built-in CRC64ISO integrity checks and versioning. In the context of [Serpent OS](https://serpentos.com), our package format is entirely implemented for deeply deduplicated packages & cache stores, with installation routines implemented within `moss`.
 
-The Content payload contains a huge binary lump, which is simply every **unique,
-regular file** within the package. It is only addressable via the Index payload.
+The format currently supports `zstd` and `zlib` stream compression, and is completely endian-aware.
+####  Source Format (`moss.format.source`)
 
-##### Layout
+The source module provides our package recipe support, and is unofficially termed as the `stone.yml` format. It is implemented using a stricter variant of YAML as implemented through rigid parsing via the `dyyaml` module. The format is largely inspired by the developers previous work on the Solus `package.yml` format, and addresses some Serpent OS-specific requirements such as multiple-architecture builds, contextual nesting, etc.
 
-The Layout payload is similar to a `%files` list. It contains the filesystem
-**layout**, including symlink targets, permissions, etc. Regular files are referenced
-via their unique hash key, meaning that multiple Layout entries can reference the
-same Content, permitting deduplication
-
-#### Meta
-
-The Meta payload contains all metadata on a package, and supports well defined
-key **types** and **tags**. These keys are binary encoded, like the rest of the
-package, and have required information such as the name or version of the package.
+While it is possible to read the YML files without the library, it is highly recommended to do so in order to support a full range of features such as variable expansion and script substitution, as used heavily by [boulder](https://github.com/serpent-linux/boulder).
