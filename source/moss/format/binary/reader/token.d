@@ -134,6 +134,14 @@ package:
         return _crc64iso;
     }
 
+    /**
+     * Return how many bytes are currently left within the stream
+     */
+    pragma(inline, true) pure final @property uint64_t remainingBytes() @safe @nogc nothrow
+    {
+        return _header.storedSize - filePointer;
+    }
+
 private:
 
     /**
