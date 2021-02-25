@@ -40,4 +40,12 @@ public final class ZstdReaderToken : ReaderToken
     {
         super(rangedData);
     }
+
+    /**
+     * Decode up to LENGTH bytes from the stream and pass it back,
+     */
+    override ubyte[] decodeData(uint64_t length) @trusted
+    {
+        throw new Error("Not yet implemented");
+    }
 }

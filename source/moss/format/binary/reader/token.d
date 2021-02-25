@@ -24,6 +24,7 @@ module moss.format.binary.reader.token;
 
 public import std.stdint : uint64_t;
 public import moss.format.binary.payload.header;
+public import std.digest.crc : CRC64ISO;
 
 /**
  * The ReaderToken base type permits access to the underlying Reader resource
@@ -42,7 +43,7 @@ public abstract class ReaderToken
      */
     this(ref ubyte[] rangedData)
     {
-
+        this.rangedData = rangedData;
     }
 
     /**
@@ -63,10 +64,17 @@ public abstract class ReaderToken
     /**
      * Return a slice from the underlying stream with the given length
      */
-    ubyte[] readData(uint64_t length)
+    final ubyte[] readData(uint64_t length)
     {
-        throw new Exception("readData(): Not yet implemented");
+        auto data = this.decodeData(length);
+        checksum.put(data);
+        return data;
     }
+
+    /**
+     * Implementations should make decodeData actually useful.
+     */
+    abstract ubyte[] decodeData(uint64_t length) @trusted;
 
     /**
      * Return a copy of the underlying header
@@ -89,6 +97,8 @@ package:
 private:
 
     PayloadHeader _header;
+    ubyte[] rangedData;
+    CRC64ISO checksum;
 }
 
 /**
@@ -106,6 +116,14 @@ public final class PlainReaderToken : ReaderToken
     this(ref ubyte[] rangedData)
     {
         super(rangedData);
+    }
+
+    /**
+     * Pull raw bytes directly from the stream.
+     */
+    override ubyte[] decodeData(uint64_t length) @trusted
+    {
+        throw new Exception("Not yet implemented");
     }
 }
 
