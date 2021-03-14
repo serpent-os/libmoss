@@ -73,7 +73,7 @@ struct BuildOptions
      * project and execution of the workload, in the hopes of a finer tuned
      * profile data set
      */
-    @YamlSchema("cspgo") bool csgpo = true;
+    @YamlSchema("cspgo") bool cspgo = true;
 
     /**
      * A set of tuning selections to apply. Constructed at runtime through
