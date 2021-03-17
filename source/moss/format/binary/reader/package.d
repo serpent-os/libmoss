@@ -241,6 +241,22 @@ public final class Reader
         return wrappers.map!((w) => w.header());
     }
 
+    /**
+     * Assuming the Payload supports Content storage, unpackContent will simply
+     * decompress the entire contents to the output file name. This is primarily
+     * useful for the ContentPayload, but may be used for any files-as-a-payload
+     * usecase.
+     */
+    void unpackContent(scope Payload p, const(string) destFile) @trusted
+    {
+        import std.exception : enforce;
+        import std.string : format;
+
+        enforce(p.storageType == StorageType.Content,
+                "Reader.unpackContent(): %s doesn't support Content Storage".format(typeid(p).name));
+        throw new Error("Unsupported");
+    }
+
 private:
 
     File _file;
@@ -324,7 +340,8 @@ private:
         rt.header = wrapper.header;
         wrapper.payload.decode(rt);
         rt.finish();
-        enforce(rt.crc64iso == wrapper.header.crc64, "Reader: Invalid checksum on payload %s".format(to!string(wrapper.type)));
+        enforce(rt.crc64iso == wrapper.header.crc64,
+                "Reader: Invalid checksum on payload %s".format(to!string(wrapper.type)));
     }
 }
 
