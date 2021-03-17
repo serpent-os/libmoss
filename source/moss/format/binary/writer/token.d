@@ -80,6 +80,29 @@ public abstract class WriterToken
         /* Dump what we have to the stream */
         enforce(fwrite(encoded.ptr, ubyte.sizeof, encoded.length,
                 fp) == encoded.length, "WriterToken.appendData(): Failed to write data");
+
+        flush();
+    }
+
+    final void flush()
+    {
+        import core.stdc.stdio : fwrite;
+        import std.exception : enforce;
+
+        auto flushedSet = flushData();
+        if (flushedSet is null || flushedSet.length < 1)
+        {
+            return;
+        }
+
+        /* Got something left to write... */
+        _sizeCompressed += flushedSet.length;
+
+        enforce(fp !is null, "WriterToken.end(): No filepointer!");
+
+        /* Dump what we have to the stream */
+        enforce(fwrite(flushedSet.ptr, ubyte.sizeof, flushedSet.length,
+                fp) == flushedSet.length, "WriterToken.end(): Failed to write data");
     }
 
     /**
@@ -115,29 +138,8 @@ package:
      */
     final void end() @trusted
     {
-        import std.exception : enforce;
-        import core.stdc.stdio : fwrite;
-
-        /* Always update the checksum */
-        scope (exit)
-        {
-            crc64iso = checksum.finish();
-        }
-
-        auto flushedSet = flushData();
-        if (flushedSet is null || flushedSet.length < 1)
-        {
-            return;
-        }
-
-        /* Got something left to write... */
-        _sizeCompressed += flushedSet.length;
-
-        enforce(fp !is null, "WriterToken.end(): No filepointer!");
-
-        /* Dump what we have to the stream */
-        enforce(fwrite(flushedSet.ptr, ubyte.sizeof, flushedSet.length,
-                fp) == flushedSet.length, "WriterToken.end(): Failed to write data");
+        flush();
+        crc64iso = checksum.finish();
     }
 
     /**
