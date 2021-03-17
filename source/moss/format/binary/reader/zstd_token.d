@@ -24,6 +24,8 @@ module moss.format.binary.reader.zstd_token;
 
 public import moss.format.binary.reader.token;
 
+import zstd : Decompressor;
+
 /**
  * The ZstdReaderToken provides a zstd-stream-decompression aware ReaderToken
  * implementation.
@@ -39,6 +41,7 @@ public final class ZstdReaderToken : ReaderToken
     this(ref ubyte[] rangedData)
     {
         super(rangedData);
+        decompressor = new Decompressor();
     }
 
     /**
@@ -48,4 +51,8 @@ public final class ZstdReaderToken : ReaderToken
     {
         throw new Error("Not yet implemented");
     }
+
+private:
+
+    Decompressor decompressor;
 }
