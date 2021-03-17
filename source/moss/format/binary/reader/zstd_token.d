@@ -49,10 +49,33 @@ public final class ZstdReaderToken : ReaderToken
      */
     override ubyte[] decodeData(uint64_t length) @trusted
     {
-        throw new Error("Not yet implemented");
+        while (availableStorage < length)
+        {
+            /* How much can we currently read? */
+            auto readableSize = remainingBytes <= chunkSize ? remainingBytes : chunkSize;
+            auto bytesRead = decompressor.decompress(readRaw(readableSize));
+            bufferStorage ~= bytesRead;
+            availableStorage += bytesRead.length;
+        }
+
+        auto retStore = bufferStorage[0 .. length];
+        scope (exit)
+        {
+            bufferStorage = bufferStorage[length .. $];
+            availableStorage -= length;
+        }
+        return retStore;
     }
 
 private:
 
     Decompressor decompressor;
+
+    /* Saved bytes from decompression runs */
+    ubyte[] bufferStorage;
+
+    /* How many bytes to bulk process */
+    static const uint chunkSize = 4096;
+
+    ulong availableStorage = 0;
 }
