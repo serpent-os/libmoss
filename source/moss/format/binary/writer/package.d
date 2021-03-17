@@ -110,8 +110,8 @@ public:
             WriterToken wk;
 
             /* TODO: Set this up more dynamically */
-            pHdr.compression = PayloadCompression.None;
-            wk = new PlainWriterToken(_file.getFP());
+            pHdr.compression = PayloadCompression.Zstd;
+            wk = new ZstdWriterToken(_file.getFP());
             /* Begin encoding before emitting a header and copying */
             wk.begin();
             p.encode(wk);
