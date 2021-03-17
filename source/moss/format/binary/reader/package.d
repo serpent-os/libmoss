@@ -307,7 +307,20 @@ private:
         ReaderToken rt = null;
         ubyte[] rangedData = cast(ubyte[]) mappedFile[wrapper.start .. wrapper.end];
 
-        rt = new PlainReaderToken(rangedData);
+        switch (wrapper.header.compression)
+        {
+        case PayloadCompression.Zstd:
+            rt = new ZstdReaderToken(rangedData);
+            break;
+        case PayloadCompression.None:
+        case PayloadCompression.Unknown:
+            rt = new PlainReaderToken(rangedData);
+            break;
+        default:
+            throw new Error("Reader.loadPayload(): Cannot read compression type: %s".format(
+                    to!string(wrapper.header.compression)));
+        }
+
         rt.header = wrapper.header;
         wrapper.payload.decode(rt);
         rt.finish();
