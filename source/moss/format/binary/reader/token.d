@@ -77,10 +77,7 @@ public abstract class ReaderToken
      */
     final void finish() @trusted
     {
-        import std.exception : enforce;
-
         crc64iso = checksum.finish();
-        enforce(filePointer == rangedData.length, "Incorrect length read");
     }
 
     /**
