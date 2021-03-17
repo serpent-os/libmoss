@@ -254,7 +254,74 @@ public final class Reader
 
         enforce(p.storageType == StorageType.Content,
                 "Reader.unpackContent(): %s doesn't support Content Storage".format(typeid(p).name));
-        throw new Error("Unsupported");
+
+        File outputFile = File(destFile, "wb");
+
+        scope (exit)
+        {
+            outputFile.close();
+        }
+        return unpackContent(p, outputFile);
+    }
+
+    /**
+     * unpackContent will write the entire contents of the extraction section to
+     * the given file
+     */
+    void unpackContent(scope Payload p, File outputFile) @trusted
+    {
+        import std.exception : enforce;
+        import std.string : format;
+        import std.conv : to;
+
+        /* Find the correct wrapper to get the header, etc. */
+        PayloadWrapper* wrapper = null;
+        foreach (wr; wrappers)
+        {
+            if (p !is null && wr.payload == p)
+            {
+                wrapper = wr;
+                break;
+            }
+        }
+        enforce(wrapper !is null,
+                "Reader.unpackContent(): No known PayloadHeader for %s".format(typeid(p).name));
+
+        ReaderToken rt = null;
+        ubyte[] rangedData = cast(ubyte[]) mappedFile[wrapper.start .. wrapper.end];
+
+        switch (wrapper.header.compression)
+        {
+        case PayloadCompression.Zstd:
+            rt = new ZstdReaderToken(rangedData);
+            break;
+        case PayloadCompression.None:
+        case PayloadCompression.Unknown:
+            rt = new PlainReaderToken(rangedData);
+            break;
+        default:
+            throw new Error("Reader.unpackContent(): Cannot read compression type: %s".format(
+                    to!string(wrapper.header.compression)));
+        }
+
+        rt.header = wrapper.header;
+        uint64_t readTotal = rt.header.plainSize;
+        uint64_t readCurrent = 0;
+        while (readCurrent < readTotal)
+        {
+            static const auto chunkSize = 4096;
+            auto remaining = readTotal - readCurrent;
+            auto readSize = remaining <= chunkSize ? remaining : chunkSize;
+            ubyte[] readData = rt.readData(readSize);
+            outputFile.rawWrite(readData);
+            readCurrent += readData.length;
+        }
+
+        enforce(readCurrent == readTotal, "Reader: Invalid read in unpackContent");
+
+        rt.finish();
+        enforce(rt.crc64iso == wrapper.header.crc64,
+                "Reader: Invalid checksum on payload %s".format(to!string(wrapper.type)));
     }
 
 private:
