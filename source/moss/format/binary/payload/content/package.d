@@ -108,7 +108,7 @@ public:
         import std.stdio : File;
 
         File fi = File(entry.originPath, "rb");
-        foreach (ubyte[] buffer; fi.byChunk(16 * 1024))
+        foreach (ubyte[] buffer; fi.byChunk(128 * 1024))
         {
             wr.appendData(buffer);
         }

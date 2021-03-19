@@ -309,7 +309,7 @@ public final class Reader
         uint64_t readCurrent = 0;
         while (readCurrent < readTotal)
         {
-            static const auto chunkSize = 4096;
+            static const auto chunkSize = 128 * 1024;
             auto remaining = readTotal - readCurrent;
             auto readSize = remaining <= chunkSize ? remaining : chunkSize;
             ubyte[] readData = rt.readData(readSize);

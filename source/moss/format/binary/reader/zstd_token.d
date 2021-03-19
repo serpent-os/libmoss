@@ -75,7 +75,7 @@ private:
     ubyte[] bufferStorage;
 
     /* How many bytes to bulk process */
-    static const uint chunkSize = 4096;
+    static const uint chunkSize = 128 * 1024;
 
     ulong availableStorage = 0;
 }
