@@ -80,8 +80,6 @@ public abstract class WriterToken
         /* Dump what we have to the stream */
         enforce(fwrite(encoded.ptr, ubyte.sizeof, encoded.length,
                 fp) == encoded.length, "WriterToken.appendData(): Failed to write data");
-
-        flush();
     }
 
     final void flush()
@@ -98,7 +96,7 @@ public abstract class WriterToken
         /* Got something left to write... */
         _sizeCompressed += flushedSet.length;
 
-        enforce(fp !is null, "WriterToken.end(): No filepointer!");
+        enforce(fp !is null, "WriterToken.flush(): No filepointer!");
 
         /* Dump what we have to the stream */
         enforce(fwrite(flushedSet.ptr, ubyte.sizeof, flushedSet.length,

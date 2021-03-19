@@ -59,7 +59,7 @@ final class ZstdWriterToken : WriterToken
      */
     override ubyte[] flushData() @trusted
     {
-        return compressor.flush();
+        return compressor.finish();
     }
 
 private:
