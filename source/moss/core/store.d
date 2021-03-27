@@ -170,10 +170,11 @@ package:
         final switch (type)
         {
         case StoreType.System:
-            _directory = buildPath("/os", "store", identifier, versionIdentifier);
+            _directory = buildPath("/.moss", "store",
+                    identifier, versionIdentifier);
             break;
         case StoreType.User:
-            _directory = userHome.buildPath("moss", "store",
+            _directory = userHome.buildPath(".moss", "store",
                     identifier, versionIdentifier);
             break;
         }
