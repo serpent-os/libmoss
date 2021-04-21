@@ -82,6 +82,9 @@ public abstract class WriterToken
                 fp) == encoded.length, "WriterToken.appendData(): Failed to write data");
     }
 
+    /**
+     * Flush any remaining data to the stream
+     */
     final void flush()
     {
         import core.stdc.stdio : fwrite;
