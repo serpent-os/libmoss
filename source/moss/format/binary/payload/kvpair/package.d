@@ -22,7 +22,23 @@
 
 module moss.format.binary.payload.kvpair;
 
+public import std.stdint;
 public import moss.format.binary.payload;
+
+import moss.format.binary.endianness;
+
+/**
+ * A KvDatum is a simple struct recording the key and value lengths within
+ * the database. It is always 16-bytes in length and properly encoded.
+ */
+extern (C) struct KvDatum
+{
+    /** Length of the datum key */
+    @AutoEndian uint64_t keyLength;
+
+    /** Length of the datum value */
+    @AutoEndian uint64_t valueLength;
+}
 
 /**
  * The KvPairPayload is an abstract mechanism by which payloads can be implemented
