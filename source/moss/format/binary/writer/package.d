@@ -145,7 +145,6 @@ public:
                 enforce(pHdr.compression != PayloadCompression.Unknown,
                         "Writer.flush(): Unknown PayloadCompression unsupported!");
             }
-            wk = new ZstdWriterToken(_file.getFP());
             /* Begin encoding before emitting a header and copying */
             wk.begin();
             p.encode(wk);
