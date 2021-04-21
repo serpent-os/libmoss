@@ -38,9 +38,26 @@ extern (C) struct KvDatum
 
     /** Length of the datum value */
     @AutoEndian uint64_t valueLength;
+
+    /**
+     * Encode the KvDatum to the underlying stream
+     */
+    void encode(WriterToken wr) @trusted
+    {
+        KvDatum cp = this;
+
+        cp.toNetworkOrder();
+        wr.appendData((cast(ubyte*)&cp.keyLength)[0 .. cp.keyLength.sizeof]);
+        wr.appendData((cast(ubyte*)&cp.valueLength)[0 .. cp.valueLength.sizeof]);
+    }
 }
 
 static assert(KvDatum.sizeof == 16, "KvDatum should only ever be 16-bytes");
+
+/**
+ * A callback for writing a single record into the archive.
+ */
+alias recordWriteFunction = void delegate(scope ubyte[] key, scope ubyte[] value);
 
 /**
  * The KvPairPayload is an abstract mechanism by which payloads can be implemented
@@ -73,11 +90,24 @@ abstract class KvPairPayload : Payload
     }
 
     /**
-     * Encoding is not yet implemented
+     * Encoding relies on bulk inserts from a helper function in the implementation
      */
     final override void encode(scope WriterToken wr)
     {
+        /* Helper to encode each record */
+        void recordWriter(scope ubyte[] key, scope ubyte[] value)
+        {
+            assert(key.length > 0, "KvPairPayload.encode(): Key length must be greater than 0");
+            assert(value.length > 0, "KvPairPayload.encode(): Key length must be greater than 0");
+            KvDatum datum = KvDatum(key.length, value.length);
+            datum.encode(wr);
+            wr.appendData(key);
+            wr.appendData(value);
+            recordCount = recordCount + 1;
+        }
 
+        recordCount = 0;
+        writeRecords(&recordWriter);
     }
 
     /**
@@ -85,6 +115,19 @@ abstract class KvPairPayload : Payload
      */
     final override void decode(scope ReaderToken rdr)
     {
-
     }
+
+    /**
+     * Implementations should override writeRecords to store all data in
+     * pairs. It is very important that data is correctly serialised
+     * before asking KvPairPayload to encode it.
+     */
+    abstract void writeRecords(recordWriteFunction rwr);
+
+    /**
+     * Implementations should override loadRecord in order to correctly
+     * handle (and potentially store in memory) each record encountered
+     * within the payload.
+     */
+    abstract void loadRecord(scope ubyte[] key, scope ubyte[] data);
 }
