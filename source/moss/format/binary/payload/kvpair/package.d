@@ -40,6 +40,8 @@ extern (C) struct KvDatum
     @AutoEndian uint64_t valueLength;
 }
 
+static assert(KvDatum.sizeof == 16, "KvDatum should only ever be 16-bytes");
+
 /**
  * The KvPairPayload is an abstract mechanism by which payloads can be implemented
  * in a key-value database fashion. It is expected that the primary "Key" of a
