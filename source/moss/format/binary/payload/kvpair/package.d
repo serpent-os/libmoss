@@ -50,6 +50,16 @@ extern (C) struct KvDatum
         wr.appendData((cast(ubyte*)&cp.keyLength)[0 .. cp.keyLength.sizeof]);
         wr.appendData((cast(ubyte*)&cp.valueLength)[0 .. cp.valueLength.sizeof]);
     }
+
+    /**
+     * Decode the kvDatum itself from a given input stream
+     */
+    void decode(scope ReaderToken rdr) @trusted
+    {
+        auto cp = rdr.readDataToStruct!KvDatum;
+        cp.toHostOrder();
+        this = cp;
+    }
 }
 
 static assert(KvDatum.sizeof == 16, "KvDatum should only ever be 16-bytes");
@@ -111,10 +121,22 @@ abstract class KvPairPayload : Payload
     }
 
     /**
-     * Decoding is not yet implemented
+     * Decoding will grab each KvDatum and pass them to the loadRecord function
      */
     final override void decode(scope ReaderToken rdr)
     {
+        /* Match number of records */
+        recordCount = rdr.header.numRecords;
+
+        foreach (recordIndex; 0 .. recordCount)
+        {
+            KvDatum datum;
+            datum.decode(rdr);
+            ubyte[] key = rdr.readData(datum.keyLength);
+            ubyte[] value = rdr.readData(datum.valueLength);
+
+            loadRecord(key, value);
+        }
     }
 
     /**
