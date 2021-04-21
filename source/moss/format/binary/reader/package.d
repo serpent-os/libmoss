@@ -337,7 +337,7 @@ public final class Reader
      */
     pure @property MossFileType fileType() @safe @nogc nothrow
     {
-        return _header.fileType;
+        return _header.type;
     }
 
 private:
