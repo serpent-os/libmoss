@@ -46,9 +46,17 @@ const ubyte[21] integrityCheck = [
  */
 enum MossFileType : uint8_t
 {
+    /** No known file type, likely invalid */
     Unknown = 0,
+
+    /** Standard binary package */
     Binary,
+
+    /** Binary package: Delta update */
     Delta,
+
+    /** Database file, i.e. internal moss usage */
+    Database,
 }
 
 /**
