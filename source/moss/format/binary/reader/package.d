@@ -332,6 +332,14 @@ public final class Reader
         return _header;
     }
 
+    /**
+     * Return the underlying moss file type, i.e. package, database, etc.
+     */
+    pure @property MossFileTyoe fileType() @safe @nogc nothrow
+    {
+        return _header.fileType;
+    }
+
 private:
 
     File _file;
