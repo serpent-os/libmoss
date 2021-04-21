@@ -324,6 +324,14 @@ public final class Reader
                 "Reader: Invalid checksum on payload %s".format(to!string(wrapper.type)));
     }
 
+    /**
+     * Return a copy of the main header struct
+     */
+    pure @property ArchiveHeader archiveHeader() @safe @nogc nothrow
+    {
+        return _header;
+    }
+
 private:
 
     File _file;
