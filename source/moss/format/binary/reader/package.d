@@ -147,8 +147,6 @@ public final class Reader
         readPointer = 0;
         readPointer += _header.decode(cast(ubyte[]) mappedFile[readPointer .. $]);
         _header.validate();
-
-        iteratePayloads();
     }
 
     ~this() @safe
@@ -166,6 +164,14 @@ public final class Reader
             return;
         }
         _file.close();
+    }
+
+    /**
+     * Set userdata up
+     */
+    void setUserData(P : Payload)(void* userData) @trusted
+    {
+        userdataPointers[typeid(P)] = userData;
     }
 
     /**
@@ -215,6 +221,8 @@ public final class Reader
      */
     T payload(T : Payload)()
     {
+        iteratePayloads();
+
         foreach (ref w; wrappers)
         {
             if (w.type == typeid(T))
@@ -234,8 +242,10 @@ public final class Reader
      * The headers property returns a slice of the headers as found in the stream,
      * sequentially.
      */
-    @property auto headers() @safe nothrow
+    @property auto headers() @safe
     {
+        iteratePayloads();
+
         import std.algorithm : map;
 
         return wrappers.map!((w) => w.header());
@@ -350,6 +360,10 @@ private:
     ulong readPointer = 0;
     ulong fileLength = 0;
 
+    bool didIterate = false;
+
+    void*[TypeInfo] userdataPointers;
+
     static TypeInfo[PayloadType] registeredHandlers;
 
     /**
@@ -357,6 +371,12 @@ private:
      */
     void iteratePayloads() @trusted
     {
+        if (didIterate)
+        {
+            return;
+        }
+        didIterate = true;
+
         import std.exception : enforce;
 
         /* Read numPayloads worth of payloads. */
@@ -374,6 +394,12 @@ private:
             if (wrap.payload !is null)
             {
                 wrap.type = registeredHandlers[wrap.header.type];
+
+                auto tpid = typeid(wrap.payload);
+                if (tpid in userdataPointers)
+                {
+                    wrap.payload.userData = userdataPointers[tpid];
+                }
             }
 
             /* Skip to next PayloadHeader now for next read */

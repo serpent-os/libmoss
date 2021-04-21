@@ -81,7 +81,7 @@ alias recordWriteFunction = void delegate(scope ubyte[] key, scope ubyte[] value
  * Implementations should still ensure they register their specific type and
  * version with the Reader API in a static constructor.
  */
-abstract class KvPairPayload : Payload
+public abstract class KvPairPayload : Payload
 {
     @disable this();
 

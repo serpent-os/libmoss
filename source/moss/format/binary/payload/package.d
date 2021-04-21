@@ -134,6 +134,23 @@ public:
     }
 
     /**
+     * Return the userData pointer. This is primarily used in Reader
+     * implementations for proper decoding.
+     */
+    pure final @property userData() @trusted @nogc nothrow
+    {
+        return _userData;
+    }
+
+    /**
+     * Set the userData pointer.
+     */
+    pure final @property void userData(void* userData) @trusted @nogc nothrow
+    {
+        _userData = userData;
+    }
+
+    /**
      * Subclasses must implement the decode method so that reading of the
      * stream data is possible.
      */
@@ -163,6 +180,8 @@ package:
         this._storageType = storageType;
     }
 
+protected:
+
     /**
      * Set the number of records within the payload, implementation specific
      */
@@ -188,6 +207,7 @@ private:
     StorageType _storageType = StorageType.Data;
     uint16_t _payloadVersion = 0;
     uint32_t _recordCount = 0;
+    void* _userData = null;
 }
 
 public import moss.format.binary.payload.header;
