@@ -63,6 +63,26 @@ public:
         _header.type = type;
     }
 
+    /**
+     * Return the default compression tupe used for writing payloads.
+     * This is used for every payload, and it is not currently possible
+     * to set on a per-payload basis.
+     *
+     * Currently the default compression type is ZSTD
+     */
+    pure @property PayloadCompression compressionType() @safe @nogc nothrow
+    {
+        return _compression;
+    }
+
+    /**
+     * Set the default compression type for writing payloads.
+     */
+    pure @property void compressionType(PayloadCompression comp) @safe @nogc nothrow
+    {
+        _compression = comp;
+    }
+
     ~this() @safe
     {
         close();
@@ -109,8 +129,22 @@ public:
             pHdr.numRecords = p.recordCount;
             WriterToken wk;
 
-            /* TODO: Set this up more dynamically */
-            pHdr.compression = PayloadCompression.Zstd;
+            pHdr.compression = this.compressionType();
+            final switch (pHdr.compression)
+            {
+            case PayloadCompression.None:
+                wk = new PlainWriterToken(_file.getFP());
+                break;
+            case PayloadCompression.Zlib:
+                wk = new ZlibWriterToken(_file.getFP());
+                break;
+            case PayloadCompression.Zstd:
+                wk = new ZstdWriterToken(_file.getFP());
+                break;
+            case PayloadCompression.Unknown:
+                enforce(pHdr.compression != PayloadCompression.Unknown,
+                        "Writer.flush(): Unknown PayloadCompression unsupported!");
+            }
             wk = new ZstdWriterToken(_file.getFP());
             /* Begin encoding before emitting a header and copying */
             wk.begin();
@@ -175,6 +209,7 @@ private:
     ArchiveHeader _header;
     Payload[] payloads;
     bool headerWritten = false;
+    PayloadCompression _compression = PayloadCompression.Zstd;
 
 }
 
