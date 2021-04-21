@@ -126,7 +126,6 @@ public:
             auto pHdr = PayloadHeader();
             pHdr.type = p.payloadType;
             pHdr.payloadVersion = p.payloadVersion;
-            pHdr.numRecords = p.recordCount;
             WriterToken wk;
 
             pHdr.compression = this.compressionType();
@@ -153,6 +152,7 @@ public:
             pHdr.plainSize = wk.sizePlain;
             pHdr.storedSize = wk.sizeCompressed;
             pHdr.crc64 = wk.crc64iso;
+            pHdr.numRecords = p.recordCount;
 
             correctedHeaders ~= pHdr;
         }
