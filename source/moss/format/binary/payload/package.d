@@ -48,11 +48,16 @@ enum PayloadType : uint8_t
     /** For indexing the deduplicated store */
     Index = 4,
 
-    /* Attribute storage */
+    /** Attribute storage */
     Attributes = 5,
 
     /* For Writer interim */
     Dumb = 6,
+
+    /* MossDB types follow */
+
+    /** CacheDB payload */
+    CacheDB = 7,
 }
 
 /**
