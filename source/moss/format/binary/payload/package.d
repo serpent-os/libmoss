@@ -58,6 +58,12 @@ enum PayloadType : uint8_t
 
     /** CacheDB payload */
     CacheDB = 7,
+
+    /** StateMetaDB payload */
+    StateMetaDB = 8,
+
+    /** StateEntriesDB payload */
+    StateEntriesDB = 9,
 }
 
 /**
