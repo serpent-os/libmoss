@@ -299,6 +299,7 @@ public final class Reader
 
         ReaderToken rt = null;
         ubyte[] rangedData = cast(ubyte[]) mappedFile[wrapper.start .. wrapper.end];
+        validateChecksum(wrapper, rangedData);
 
         switch (wrapper.header.compression)
         {
@@ -328,10 +329,6 @@ public final class Reader
         }
 
         enforce(readCurrent == readTotal, "Reader: Invalid read in unpackContent");
-
-        rt.finish();
-        enforce(rt.crc64iso == wrapper.header.crc64,
-                "Reader: Invalid checksum on payload %s".format(to!string(wrapper.type)));
     }
 
     /**
@@ -419,19 +416,21 @@ private:
      */
     void loadPayload(scope PayloadWrapper* wrapper) @trusted
     {
-        import std.string : format;
-        import std.exception : enforce;
         import std.conv : to;
+        import std.string : format;
 
         scope (exit)
         {
             wrapper.loaded = true;
         }
 
-        /* TODO: Initialise a ReaderToken based on the range of available data */
+        /* Map available data to byte range (0-copy) */
         ReaderToken rt = null;
         ubyte[] rangedData = cast(ubyte[]) mappedFile[wrapper.start .. wrapper.end];
 
+        validateChecksum(wrapper, rangedData);
+
+        /* Initialise a ReaderToken based on the range of available data */
         switch (wrapper.header.compression)
         {
         case PayloadCompression.Zstd:
@@ -448,10 +447,27 @@ private:
 
         rt.header = wrapper.header;
         wrapper.payload.decode(rt);
-        rt.finish();
-        enforce(rt.crc64iso == wrapper.header.crc64,
-                "Reader: Invalid checksum on payload %s".format(to!string(wrapper.type)));
     }
+
+    void validateChecksum(scope PayloadWrapper* wrapper, ref scope ubyte[] data)
+    {
+        import std.string : format;
+        import std.exception : enforce;
+        import std.conv : to;
+        import std.digest.crc : CRC64ISO;
+
+        /* Read ahead and verify the CRC64ISO before actually dealing with contents */
+        auto crcheck = CRC64ISO();
+        crcheck.put(data);
+        ubyte[8] crcheckResult = crcheck.finish();
+        import std.stdio : writeln;
+
+        enforce(crcheckResult == wrapper.header.crc64,
+                "Reader: Invalid checksum on payload %s, expected '%s', got '%s'".format(
+                    to!string(wrapper.type), to!string(wrapper.header.crc64),
+                    to!string(crcheckResult)));
+    }
+
 }
 
 public import moss.format.binary.reader.token;

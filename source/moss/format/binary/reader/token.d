@@ -24,7 +24,6 @@ module moss.format.binary.reader.token;
 
 public import std.stdint : uint64_t;
 public import moss.format.binary.payload.header;
-public import std.digest.crc : CRC64ISO;
 
 /**
  * The ReaderToken base type permits access to the underlying Reader resource
@@ -44,7 +43,6 @@ public abstract class ReaderToken
     this(ref ubyte[] rangedData)
     {
         this.rangedData = rangedData;
-        checksum.start();
     }
 
     /**
@@ -67,17 +65,7 @@ public abstract class ReaderToken
      */
     final ubyte[] readData(uint64_t length)
     {
-        ubyte[] data = decodeData(length);
-        checksum.put(data);
-        return data;
-    }
-
-    /**
-     * Finish reading
-     */
-    final void finish() @trusted
-    {
-        crc64iso = checksum.finish();
+        return decodeData(length);
     }
 
     /**
@@ -124,14 +112,6 @@ package:
     }
 
     /**
-     * Return the calculated CRC64ISO value
-     */
-    pragma(inline, true) pure final @property ubyte[8] crc64iso() @safe @nogc nothrow
-    {
-        return _crc64iso;
-    }
-
-    /**
      * Return how many bytes are currently left within the stream
      */
     pragma(inline, true) pure final @property uint64_t remainingBytes() @safe @nogc nothrow
@@ -141,18 +121,8 @@ package:
 
 private:
 
-    /**
-     * Set the known CRC64ISO value
-     */
-    pragma(inline, true) pure @property void crc64iso(ubyte[8] newChecksum) @safe @nogc nothrow
-    {
-        _crc64iso = newChecksum;
-    }
-
     PayloadHeader _header;
     ubyte[] rangedData;
-    CRC64ISO checksum;
-    ubyte[8] _crc64iso = [0, 0, 0, 0, 0, 0, 0, 0];
 
     uint64_t filePointer = 0;
 }
