@@ -64,6 +64,9 @@ enum PayloadType : uint8_t
 
     /** StateEntriesDB payload */
     StateEntriesDB = 9,
+
+    /** LayoutDB payload */
+    LayoutDB = 10,
 }
 
 /**
