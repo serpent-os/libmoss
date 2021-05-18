@@ -73,7 +73,7 @@ public abstract class WriterToken
         _sizePlain += data.length;
         auto encoded = encodeData(data);
         _sizeCompressed += encoded.length;
-        checksum.put(data);
+        checksum.put(encoded);
 
         enforce(fp !is null, "WriterToken.appendData(): No filepointer!");
 
@@ -98,6 +98,7 @@ public abstract class WriterToken
 
         /* Got something left to write... */
         _sizeCompressed += flushedSet.length;
+        checksum.put(flushedSet);
 
         enforce(fp !is null, "WriterToken.flush(): No filepointer!");
 
