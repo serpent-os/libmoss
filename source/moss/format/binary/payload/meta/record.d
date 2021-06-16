@@ -88,6 +88,9 @@ enum RecordTag : uint16_t
 
     /** SPDX license identifier */
     @(RecordType.String) License = 12,
+
+    /** Currently recorded build number */
+    @(RecordType.Uint64) BuildRelease = 13,
 }
 
 /**
