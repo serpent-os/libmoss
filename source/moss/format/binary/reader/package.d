@@ -217,25 +217,46 @@ public final class Reader
     }
 
     /**
-     * Return first matching Payload instance type or null if not found
+     * Return all matching payloads as a range
      */
-    T payload(T : Payload)()
+    auto payloads(T : Payload)()
     {
+        import std.algorithm : filter, map;
+
         iteratePayloads();
 
-        foreach (ref w; wrappers)
+        auto filterFunc(scope PayloadWrapper* w)
         {
-            if (w.type == typeid(T))
+            return w.type == typeid(T);
+        }
+
+        auto updateFunc(scope PayloadWrapper* w)
+        {
+            if (w.payload !is null && !w.loaded && w.payload.storageType == StorageType.Data)
             {
-                if (w.payload !is null && !w.loaded && w.payload.storageType == StorageType.Data)
-                {
-                    loadPayload(w);
-                }
-                return cast(T) w.payload;
+                loadPayload(w);
             }
         }
 
-        return null;
+        auto compReturn(scope PayloadWrapper* w)
+        {
+            updateFunc(w);
+            return cast(T) w.payload;
+        }
+
+        return wrappers.filter!(filterFunc)
+            .map!((p) => compReturn(p));
+    }
+
+    /**
+     * Return the first payload matching the given type
+     */
+    T payload(T : Payload)()
+    {
+        import std.range : take;
+
+        auto payloads = this.payloads!T();
+        return payloads.empty ? null : payloads.take(1).front;
     }
 
     /**
