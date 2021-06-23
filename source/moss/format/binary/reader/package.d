@@ -230,22 +230,9 @@ public final class Reader
             return w.type == typeid(T);
         }
 
-        auto updateFunc(scope PayloadWrapper* w)
-        {
-            if (w.payload !is null && !w.loaded && w.payload.storageType == StorageType.Data)
-            {
-                loadPayload(w);
-            }
-        }
-
-        auto compReturn(scope PayloadWrapper* w)
-        {
-            updateFunc(w);
-            return cast(T) w.payload;
-        }
-
         return wrappers.filter!(filterFunc)
-            .map!((p) => compReturn(p));
+            .map!((w) => PayloadReturn(this, w))
+            .map!((p) => p.payload);
     }
 
     /**
@@ -256,7 +243,7 @@ public final class Reader
         import std.range : take;
 
         auto payloads = this.payloads!T();
-        return payloads.empty ? null : payloads.take(1).front;
+        return payloads.empty ? null : cast(T) payloads.take(1).front;
     }
 
     /**
@@ -269,7 +256,7 @@ public final class Reader
 
         import std.algorithm : map;
 
-        return wrappers.map!((w) => w.header());
+        return wrappers.map!((w) => PayloadReturn(this, w));
     }
 
     /**
@@ -489,6 +476,50 @@ private:
                     to!string(crcheckResult)));
     }
 
+}
+
+/**
+ * Simple type to wrap the payload functions and make them automatically
+* load on demand
+*/
+public struct PayloadReturn
+{
+    PayloadHeader pt;
+    alias pt this;
+
+    @disable this();
+
+package:
+
+    /**
+     * Construct a new PayloadReturn type
+     */
+    this(Reader refOwner, PayloadWrapper* wrapper)
+    {
+        this.refOwner = refOwner;
+        this.wrapper = wrapper;
+        this.pt = wrapper.header;
+    }
+
+public:
+
+    /**
+     * Return a payload and load it when needed
+     */
+    @property Payload payload() @safe
+    {
+        if (wrapper.payload !is null && !wrapper.loaded
+                && wrapper.payload.storageType == StorageType.Data)
+        {
+            refOwner.loadPayload(wrapper);
+        }
+        return wrapper.payload;
+    }
+
+private:
+
+    PayloadWrapper* wrapper = null;
+    Reader refOwner = null;
 }
 
 public import moss.format.binary.reader.token;
