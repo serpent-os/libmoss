@@ -1,0 +1,3 @@
+[submodule "external/external/rocksdb-binding"]
+	path = external/external/rocksdb-binding
+	url = https://gitlab.com/serpent-os/dlang/rocksdb-binding.git
