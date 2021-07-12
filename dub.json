@@ -7,7 +7,7 @@
 	"license": "Zlib",
 	"version": "0.0.1",
 	"name": "moss-db",
-	"targetPath": "none",
+	"targetType": "none",
 	"dependencies": {
 		"rocksdb": {
 			"path": "external/rocksdb-binding"
