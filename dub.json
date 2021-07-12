@@ -3,31 +3,14 @@
 		"Serpent OS Developers"
 	],
 	"copyright": "Copyright © 2020-2021 Serpent OS Developers",
-	"description": "Serpent OS Package Manager",
+	"description": "Nested key-value database abstraction",
 	"license": "Zlib",
 	"version": "0.0.1",
-	"name": "moss",
-	"targetPath": "bin",
+	"name": "moss-db",
+	"targetPath": "none",
 	"dependencies": {
-		"moss-core": {
-			"path": "external/moss-core"
-		},
-		"moss-format:binary": {
-			"path": "external/moss-format"
-		},
 		"rocksdb": {
 			"path": "external/rocksdb-binding"
-		}
-	},
-	"buildTypes": {
-		"debug": {
-			"buildOptions": ["debugMode", "optimize"],
-			"dflags-dmd": ["-g", "-fPIC"],
-			"dflags-ldc": ["-gc", "-O2", "--relocation-model=pic"]
-		},
-		"release": {
-			"buildOptions": ["releaseMode", "optimize", "inline"],
-			"dflags-ldc": ["-flto=thin", "--relocation-model=pic", "-link-defaultlib-shared=false"]
 		}
 	}
 }

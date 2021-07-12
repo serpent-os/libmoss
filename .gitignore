@@ -1,4 +1,2 @@
-/bin
+/*.a
 /.dub
-/testpackage.stone
-/dub.selections.json
