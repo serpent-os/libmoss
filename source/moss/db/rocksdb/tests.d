@@ -54,3 +54,35 @@ private unittest
         cleanupDB(db);
     }
 }
+
+/**
+ * Add 1000 integer values, ensure they exist without iteration
+ */
+private unittest
+{
+    auto db = new RDBDatabase(dbLocation, DatabaseMutability.ReadWrite);
+    scope (exit)
+    {
+        cleanupDB(db);
+    }
+
+    /**
+     * Add all the keys
+     */
+    foreach (i; 0 .. 1000)
+    {
+        ubyte[1] keyval = [cast(ubyte) i];
+        db.set(keyval, keyval);
+    }
+
+    foreach (i; 0 .. 1000)
+    {
+        ubyte[1] lookupkey = [cast(ubyte) i];
+        const ubyte[] ret = db.get(lookupkey);
+
+        assert(ret !is null, "Could not retrieve integer key from database");
+        assert(ret.length == 1, "Invalid length integer key value from database");
+
+        assert(ret == lookupkey, "Invalid integer return value from database");
+    }
+}
