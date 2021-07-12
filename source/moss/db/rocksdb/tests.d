@@ -86,3 +86,47 @@ private unittest
         assert(ret == lookupkey, "Invalid integer return value from database");
     }
 }
+
+/**
+ * Make sure buckets work appropriately
+ */
+private unittest
+{
+    auto db = new RDBDatabase(dbLocation, DatabaseMutability.ReadWrite);
+    scope (exit)
+    {
+        cleanupDB(db);
+    }
+
+    auto bucket = db.bucket(cast(ubyte[]) "customBucket");
+    assert(bucket !is null, "Could not retrieve customBucket from database");
+
+    /**
+      * Add all the keys to bucket
+      */
+    foreach (i; 0 .. 10)
+    {
+        ubyte[1] keyval = [cast(ubyte) i];
+        bucket.set(keyval, keyval);
+    }
+
+    /**
+     * Ensure they exist in the bucket
+     */
+    foreach (i; 0 .. 10)
+    {
+        ubyte[1] lookupkey = [cast(ubyte) i];
+        const ubyte[] ret = bucket.get(lookupkey);
+
+        assert(ret !is null, "Could not retrieve integer key from bucket");
+        assert(ret.length == 1, "Invalid length integer key value from bucket");
+
+        assert(ret == lookupkey, "Invalid integer return value from bucket");
+
+        /**
+         * Ensure it doesn't exist in root namespace
+         */
+        const auto ret2 = db.get(lookupkey);
+        assert(ret2 is null, "Should not find bucket key in root namespace");
+    }
+}
