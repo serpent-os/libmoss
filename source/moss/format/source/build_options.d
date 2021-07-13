@@ -49,7 +49,7 @@ struct TuningSelection
     TuningSelectionType type = TuningSelectionType.Enable;
 
     /**
-     * Optional configuation value
+     * Optional configuration value
      */
     string configValue = null;
 }

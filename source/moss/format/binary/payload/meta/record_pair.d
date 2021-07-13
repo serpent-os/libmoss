@@ -173,7 +173,7 @@ private:
         import std.exception : enforce;
         import std.bitmanip : bigEndianToNative;
 
-        enforce(record.length == T.sizeof, "Record size mistmatch");
+        enforce(record.length == T.sizeof, "Record size mismatch");
 
         auto readData = rdr.readData(T.sizeof);
 

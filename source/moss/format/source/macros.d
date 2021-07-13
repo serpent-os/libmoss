@@ -73,13 +73,13 @@ public:
     }
 
     /**
-     * Attempt to parse the input fiel
+     * Attempt to parse the input file
      */
     void parse() @system
     {
         import std.exception : enforce;
 
-        enforce(_file.isOpen(), "MacoFile.parse(): File is not open");
+        enforce(_file.isOpen(), "MacroFile.parse(): File is not open");
 
         scope (exit)
         {
@@ -287,7 +287,7 @@ private:
         foreach (ref Node k; node)
         {
             enforce(k.nodeID == NodeID.mapping,
-                    "parseMaros(): Expected mapping in sequence for " ~ name);
+                    "parseMacros(): Expected mapping in sequence for " ~ name);
 
             auto mappingKeys = k.mappingKeys;
             auto mappingValues = k.mappingValues;

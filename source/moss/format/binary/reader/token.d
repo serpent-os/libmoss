@@ -48,7 +48,7 @@ public abstract class ReaderToken
     /**
      * TODO: Remove or rework this API
      *
-     * Attempts to read data from the stream and deserialise into a C-style
+     * Attempts to read data from the stream and de-serialise into a C-style
      * struct.
      */
     T readDataToStruct(T)()
