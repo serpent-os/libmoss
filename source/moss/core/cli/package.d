@@ -26,7 +26,7 @@ import std.stdio;
 import std.getopt;
 
 /**
- * UDA to associcate a command _name_ with a structure. This is the primary
+ * UDA to associate a command _name_ with a structure. This is the primary
  * key, such as "help", "install", etc.
  */
 struct CommandName
@@ -44,7 +44,7 @@ struct CommandHelp
     /** A short helpful description of what the command actually does */
     string blurb;
 
-    /** A multiline string containing information on command usage */
+    /** A multi-line string containing information on command usage */
     string help;
 }
 
