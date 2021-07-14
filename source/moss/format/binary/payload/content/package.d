@@ -92,10 +92,10 @@ public:
      */
     void addFile(const(string) id, const(string) path) @trusted
     {
-        ContentEntry queable;
-        queable.hash = id;
-        queable.originPath = path;
-        encoderQueue ~= queable;
+        ContentEntry queueable;
+        queueable.hash = id;
+        queueable.originPath = path;
+        encoderQueue ~= queueable;
 
         recordCount = cast(uint32_t) encoderQueue.length;
     }

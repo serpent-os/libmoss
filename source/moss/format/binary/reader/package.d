@@ -155,7 +155,7 @@ public final class Reader
     }
 
     /**
-     * Flush and close the underying file.
+     * Flush and close the underlying file.
      */
     void close() @safe
     {
@@ -263,7 +263,7 @@ public final class Reader
      * Assuming the Payload supports Content storage, unpackContent will simply
      * decompress the entire contents to the output file name. This is primarily
      * useful for the ContentPayload, but may be used for any files-as-a-payload
-     * usecase.
+     * use case.
      */
     void unpackContent(scope Payload p, const(string) destFile) @trusted
     {
@@ -394,7 +394,7 @@ private:
             wrap.header = ph;
             wrap.start = readPointer;
 
-            /* Instaniate the Payload object */
+            /* Instantiate the Payload object */
             wrap.payload = getPayloadImplForType(wrap.header.type);
             if (wrap.payload !is null)
             {

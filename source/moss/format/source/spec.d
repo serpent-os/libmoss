@@ -102,7 +102,7 @@ public:
     }
 
     /**
-     * Attempt to parse the input fiel
+     * Attempt to parse the input file
      */
     void parse() @system
     {

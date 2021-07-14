@@ -140,7 +140,7 @@ public:
     }
 
     /**
-     * Return the numner of records within a Data Payload
+     * Return the number of records within a Data Payload
      */
     pure final @property uint32_t recordCount() @safe @nogc nothrow
     {

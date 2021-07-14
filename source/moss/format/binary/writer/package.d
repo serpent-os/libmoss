@@ -48,7 +48,7 @@ public:
     }
 
     /**
-     * Return the filetype for this Writer
+     * Return the file type for this Writer
      */
     pure @property MossFileType fileType() @safe @nogc nothrow
     {
@@ -56,7 +56,7 @@ public:
     }
 
     /**
-     * Set the filetype for this Writer
+     * Set the file type for this Writer
      */
     @property void fileType(MossFileType type) @safe @nogc nothrow
     {
@@ -64,7 +64,7 @@ public:
     }
 
     /**
-     * Return the default compression tupe used for writing payloads.
+     * Return the default compression type used for writing payloads.
      * This is used for every payload, and it is not currently possible
      * to set on a per-payload basis.
      *
@@ -89,7 +89,7 @@ public:
     }
 
     /**
-     * Flush and close the underying file.
+     * Flush and close the underlying file.
      */
     void close() @safe
     {

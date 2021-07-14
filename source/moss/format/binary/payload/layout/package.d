@@ -36,7 +36,7 @@ const uint16_t layoutPayloadVersion = 1;
 alias RangedEntrySet = Tuple!(LayoutEntry, "entry", string, "source", string, "target");
 
 /**
- * A LayoutPayload contains a series of definintions on how to apply a particular
+ * A LayoutPayload contains a series of definitions on how to apply a particular
  * filesystem layout for a given package to the target filesystem. It is used
  * in conjunction with the cache assets stored and referenced within ContentPayload
  * and IndexPayload as the final step of making package assets available.

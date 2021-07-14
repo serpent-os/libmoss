@@ -92,7 +92,7 @@ public:
     }
 
     /**
-     * Add a defintition to the builder by its ID
+     * Add a definition to the builder by its ID
      *
      * A definition is enclosed in `%(` and `)`. It provides a variable
      * that is available at "compile time", rather than run time.
