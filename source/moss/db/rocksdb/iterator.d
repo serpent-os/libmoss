@@ -23,6 +23,7 @@
 module moss.db.rocksdb.iterator;
 
 public import moss.db.interfaces;
+public import rocksdb.iterator;
 
 /**
  * A concrete implementation of IIterable for RocksDB
@@ -31,7 +32,7 @@ package class RDBIterator : IIterable
 {
     override bool empty()
     {
-        return true;
+        return !iter.valid();
     }
 
     override DatabaseEntryPair front()
@@ -41,10 +42,49 @@ package class RDBIterator : IIterable
 
     override void popFront()
     {
+        iter.next();
+        setHead();
+    }
 
+    /**
+     * Construct a new Iterator wrapping the internal iterator types
+     */
+    this(rocksdb.Iterator iter)
+    {
+        this.iter = iter;
+        setHead();
+    }
+
+public:
+
+    /**
+     * Disable default constructor
+     */
+    @disable this();
+
+    ~this()
+    {
+        this.iter.close();
+        this.iter = null;
     }
 
 private:
 
+    void setHead()
+    {
+        if (!iter.valid)
+        {
+            return;
+        }
+
+        auto key = iter.key();
+        DatabaseEntryPair pair;
+        pair.entry.decode(key);
+        pair.value = iter.value();
+        cur = pair;
+    }
+
     DatabaseEntryPair cur;
+    rocksdb.Iterator iter;
+
 }

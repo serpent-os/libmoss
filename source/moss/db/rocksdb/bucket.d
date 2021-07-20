@@ -28,6 +28,8 @@ public import moss.db.interfaces : IReadWritable, IIterable;
 import moss.db.entry;
 import moss.db.rocksdb.db : RDBDatabase;
 import moss.db.rocksdb.iterator : RDBIterator;
+import rocksdb.options : ReadOptions;
+import rocksdb.iterator;
 
 /**
  * In our rocksdb wrapper we have the root bucket, which may be nested, or
@@ -64,9 +66,19 @@ package class RDBBucket : IReadWritable
         return cast(const(Datum)) _prefix;
     }
 
+    /**
+     * Return a scope appropriate iterator
+     */
     @property override IIterable iterator()
     {
-        return new RDBIterator();
+        auto db = parentDB.dbCon;
+        auto ro = new ReadOptions();
+        auto it = new rocksdb.Iterator(db, ro);
+        if (_prefix !is null && _prefix.length > 0)
+        {
+            it.seek(_prefix);
+        }
+        return new RDBIterator(it);
     }
 
 private:

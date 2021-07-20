@@ -137,7 +137,7 @@ private unittest
 private unittest
 {
     import std.range : iota;
-    import std.algorithm : sum, map, each;
+    import std.algorithm : sum, map;
 
     auto db = new RDBDatabase(dbLocation, DatabaseMutability.ReadWrite);
 
@@ -170,8 +170,6 @@ private unittest
     static const auto knownTotal = iota(0, 10).sum();
 
     /* Make sure everything is an int */
-    it.each!((t) => assert(t.value.length == 1, "Invalid length for iterable value"));
     const auto calcTotal = it.map!((t) => cast(int) t.value[0]).sum();
-
     assert(calcTotal == knownTotal, "Iterator failed to iterate correct values");
 }
