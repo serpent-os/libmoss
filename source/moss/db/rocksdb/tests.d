@@ -130,3 +130,48 @@ private unittest
         assert(ret2 is null, "Should not find bucket key in root namespace");
     }
 }
+
+/**
+ * Iteration based API test (simple)
+ */
+private unittest
+{
+    import std.range : iota;
+    import std.algorithm : sum, map, each;
+
+    auto db = new RDBDatabase(dbLocation, DatabaseMutability.ReadWrite);
+
+    scope (exit)
+    {
+        cleanupDB(db);
+    }
+
+    /**
+      * Add all the keys to root
+      */
+    foreach (i; 0 .. 10)
+    {
+        ubyte[1] keyval = [cast(ubyte) i];
+        db.set(keyval, keyval);
+    }
+
+    /**
+     * Grab an iterator
+     */
+    auto it = db.iterator();
+
+    /* Sanity check, make sure we have an iterator implementation */
+    assert(it !is null, "Failed to grab iterator from database");
+    scope (exit)
+    {
+        it.destroy();
+    }
+
+    static const auto knownTotal = iota(0, 10).sum();
+
+    /* Make sure everything is an int */
+    it.each!((t) => assert(t.value.length == 1, "Invalid length for iterable value"));
+    const auto calcTotal = it.map!((t) => cast(int) t.value[0]).sum();
+
+    assert(calcTotal == knownTotal, "Iterator failed to iterate correct values");
+}
