@@ -173,3 +173,68 @@ private unittest
     const auto calcTotal = it.map!((t) => cast(int) t.value[0]).sum();
     assert(calcTotal == knownTotal, "Iterator failed to iterate correct values");
 }
+
+/**
+ * Iteration of multiple buckets
+ */
+private unittest
+{
+    import std.algorithm : each, sum, map;
+    import std.range : iota;
+    import std.string : format;
+
+    auto db = new RDBDatabase(dbLocation, DatabaseMutability.ReadWrite);
+
+    scope (exit)
+    {
+        cleanupDB(db);
+    }
+
+    void populateBucket(uint valueOffset, scope Datum prefix)
+    {
+        import std.stdio;
+
+        auto ptr = prefix !is null ? db.bucket(prefix) : db;
+        assert(ptr !is null, "Could not obtain bucket for population");
+        foreach (i; iota(0, 10))
+        {
+            writeln("set", ptr, prefix, i + valueOffset);
+            ptr.set(cast(Datum)[i], cast(Datum)[i + valueOffset]);
+        }
+    }
+
+    /* Populate root with 0-10 key range */
+    populateBucket(0, null);
+
+    /* Populate bucket1 with 0-10 key range value offset 100 */
+    populateBucket(100, cast(Datum) "bucket1");
+
+    /* Populate bucket2 with 0-10 key range value offset 200 */
+    populateBucket(200, cast(Datum) "bucket2");
+
+    db.close();
+    db = new RDBDatabase(dbLocation, DatabaseMutability.ReadWrite);
+
+    /* Check bucket1 */
+    static const auto bucket1KnownValue = iota(0, 10).map!((r) => r + 100).sum();
+    const auto bucket1CalcValue = db.bucket(cast(Datum) "bucket1")
+        .iterator.map!((t) => cast(uint) t.value[0]).sum();
+    assert(bucket1KnownValue == bucket1CalcValue,
+            "Bucket1 has mismatched iteration values, expected %d, got %d".format(
+                bucket1KnownValue, bucket1CalcValue));
+
+    /* Check bucket2 */
+    static const auto bucket2KnownValue = iota(0, 10).map!((r) => r + 200).sum();
+    const auto bucket2CalcValue = db.bucket(cast(Datum) "bucket2")
+        .iterator.map!((t) => cast(uint) t.value[0]).sum();
+    assert(bucket2KnownValue == bucket2CalcValue,
+            "Bucket2 has mismatched iteration values, expected %d, got %d".format(
+                bucket2KnownValue, bucket2CalcValue));
+
+    /* Check root */
+    static const auto rootKnownValue = iota(0, 10).sum();
+    const auto rootCalcValue = db.iterator.map!((t) => cast(uint) t.value[0]).sum();
+    assert(rootKnownValue == rootCalcValue,
+            "Root bucket has mismatched iteration values, expected %d, got %d".format(
+                rootKnownValue, rootCalcValue));
+}
