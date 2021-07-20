@@ -20,10 +20,31 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.db.rocksdb;
+module moss.db.rocksdb.iterator;
 
-public import moss.db;
-public import moss.db.rocksdb.bucket;
-public import moss.db.rocksdb.db;
-public import moss.db.rocksdb.iterator;
-public import moss.db.rocksdb.transform;
+public import moss.db.interfaces;
+
+/**
+ * A concrete implementation of IIterable for RocksDB
+ */
+package class RDBIterator : IIterable
+{
+    override bool empty()
+    {
+        return true;
+    }
+
+    override DatabaseEntryPair front()
+    {
+        return cur;
+    }
+
+    override void popFront()
+    {
+
+    }
+
+private:
+
+    DatabaseEntryPair cur;
+}
