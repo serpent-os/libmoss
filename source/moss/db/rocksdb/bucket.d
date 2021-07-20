@@ -27,6 +27,7 @@ public import moss.db.interfaces : IReadWritable, IIterable;
 
 import moss.db.entry;
 import moss.db.rocksdb.db : RDBDatabase;
+import moss.db.rocksdb.iterator : RDBIterator;
 
 /**
  * In our rocksdb wrapper we have the root bucket, which may be nested, or
@@ -65,7 +66,7 @@ package class RDBBucket : IReadWritable
 
     @property override IIterable iterator()
     {
-        return null;
+        return new RDBIterator();
     }
 
 private:
