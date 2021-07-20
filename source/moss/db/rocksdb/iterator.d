@@ -49,9 +49,17 @@ package class RDBIterator : IIterable
     /**
      * Construct a new Iterator wrapping the internal iterator types
      */
-    this(rocksdb.Iterator iter)
+    this(rocksdb.Iterator iter, in Datum prefix)
     {
         this.iter = iter;
+        this.prefix = cast(Datum) prefix;
+
+        /* Wind to the start of the prefix */
+        if (prefix !is null && prefix.length > 0)
+        {
+            iter.seek(prefix);
+        }
+
         setHead();
     }
 
@@ -86,5 +94,6 @@ private:
 
     DatabaseEntryPair cur;
     rocksdb.Iterator iter;
+    Datum prefix;
 
 }
