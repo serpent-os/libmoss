@@ -73,6 +73,8 @@ package class RDBBucket : IReadWritable
     {
         auto db = parentDB.dbCon;
         auto ro = new ReadOptions();
+        ro.prefix_same_as_start = true;
+        ro.total_order_seek = false;
         auto it = new rocksdb.Iterator(db, ro);
         return new RDBIterator(it, prefix);
     }
