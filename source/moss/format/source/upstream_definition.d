@@ -43,14 +43,17 @@ struct PlainUpstreamDefinition
     /** Checksum for the origin */
     @YamlSchema("hash", true) string hash;
 
-    /** Location where to extract upstream files to */
-    @YamlSchema("location") string location = ".";
-
     /** New name for the source in case of conflicts */
     @YamlSchema("rename") string rename = null;
 
+    /** Number of directories to strip from tarball */
+    @YamlSchema("stripdirs") string stripdirs = "0";
+
     /** Whether to automatically unpack the source. */
     @YamlSchema("unpack") bool unpack = true;
+
+    /** Where to extract source file to */
+    @YamlSchema("unpackdir") string unpackdir = ".";
 }
 
 /**
