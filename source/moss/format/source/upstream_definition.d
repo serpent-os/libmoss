@@ -43,6 +43,9 @@ struct PlainUpstreamDefinition
     /** Checksum for the origin */
     @YamlSchema("hash", true) string hash;
 
+    /** Location where to extract upstream files to */
+    @YamlSchema("location") string location = ".";
+
     /** New name for the source in case of conflicts */
     @YamlSchema("rename") string rename = null;
 
