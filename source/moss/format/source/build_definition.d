@@ -69,6 +69,13 @@ public struct BuildDefinition
     @YamlSchema("workload") string stepWorkload = null;
 
     /**
+     * Build environment.
+     *
+     * Common variables and instructions to include with each step.
+     */
+    @YamlSchema("environment") string buildEnvironment = null;
+
+    /**
      * Build dependencies
      *
      * We list build dependencies in a format suitable for consumption
@@ -164,6 +171,24 @@ public struct BuildDefinition
                     != "")
             {
                 return node.stepWorkload;
+            }
+            node = node.parent;
+        }
+        return null;
+    }
+
+    /**
+     * Return the relevant build environment output
+     */
+    string environment() @safe
+    {
+        BuildDefinition* node = &this;
+
+        while (node !is null)
+        {
+            if (node.buildEnvironment != null && node.buildEnvironment != "(null)" && node.buildEnvironment != "")
+            {
+                return node.buildEnvironment;
             }
             node = node.parent;
         }
