@@ -76,6 +76,15 @@ struct BuildOptions
     @YamlSchema("cspgo") bool cspgo = true;
 
     /**
+     * Sample Profile Guided Optimisation
+     *
+     * When enabling samplepgo, parts of the code not run during workload will
+     * no longer be optimized for size. This is handy when you have an important
+     * workload to tune, but has low coverage overall.
+     */
+    @YamlSchema("samplepgo") bool samplepgo = true;
+
+    /**
      * A set of tuning selections to apply. Constructed at runtime through
      * parsing
      */
