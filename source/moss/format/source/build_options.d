@@ -82,7 +82,7 @@ struct BuildOptions
      * no longer be optimized for size. This is handy when you have an important
      * workload to tune, but has low coverage overall.
      */
-    @YamlSchema("samplepgo") bool samplepgo = true;
+    @YamlSchema("samplepgo") bool samplepgo = false;
 
     /**
      * A set of tuning selections to apply. Constructed at runtime through
