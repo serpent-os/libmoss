@@ -6,4 +6,4 @@ set -x
 COMPILER="ldc2"
 
 
-dub test --compiler="${COMPILER}" --skip-registry=all -v
+dub test --compiler="${COMPILER}" --skip-registry=all -v -b debug
