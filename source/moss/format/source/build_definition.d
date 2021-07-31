@@ -186,7 +186,8 @@ public struct BuildDefinition
 
         while (node !is null)
         {
-            if (node.buildEnvironment != null && node.buildEnvironment != "(null)" && node.buildEnvironment != "")
+            if (node.buildEnvironment != null
+                    && node.buildEnvironment != "(null)" && node.buildEnvironment != "")
             {
                 return node.buildEnvironment;
             }
