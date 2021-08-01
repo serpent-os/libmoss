@@ -76,7 +76,8 @@ package class RDBBucket : IReadWritable
         ro.prefix_same_as_start = true;
         ro.total_order_seek = false;
         auto it = new rocksdb.Iterator(db, ro);
-        return new RDBIterator(it, prefix);
+        auto prefixEntry = DatabaseEntry(prefix, null);
+        return new RDBIterator(it, prefixEntry.encode());
     }
 
 private:
