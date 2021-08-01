@@ -68,7 +68,9 @@ public class NamespacePrefixTransform : SliceTransform
         ubyte[] rangedData = cast(ubyte[]) inp.p[0 .. inp.l];
         dbe.decode(rangedData);
 
-        return Slice.fromChar(dbe.prefix.length, cast(char*) dbe.prefix);
+        /* Return slice which preserves PrefixLen+Prefix for further matching */
+        auto prefixLen = uint32_t.sizeof + dbe.prefix.length;
+        return Slice.fromChar(prefixLen, cast(char*) rangedData[0 .. prefixLen]);
     }
 
     /**
