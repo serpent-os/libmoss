@@ -92,7 +92,7 @@ struct DatabaseEntry
      */
     void decode(scope Datum input)
     {
-        enforce(input.length > uint32_t.sizeof, "DatabaseEntry.decode(Datum): Key is too short");
+        enforce(input.length >= uint32_t.sizeof, "DatabaseEntry.decode(Datum): Key is too short");
 
         ubyte[uint32_t.sizeof] prefixLenEnc = input[0 .. uint32_t.sizeof];
         const uint32_t prefixLen = bigEndianToNative!(uint32_t, uint32_t.sizeof)(prefixLenEnc);
