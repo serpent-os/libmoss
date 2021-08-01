@@ -192,13 +192,10 @@ private unittest
 
     void populateBucket(uint valueOffset, scope Datum prefix)
     {
-        import std.stdio;
-
         auto ptr = prefix !is null ? db.bucket(prefix) : db;
         assert(ptr !is null, "Could not obtain bucket for population");
         foreach (i; iota(0, 10))
         {
-            writeln("set", ptr, prefix, i + valueOffset);
             ptr.set(cast(Datum)[i], cast(Datum)[i + valueOffset]);
         }
     }
