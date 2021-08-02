@@ -24,6 +24,7 @@ module moss.db;
 
 public import moss.db.entry;
 public import moss.db.interfaces;
+public import moss.db.encoding;
 
 /**
  * We encode all db keys and values as ubyte[] internally which must take into
