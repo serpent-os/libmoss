@@ -31,3 +31,10 @@ public import moss.db.interfaces;
  * format, and convert back to native endian upon reads.
  */
 public alias Datum = ubyte[];
+
+/**
+ * Some specialised encoders must return an explicitly immutable Datum
+ * which we'll use to provide some compile time guarantees over the
+ * key or value integrity.
+ */
+public alias ImmutableDatum = immutable(Datum);
