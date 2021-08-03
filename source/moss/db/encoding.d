@@ -59,7 +59,7 @@ auto isMossDbDecodable(T)()
                 T val = void;
                 ImmutableDatum inp = cast(ImmutableDatum) null;
                 static assert(is(typeof(val.mossdbDecode(inp)) == T),
-                "isMossDbEncodable(): Return type should be void");
+                "isMossDbEncodable(): Return type should be " ~ T.stringof);
             })))
     {
         return true;
