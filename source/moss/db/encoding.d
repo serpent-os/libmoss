@@ -179,7 +179,7 @@ pragma(inline, true) void set(K, V)(IReadWritable rwDest, K key, V value)
 /**
  * Strongly typed get operation for any IReadable
  */
-public DbResult!V getObject(V, K)(IReadable rSource, K key)
+public DbResult!V get(V, K)(IReadable rSource, K key)
 {
     V val = V.init;
     static assert(isMossDbEncodable!K, stringifyNonEncodableType!K);

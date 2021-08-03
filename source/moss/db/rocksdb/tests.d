@@ -235,3 +235,25 @@ private unittest
             "Root bucket has mismatched iteration values, expected %d, got %d".format(
                 rootKnownValue, rootCalcValue));
 }
+
+/**
+ * Working with generics for simple key/value set
+ */
+private unittest
+{
+    auto db = new RDBDatabase(dbLocation, DatabaseMutability.ReadWrite);
+
+    scope (exit)
+    {
+        cleanupDB(db);
+    }
+
+    db.set("john", 23);
+    import std.stdio : writeln;
+
+    auto result = db.get!int("john");
+    if (result.found)
+    {
+        writeln(result.value);
+    }
+}
