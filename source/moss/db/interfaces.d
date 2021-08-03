@@ -57,7 +57,7 @@ public interface IReadable
     /**
      * Retrieve a single value from the current namespace/scope
      */
-    Datum get(scope Datum key);
+    Datum getDatum(scope Datum key);
 
     /**
      * Implementations must return a new iterator for reading through the
@@ -74,7 +74,7 @@ public interface IWritable
     /**
      * Set a single value within the current namespace/scope
      */
-    void set(scope Datum key, scope Datum value);
+    void setDatum(scope Datum key, scope Datum value);
 }
 
 /**

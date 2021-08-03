@@ -72,17 +72,17 @@ public class RDBDatabase : Database
     /**
      * Set a key in the root namespace
      */
-    pragma(inline, true) override void set(scope Datum key, scope Datum value)
+    pragma(inline, true) override void setDatum(scope Datum key, scope Datum value)
     {
-        rootBucket.set(key, value);
+        rootBucket.setDatum(key, value);
     }
 
     /**
      * Get a value from the root namespace
      */
-    pragma(inline, true) override Datum get(scope Datum key)
+    pragma(inline, true) override Datum getDatum(scope Datum key)
     {
-        return rootBucket.get(key);
+        return rootBucket.getDatum(key);
     }
 
     /**

@@ -49,13 +49,13 @@ package class RDBBucket : IReadWritable
         this.parentDB = parentDB;
     }
 
-    override void set(scope Datum key, scope Datum value)
+    override void setDatum(scope Datum key, scope Datum value)
     {
         auto dbe = DatabaseEntry(prefix, key);
         parentDB.dbCon.put(dbe.encode(), value);
     }
 
-    override Datum get(scope Datum key)
+    override Datum getDatum(scope Datum key)
     {
         auto dbe = DatabaseEntry(prefix, key);
         return parentDB.dbCon.get(dbe.encode());

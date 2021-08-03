@@ -72,13 +72,13 @@ private unittest
     foreach (i; 0 .. 1000)
     {
         ubyte[1] keyval = [cast(ubyte) i];
-        db.set(keyval, keyval);
+        db.setDatum(keyval, keyval);
     }
 
     foreach (i; 0 .. 1000)
     {
         ubyte[1] lookupkey = [cast(ubyte) i];
-        const ubyte[] ret = db.get(lookupkey);
+        const ubyte[] ret = db.getDatum(lookupkey);
 
         assert(ret !is null, "Could not retrieve integer key from database");
         assert(ret.length == 1, "Invalid length integer key value from database");
@@ -107,7 +107,7 @@ private unittest
     foreach (i; 0 .. 10)
     {
         ubyte[1] keyval = [cast(ubyte) i];
-        bucket.set(keyval, keyval);
+        bucket.setDatum(keyval, keyval);
     }
 
     /**
@@ -116,7 +116,7 @@ private unittest
     foreach (i; 0 .. 10)
     {
         ubyte[1] lookupkey = [cast(ubyte) i];
-        const ubyte[] ret = bucket.get(lookupkey);
+        const ubyte[] ret = bucket.getDatum(lookupkey);
 
         assert(ret !is null, "Could not retrieve integer key from bucket");
         assert(ret.length == 1, "Invalid length integer key value from bucket");
@@ -126,7 +126,7 @@ private unittest
         /**
          * Ensure it doesn't exist in root namespace
          */
-        const auto ret2 = db.get(lookupkey);
+        const auto ret2 = db.getDatum(lookupkey);
         assert(ret2 is null, "Should not find bucket key in root namespace");
     }
 }
@@ -152,7 +152,7 @@ private unittest
     foreach (i; 0 .. 10)
     {
         ubyte[1] keyval = [cast(ubyte) i];
-        db.set(keyval, keyval);
+        db.setDatum(keyval, keyval);
     }
 
     /**
@@ -196,7 +196,7 @@ private unittest
         assert(ptr !is null, "Could not obtain bucket for population");
         foreach (i; iota(0, 10))
         {
-            ptr.set(cast(Datum)[i], cast(Datum)[i + valueOffset]);
+            ptr.setDatum(cast(Datum)[i], cast(Datum)[i + valueOffset]);
         }
     }
 
