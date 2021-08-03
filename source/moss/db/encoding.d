@@ -25,6 +25,7 @@ module moss.db.encoding;
 import std.traits : isFloatingPoint, isIntegral, isNumeric, isBoolean;
 
 public import moss.db : Datum;
+public import moss.db.interfaces : IReadWritable;
 
 /**
  * Simply for ease of writing.
@@ -136,4 +137,15 @@ pure ImmutableDatum mossdbEncode(T)(in T i)
     {
         return [i];
     }
+}
+
+/**
+ * Strongly typed set operation for any IReadWritable
+ */
+void set(K, V)(IReadWritable rwDest, K key, V value)
+{
+    static assert(isMossDbEncodable!K, stringifyNonEncodableType!K);
+    static assert(isMossDbEncodable!V, stringifyNonEncodableType!V);
+
+    rwDest.setDatum(cast(Datum) key.mossdbEncode, cast(Datum) value.mossdbEncode);
 }
