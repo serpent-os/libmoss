@@ -25,7 +25,7 @@ module moss.db.encoding;
 import std.traits : isFloatingPoint, isIntegral, isNumeric, isBoolean;
 
 public import moss.db : Datum;
-public import moss.db.interfaces : IReadWritable;
+public import moss.db.interfaces : IReadWritable, IReadable;
 
 /**
  * Simply for ease of writing.
@@ -93,6 +93,9 @@ auto stringifyNonDecodableType(T)()
  * A DbResult is returned from any get() query, but the internal value may not
  * actually be set to anything useful, thus we include a "found" flag for simplistic
  * matching.
+ *
+ * Future revisions will have the core DB APIs return their own DbFetchResult with
+ * a documented status, which we can rewrap with generics in our return.
  */
 struct DbResult(V)
 {
@@ -110,7 +113,7 @@ struct DbResult(V)
 /**
  * Automatically encode string to C string with nul terminator
  */
-pure ImmutableDatum mossdbEncode(T)(in T s) if (is(T == string))
+pure public ImmutableDatum mossdbEncode(T)(in T s) if (is(T == string))
 {
     import std.string : toStringz;
     import core.stdc.string : strlen;
@@ -123,7 +126,7 @@ pure ImmutableDatum mossdbEncode(T)(in T s) if (is(T == string))
  * Automatically encode all non floating point numericals to big endian representation
  * when they're more than one byte in size
  */
-pure ImmutableDatum mossdbEncode(T)(in T i)
+pure public ImmutableDatum mossdbEncode(T)(in T i)
         if (!isFloatingPoint!T && (isNumeric!T || isBoolean!T))
 {
     import std.bitmanip : nativeToBigEndian;
@@ -140,7 +143,30 @@ pure ImmutableDatum mossdbEncode(T)(in T i)
 }
 
 /**
- * Strongly typed set operation for any IReadWritable
+ * Automatically decode all non floating point numericals from big endian representation
+ * when they're more than one byte in size.
+ */
+pure T mossdbDecode(T)(T source, in ImmutableDatum rawBytes)
+        if (!isFloatingPoint!T && (isNumeric!T || isBoolean!T))
+{
+    import std.bitmanip : bigEndianToNative;
+    import std.exception : enforce;
+
+    enforce(T.sizeof == rawBytes.length, "mossdbDecode!" ~ T.stringof
+            ~ ": Decoding wrong value type");
+
+    static if (T.sizeof > 1)
+    {
+        return bigEndianToNative!(T, T.sizeof)(cast(Datum) rawBytes[0 .. T.sizeof]);
+    }
+    else
+    {
+        return rawBytes[0];
+    }
+}
+
+/**
+ * Strongly typed setter operation for any IReadWritable
  */
 pragma(inline, true) void set(K, V)(IReadWritable rwDest, K key, V value)
 {
@@ -148,4 +174,24 @@ pragma(inline, true) void set(K, V)(IReadWritable rwDest, K key, V value)
     static assert(isMossDbEncodable!V, stringifyNonEncodableType!V);
 
     rwDest.setDatum(cast(Datum) key.mossdbEncode, cast(Datum) value.mossdbEncode);
+}
+
+/**
+ * Strongly typed get operation for any IReadable
+ */
+public DbResult!V getObject(V, K)(IReadable rSource, K key)
+{
+    V val = V.init;
+    static assert(isMossDbEncodable!K, stringifyNonEncodableType!K);
+    static assert(isMossDbDecodable!V, stringifyNonDecodableType!V);
+
+    /* Grab the actual real value */
+    ImmutableDatum realValue = cast(ImmutableDatum) rSource.getDatum(cast(Datum) key.mossdbEncode);
+    if (realValue is null || realValue.length < 1)
+    {
+        return DbResult!V(val, false);
+    }
+    val = val.mossdbDecode(realValue);
+    return DbResult!V(val, true);
+
 }
