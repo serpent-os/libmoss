@@ -142,7 +142,7 @@ pure ImmutableDatum mossdbEncode(T)(in T i)
 /**
  * Strongly typed set operation for any IReadWritable
  */
-void set(K, V)(IReadWritable rwDest, K key, V value)
+pragma(inline, true) void set(K, V)(IReadWritable rwDest, K key, V value)
 {
     static assert(isMossDbEncodable!K, stringifyNonEncodableType!K);
     static assert(isMossDbEncodable!V, stringifyNonEncodableType!V);
