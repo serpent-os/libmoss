@@ -143,6 +143,17 @@ pure public ImmutableDatum mossdbEncode(T)(in T i)
 }
 
 /**
+ * Automatically convert a stored nul-terminated string into a valid D string
+ */
+pure T mossdbDecode(T)(T source, in ImmutableDatum rawBytes) if (is(T == string))
+{
+    import std.string : fromStringz;
+    import std.exception : enforce;
+
+    return cast(string) fromStringz(cast(char*) rawBytes.ptr);
+}
+
+/**
  * Automatically decode all non floating point numericals from big endian representation
  * when they're more than one byte in size.
  */
