@@ -98,7 +98,7 @@ private unittest
         cleanupDB(db);
     }
 
-    auto bucket = db.bucket(cast(ubyte[]) "customBucket");
+    auto bucket = db.bucket("customBucket");
     assert(bucket !is null, "Could not retrieve customBucket from database");
 
     /**
@@ -190,7 +190,7 @@ private unittest
         cleanupDB(db);
     }
 
-    void populateBucket(uint valueOffset, scope Datum prefix)
+    void populateBucket(P)(uint valueOffset, scope P prefix)
     {
         auto ptr = prefix !is null ? db.bucket(prefix) : db;
         assert(ptr !is null, "Could not obtain bucket for population");
@@ -201,20 +201,20 @@ private unittest
     }
 
     /* Populate root with 0-10 key range */
-    populateBucket(0, null);
+    populateBucket!string(0, null);
 
     /* Populate bucket1 with 0-10 key range value offset 100 */
-    populateBucket(100, cast(Datum) "bucket1");
+    populateBucket(100, "bucket1");
 
     /* Populate bucket2 with 0-10 key range value offset 200 */
-    populateBucket(200, cast(Datum) "bucket2");
+    populateBucket(200, "bucket2");
 
     db.close();
     db = new RDBDatabase(dbLocation, DatabaseMutability.ReadWrite);
 
     /* Check bucket1 */
     static const auto bucket1KnownValue = iota(0, 10).map!((r) => r + 100).sum();
-    const auto bucket1CalcValue = db.bucket(cast(Datum) "bucket1")
+    const auto bucket1CalcValue = db.bucket("bucket1")
         .iterator.map!((t) => cast(uint) t.value[0]).sum();
     assert(bucket1KnownValue == bucket1CalcValue,
             "Bucket1 has mismatched iteration values, expected %d, got %d".format(
@@ -222,7 +222,7 @@ private unittest
 
     /* Check bucket2 */
     static const auto bucket2KnownValue = iota(0, 10).map!((r) => r + 200).sum();
-    const auto bucket2CalcValue = db.bucket(cast(Datum) "bucket2")
+    const auto bucket2CalcValue = db.bucket("bucket2")
         .iterator.map!((t) => cast(uint) t.value[0]).sum();
     assert(bucket2KnownValue == bucket2CalcValue,
             "Bucket2 has mismatched iteration values, expected %d, got %d".format(
@@ -269,7 +269,7 @@ private unittest
     ensureMatchResult(db, "john", 100);
     ensureMatchResult(db, "user 100", "bobby is my name");
 
-    auto bucketID = cast(Datum) "bucket numero 1";
+    string bucketID = "bucket numero 1";
     db.bucket(bucketID).set("name", "john");
     db.bucket(bucketID).set("age", 30);
     db.bucket(bucketID).set("alive", true);

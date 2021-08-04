@@ -126,7 +126,7 @@ public abstract class Database : IReadWritable
      * Return a subset of the primary database that is namespaced with
      * a special bucket prefix or key.
      */
-    abstract IReadWritable bucket(scope Datum prefix);
+    abstract IReadWritable bucketByDatum(scope Datum prefix);
 
     /**
      * The path URI is set at construction time. This property returns the current value

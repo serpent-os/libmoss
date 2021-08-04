@@ -89,7 +89,7 @@ public class RDBDatabase : Database
      * Return a subset of the database with an explicit prefix for
      * the purposes of namespacing
      */
-    override IReadWritable bucket(scope Datum prefix)
+    override IReadWritable bucketByDatum(scope Datum prefix)
     {
         import std.algorithm : find;
 

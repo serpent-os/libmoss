@@ -25,7 +25,7 @@ module moss.db.encoding;
 import std.traits : isFloatingPoint, isIntegral, isNumeric, isBoolean;
 
 public import moss.db : Datum;
-public import moss.db.interfaces : IReadWritable, IReadable;
+public import moss.db.interfaces : Database, IReadWritable, IReadable;
 
 /**
  * Simply for ease of writing.
@@ -174,6 +174,18 @@ pure T mossdbDecode(T)(T source, in ImmutableDatum rawBytes)
     {
         return cast(T) rawBytes[0];
     }
+}
+
+/**
+ * Allowing using arbitrary keys for bucket based operation and
+ * have them properly encoded
+ */
+pragma(inline, true) auto bucket(P)(Database db, P prefix)
+{
+    static assert(!is(P == Datum),
+            "Database.bucket(): Use .bucketByDatum() for Datum (ubyte[]) keys");
+    static assert(isMossDbEncodable!P, stringifyNonEncodableType!P);
+    return db.bucketByDatum(cast(Datum) prefix.mossdbEncode);
 }
 
 /**
