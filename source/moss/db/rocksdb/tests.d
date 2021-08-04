@@ -248,12 +248,36 @@ private unittest
         cleanupDB(db);
     }
 
-    db.set("john", 23);
+    /**
+     * Helper to ensure we can fetch a key/value pair and get the right Thing
+     */
+    static void ensureMatchResult(K, V)(IReadWritable rwDest, K key, V expectedValue)
+    {
+        import std.conv : to;
+
+        auto result = rwDest.get!V(key);
+        assert(result.found, "Could not find result: " ~ to!string(key));
+        assert(result.value == expectedValue, "Expected result for key " ~ to!string(
+                key) ~ " : " ~ to!string(expectedValue) ~ ", got " ~ to!string(
+                result.value) ~ " instead");
+    }
+
+    db.set("john", 100);
+    db.set("user 100", "bobby is my name");
     import std.stdio : writeln;
 
-    auto result = db.get!int("john");
-    if (result.found)
-    {
-        writeln(result.value);
-    }
+    ensureMatchResult(db, "john", 100);
+    ensureMatchResult(db, "user 100", "bobby is my name");
+
+    auto bucketID = cast(Datum) "bucket numero 1";
+    db.bucket(bucketID).set("name", "john");
+    db.bucket(bucketID).set("age", 30);
+    db.bucket(bucketID).set("alive", true);
+
+    ensureMatchResult(db.bucket(bucketID), "name", "john");
+    ensureMatchResult(db.bucket(bucketID), "age", 30);
+    ensureMatchResult(db.bucket(bucketID), "alive", true);
+
+    auto result = db.get!string("unknown key");
+    assert(!result.found, "Should not be able to retrieve invalid key");
 }

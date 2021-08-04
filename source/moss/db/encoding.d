@@ -172,7 +172,7 @@ pure T mossdbDecode(T)(T source, in ImmutableDatum rawBytes)
     }
     else
     {
-        return rawBytes[0];
+        return cast(T) rawBytes[0];
     }
 }
 
