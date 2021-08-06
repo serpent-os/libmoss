@@ -59,8 +59,8 @@ auto isMossDbDecodable(T)()
     static if (is(typeof({
                 T val = void;
                 ImmutableDatum inp = cast(ImmutableDatum) null;
-                static assert(is(typeof(val.mossdbDecode(inp)) == T),
-                "isMossDbEncodable(): Return type should be " ~ T.stringof);
+                static assert(is(typeof(val.mossdbDecode(inp)) == void),
+                "isMossDbEncodable(): Return type should be void");
             })))
     {
         return true;
@@ -146,19 +146,19 @@ pure public ImmutableDatum mossdbEncode(T)(in T i)
 /**
  * Automatically convert a stored nul-terminated string into a valid D string
  */
-pure T mossdbDecode(T)(T source, in ImmutableDatum rawBytes) if (is(T == string))
+pure void mossdbDecode(T)(out T dest, in ImmutableDatum rawBytes) if (is(T == string))
 {
     import std.string : fromStringz;
     import std.exception : enforce;
 
-    return cast(string) fromStringz(cast(char*) rawBytes.ptr);
+    dest = cast(string) fromStringz(cast(char*) rawBytes.ptr);
 }
 
 /**
  * Automatically decode all non floating point numericals from big endian representation
  * when they're more than one byte in size.
  */
-pure T mossdbDecode(T)(T source, in ImmutableDatum rawBytes)
+pure void mossdbDecode(T)(out T dest, in ImmutableDatum rawBytes)
         if (!isFloatingPoint!T && (isNumeric!T || isBoolean!T))
 {
     import std.bitmanip : bigEndianToNative;
@@ -169,11 +169,11 @@ pure T mossdbDecode(T)(T source, in ImmutableDatum rawBytes)
 
     static if (T.sizeof > 1)
     {
-        return bigEndianToNative!(T, T.sizeof)(cast(Datum) rawBytes[0 .. T.sizeof]);
+        dest = bigEndianToNative!(T, T.sizeof)(cast(Datum) rawBytes[0 .. T.sizeof]);
     }
     else
     {
-        return cast(T) rawBytes[0];
+        dest = cast(T) rawBytes[0];
     }
 }
 
@@ -215,7 +215,7 @@ public DbResult!V get(V, K)(IReadable rSource, K key)
     {
         return DbResult!V(val, false);
     }
-    val = val.mossdbDecode(realValue);
+    val.mossdbDecode(realValue);
     return DbResult!V(val, true);
 
 }
