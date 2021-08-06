@@ -119,7 +119,7 @@ pure public ImmutableDatum mossdbEncode(T)(in T s) if (is(T == string))
     import core.stdc.string : strlen;
 
     auto stringC = s.toStringz;
-    return cast(ImmutableDatum) stringC[0 .. strlen(stringC)];
+    return cast(ImmutableDatum) stringC[0 .. strlen(stringC) + 1];
 }
 
 /**
