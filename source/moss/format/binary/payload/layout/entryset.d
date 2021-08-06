@@ -32,7 +32,7 @@ import moss.format.binary.writer : WriterToken;
  * An EntrySet is used to associate an LayoutEntry with a source and optional
  * target.
  */
-extern (C) package struct EntrySet
+extern (C) public struct EntrySet
 {
     /**
      * The underlying LayoutEntry
