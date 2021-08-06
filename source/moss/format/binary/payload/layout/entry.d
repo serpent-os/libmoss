@@ -98,6 +98,26 @@ align(1):
     }
 
     /**
+     * Hook to encode an entry for the moss-db library
+     */
+    immutable(ubyte[]) mossdbEncode()
+    {
+        LayoutEntry cp = this;
+        cp.toNetworkOrder();
+
+        auto ret = cast(immutable(ubyte[]))(
+                (cast(ubyte*)&cp.time)[0 .. cp.time.sizeof] ~ (cast(
+                ubyte*)&cp.uid)[0 .. cp.uid.sizeof] ~ (cast(
+                ubyte*)&cp.gid)[0 .. cp.gid.sizeof] ~ (cast(
+                ubyte*)&cp.mode)[0 .. cp.mode.sizeof] ~ (cast(
+                ubyte*)&cp.tag)[0 .. cp.tag.sizeof] ~ (cast(
+                ubyte*)&cp.sourceLength)[0 .. cp.sourceLength.sizeof] ~ (cast(
+                ubyte*)&cp.targetLength)[0 .. cp.targetLength.sizeof] ~ (
+                cast(ubyte*)&cp.type)[0 .. cp.type.sizeof] ~ cp.padding);
+        return ret;
+    }
+
+    /**
      * Decode the entry itself from a given input stream
      */
     void decode(scope ReaderToken rd) @trusted

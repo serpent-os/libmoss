@@ -81,6 +81,25 @@ extern (C) public struct EntrySet
      */
     void encode(scope WriterToken wr) @trusted
     {
+        /* Write record + value */
+        entry.encode(wr);
+        wr.appendData(encodeStrings());
+    }
+
+    /**
+     * Specialist encoder for mossdb, without requiring moss-db to be linked
+     */
+    immutable(ubyte[]) mossdbEncode()
+    {
+        immutable(ubyte[]) ret = cast(immutable(ubyte[]))(
+                (cast(ubyte[]) entry.mossdbEncode()) ~ encodeStrings());
+        return ret;
+    }
+
+private:
+
+    ubyte[] encodeStrings() @trusted
+    {
         import std.exception : enforce;
         import std.string : toStringz;
 
@@ -102,8 +121,6 @@ extern (C) public struct EntrySet
             encoded ~= (cast(ubyte*) z)[0 .. entry.targetLength];
         }
 
-        /* Write record + value */
-        entry.encode(wr);
-        wr.appendData(encoded);
+        return encoded;
     }
 }
