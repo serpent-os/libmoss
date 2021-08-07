@@ -96,6 +96,41 @@ extern (C) public struct EntrySet
         return ret;
     }
 
+    /**
+     * Specialist decoder for mossdb, without requiring moss-db to be linked
+     */
+    void mossdbDecode(in immutable(ubyte[]) rawBytes)
+    {
+        this = EntrySet.init;
+        entry.mossdbDecode(rawBytes);
+
+        /* No strings follow */
+        if (EntrySet.sizeof + 1 >= rawBytes.length)
+        {
+            return;
+        }
+
+        immutable(ubyte[]) remainingBytes = rawBytes[LayoutEntry.sizeof .. $];
+
+        /* Source is always first */
+        if (entry.sourceLength > 0)
+        {
+            const auto data = remainingBytes[0 .. entry.sourceLength];
+            auto strlength = cast(long) entry.sourceLength;
+            source = cast(string) data[0 .. strlength - 1];
+        }
+
+        /* And target follows */
+        if (entry.targetLength < 1)
+        {
+            return;
+        }
+
+        const auto data = remainingBytes[entry.sourceLength .. $];
+        auto strlength = cast(long) entry.targetLength;
+        target = cast(string) data[0 .. strlength - 1];
+    }
+
 private:
 
     ubyte[] encodeStrings() @trusted

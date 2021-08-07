@@ -126,6 +126,20 @@ align(1):
         cp.toHostOrder();
         this = cp;
     }
+
+    /**
+     * Decode the entry itself from a given mossdb value
+     */
+    void mossdbDecode(in immutable(ubyte[]) rawBytes)
+    {
+        import std.exception : enforce;
+
+        enforce(rawBytes.length >= LayoutEntry.sizeof,
+                "LayoutEntry.mossdbDecode(): Invalid stream size");
+        LayoutEntry* cp = cast(LayoutEntry*) rawBytes.ptr[0 .. LayoutEntry.sizeof];
+        this = *cp;
+        this.toHostOrder();
+    }
 }
 
 static assert(LayoutEntry.sizeof == 32,
