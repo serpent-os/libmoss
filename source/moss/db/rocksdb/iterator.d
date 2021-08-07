@@ -25,6 +25,8 @@ module moss.db.rocksdb.iterator;
 public import moss.db.interfaces;
 public import rocksdb.iterator;
 
+import moss.db.rocksdb.db : RDBDatabase;
+
 /**
  * A concrete implementation of IIterable for RocksDB
  */
@@ -49,8 +51,9 @@ package class RDBIterator : IIterable
     /**
      * Construct a new Iterator wrapping the internal iterator types
      */
-    this(rocksdb.Iterator iter, in Datum prefix)
+    this(RDBDatabase parentDB, rocksdb.Iterator iter, in Datum prefix)
     {
+        this.parentDB = parentDB;
         this.iter = iter;
         this.prefix = cast(Datum) prefix;
 
@@ -61,6 +64,7 @@ package class RDBIterator : IIterable
         }
 
         setHead();
+        this.parentDB.mergeIterator(this);
     }
 
 public:
@@ -72,8 +76,25 @@ public:
 
     ~this()
     {
-        this.iter.close();
-        this.iter = null;
+        if (parentDB is null)
+        {
+            return;
+        }
+        parentDB.dropIterator(this);
+    }
+
+    /**
+     * Close the iterator resource
+     * In some instances, this is done lazily.
+     */
+    void close()
+    {
+        if (this.iter !is null)
+        {
+            this.iter.close();
+            this.iter = null;
+            this.parentDB = null;
+        }
     }
 
 private:
@@ -92,6 +113,7 @@ private:
         cur = pair;
     }
 
+    RDBDatabase parentDB = null;
     DatabaseEntryPair cur;
     rocksdb.Iterator iter;
     Datum prefix;

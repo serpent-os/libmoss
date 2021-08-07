@@ -24,6 +24,7 @@ module moss.db.rocksdb.db;
 
 import rocksdb;
 import moss.db.rocksdb.bucket;
+import moss.db.rocksdb.iterator;
 import moss.db.rocksdb.transform;
 
 public import moss.db : Datum;
@@ -114,6 +115,10 @@ public class RDBDatabase : Database
         {
             return;
         }
+
+        /* Kill iterators */
+        liveIterators.each!((it) => it.close());
+
         nests.each!((n) => n.destroy());
         nests = [];
         rootBucket.destroy();
@@ -138,10 +143,31 @@ package:
         return _dbCon;
     }
 
+    /**
+     * Merge iterator 
+     */
+    void mergeIterator(RDBIterator it)
+    {
+        liveIterators ~= it;
+    }
+
+    /**
+     * Drop an iterator
+     */
+    void dropIterator(RDBIterator it)
+    {
+        import std.algorithm : remove;
+
+        liveIterators = liveIterators.remove!((itSeek) => itSeek == it);
+        it.close();
+        it.destroy();
+    }
+
 private:
 
     RDBBucket rootBucket = null;
     RDBBucket[] nests;
+    RDBIterator[] liveIterators = [];
 
     rocksdb.DBOptions dbOpts;
     rocksdb.Database _dbCon = null;
