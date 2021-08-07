@@ -105,7 +105,7 @@ extern (C) public struct EntrySet
         entry.mossdbDecode(rawBytes);
 
         /* No strings follow */
-        if (EntrySet.sizeof + 1 >= rawBytes.length)
+        if (LayoutEntry.sizeof + 1 >= rawBytes.length)
         {
             return;
         }
