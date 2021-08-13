@@ -70,7 +70,14 @@ public:
     pure @property bool empty() @safe @nogc nothrow
     {
         const long setsLength = cast(long) sets.length;
-        return (sets.length < 1 || iterationIndex > setsLength - 1);
+        auto isEmpty = (sets.length < 1 || iterationIndex > setsLength - 1);
+
+        if (isEmpty)
+        {
+            iterationIndex = 0;
+        }
+
+        return isEmpty;
     }
 
     /**

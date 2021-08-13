@@ -69,7 +69,15 @@ public:
     pure @property bool empty() @safe @nogc nothrow
     {
         const long pairLength = cast(long) pairs.length;
-        return (pairs.length < 1 || iterationIndex > pairLength - 1);
+        auto isEmpty = (pairs.length < 1 || iterationIndex > pairLength - 1);
+
+        /* Reset */
+        if (isEmpty)
+        {
+            iterationIndex = 0;
+        }
+
+        return isEmpty;
     }
 
     /**
