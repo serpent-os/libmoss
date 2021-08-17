@@ -380,6 +380,13 @@ package:
             {
                 return c;
             }
+
+            /* Descend until we find a match */
+            auto cchild = c.findCommand(name);
+            if (cchild !is null)
+            {
+                return cchild;
+            }
         }
         return null;
     }
