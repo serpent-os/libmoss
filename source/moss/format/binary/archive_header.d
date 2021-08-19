@@ -54,9 +54,6 @@ enum MossFileType : uint8_t
 
     /** Binary package: Delta update */
     Delta,
-
-    /** Database file, i.e. internal moss usage */
-    Database,
 }
 
 /**
