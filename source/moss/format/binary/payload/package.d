@@ -53,20 +53,6 @@ enum PayloadType : uint8_t
 
     /* For Writer interim */
     Dumb = 6,
-
-    /* MossDB types follow */
-
-    /** CacheDB payload */
-    CacheDB = 7,
-
-    /** StateMetaDB payload */
-    StateMetaDB = 8,
-
-    /** StateEntriesDB payload */
-    StateEntriesDB = 9,
-
-    /** LayoutDB payload */
-    LayoutDB = 10,
 }
 
 /**
