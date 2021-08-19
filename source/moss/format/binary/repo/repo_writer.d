@@ -72,12 +72,18 @@ public final class RepoWriter
     void addPackage(const(string) inpPath, const(string) packageURI)
     {
         import std.exception : enforce;
+        import std.stdio : writeln;
 
         auto reader = new Reader(File(inpPath, "rb"));
 
         scope (exit)
         {
             reader.close();
+        }
+
+        if (reader.fileType != MossFileType.Binary)
+        {
+            writeln("Skipping non binary file: ", reader.fileType);
         }
 
         auto metaPayload = reader.payload!MetaPayload();
