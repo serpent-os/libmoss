@@ -20,9 +20,45 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-/**
- * Repository formats
- */
-module moss.format.binary.repo;
+module moss.format.binary.repo.repo_writer;
 
-public import moss.format.binary.repo.repo_writer;
+/**
+ * A RepoWriter is responsible for emitting a binary repository to disk.
+ * It is not responsible for the management of individual assets on disk,
+ * simply for recording a MetaPayload with some attributes in a sequential
+ * index.
+ *
+ * More advanced repo formats will arrive later.
+ */
+public final class RepoWriter
+{
+    /**
+     * Construct a new RepoWriter
+     */
+    this(const(string) outputDir) @safe @nogc nothrow
+    {
+        _outputDir = outputDir;
+    }
+
+    /**
+     * Return the output directory for the RepoWriter
+     */
+    pure @property const(string) outputDir() @safe @nogc nothrow
+    {
+        return _outputDir;
+    }
+
+    /**
+     * Add a package to the index
+     */
+    void addPackage(const(string) inpPath, const(string) packageURI)
+    {
+        import std.stdio : writeln;
+
+        writeln(inpPath, " => ", packageURI);
+    }
+
+private:
+
+    string _outputDir = null;
+}
