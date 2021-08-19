@@ -22,6 +22,9 @@
 
 module moss.format.binary.repo.repo_writer;
 
+import moss.format.binary.writer;
+import moss.format.binary : mossFormatVersionNumber;
+
 /**
  * A RepoWriter is responsible for emitting a binary repository to disk.
  * It is not responsible for the management of individual assets on disk,
@@ -35,9 +38,21 @@ public final class RepoWriter
     /**
      * Construct a new RepoWriter
      */
-    this(const(string) outputDir) @safe @nogc nothrow
+    this(const(string) outputDir) @safe
     {
+        import std.path : buildPath;
+
         _outputDir = outputDir;
+        _indexFile = _outputDir.buildPath("stone.index");
+        archWriter = new Writer(File(_indexFile, "wb"), mossFormatVersionNumber);
+    }
+
+    /**
+     * Close the repository index emission
+     */
+    void close()
+    {
+        archWriter.close();
     }
 
     /**
@@ -61,4 +76,6 @@ public final class RepoWriter
 private:
 
     string _outputDir = null;
+    string _indexFile = null;
+    Writer archWriter = null;
 }
