@@ -97,6 +97,9 @@ enum RecordTag : uint16_t
 
     /** Repository index specific (Package hash) */
     @(RecordType.String) PackageHash = 15,
+
+    /** Repository index specific (size on disk) */
+    @(RecordType.Uint64) PackageSize = 16,
 }
 
 /**
