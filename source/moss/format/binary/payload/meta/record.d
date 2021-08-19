@@ -91,6 +91,12 @@ enum RecordTag : uint16_t
 
     /** Currently recorded build number */
     @(RecordType.Uint64) BuildRelease = 13,
+
+    /** Repository index specific (relative URI) */
+    @(RecordType.String) PackageURI = 14,
+
+    /** Repository index specific (Package hash) */
+    @(RecordType.String) PackageHash = 15,
 }
 
 /**
