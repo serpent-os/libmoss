@@ -22,8 +22,10 @@
 
 module moss.format.binary.repo.repo_writer;
 
+import moss.format.binary.reader;
 import moss.format.binary.writer;
 import moss.format.binary : mossFormatVersionNumber;
+import moss.format.binary.payload.meta;
 
 /**
  * A RepoWriter is responsible for emitting a binary repository to disk.
@@ -45,6 +47,7 @@ public final class RepoWriter
         _outputDir = outputDir;
         _indexFile = _outputDir.buildPath("stone.index");
         archWriter = new Writer(File(_indexFile, "wb"), mossFormatVersionNumber);
+        archWriter.compressionType = PayloadCompression.Zstd;
     }
 
     /**
@@ -68,9 +71,21 @@ public final class RepoWriter
      */
     void addPackage(const(string) inpPath, const(string) packageURI)
     {
-        import std.stdio : writeln;
+        import std.exception : enforce;
 
-        writeln(inpPath, " => ", packageURI);
+        auto reader = new Reader(File(inpPath, "rb"));
+
+        scope (exit)
+        {
+            reader.close();
+        }
+
+        auto metaPayload = reader.payload!MetaPayload();
+        enforce(metaPayload !is null, "RepoWriter.addPackage(): Unable to grab MetaPayload");
+        metaPayload.addRecord(RecordTag.PackageURI, packageURI);
+
+        /* TODO: Add hash, size, filter records, etc. */
+        archWriter.addPayload(metaPayload);
     }
 
 private:
