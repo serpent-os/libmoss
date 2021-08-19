@@ -50,10 +50,13 @@ enum MossFileType : uint8_t
     Unknown = 0,
 
     /** Standard binary package */
-    Binary,
+    Binary = 1,
 
     /** Binary package: Delta update */
-    Delta,
+    Delta = 2,
+
+    /** Repository index */
+    Repository = 3,
 }
 
 /**
