@@ -22,6 +22,7 @@
 
 module moss.deps.query.manager;
 
+import core.atomic : atomicFetchAdd, atomicStore;
 import serpent.ecs;
 import moss.deps.query.components;
 public import moss.deps.query.source;
@@ -54,6 +55,9 @@ public final class QueryManager
         entityManager.registerComponent!NameComponent;
         entityManager.registerComponent!VersionComponent;
         entityManager.registerComponent!ReleaseComponent;
+        entityManager.registerComponent!VertexComponent;
+
+        vertexID.atomicStore(0);
     }
 
     /**
@@ -92,6 +96,7 @@ public final class QueryManager
             v.addComponent(entity, NameComponent(qRes.candidate.name));
             v.addComponent(entity, VersionComponent(qRes.candidate.versionID));
             v.addComponent(entity, ReleaseComponent(qRes.candidate.release));
+            v.addComponent(entity, VertexComponent(vertexID.atomicFetchAdd(1)));
         }());
     }
 
@@ -120,4 +125,5 @@ private:
 
     EntityManager entityManager;
     QuerySource[] sources;
+    uint32_t vertexID;
 }

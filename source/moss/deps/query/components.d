@@ -22,7 +22,7 @@
 
 module moss.deps.query.components;
 
-public import std.stdint : uint64_t;
+public import std.stdint : uint32_t, uint64_t;
 public import serpent.ecs.component;
 
 /**
@@ -67,4 +67,17 @@ public import serpent.ecs.component;
      * Used internally to bump candidate priority
      */
     uint64_t release = 0;
+}
+
+/**
+ * Each package is assigned a Vertex ID atomically
+ * to simplify dependency resolution. We assign these
+ * dynamically upon load of a package.
+ */
+@serpentComponent public struct VertexComponent
+{
+    /**
+     * 32-bit vertex ID
+     */
+    uint32_t vertexID = 0;
 }
