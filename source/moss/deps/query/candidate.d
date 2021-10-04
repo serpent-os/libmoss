@@ -22,7 +22,7 @@
 
 module moss.deps.query.candidate;
 
-public import std.stdint : uint64_t;
+public import std.stdint : uint32_t, uint64_t;
 
 /**
  * A PackageCandidate is a set of minimal fields used for further
@@ -49,4 +49,9 @@ struct PackageCandidate
      * Release field, increments only.
      */
     const(uint64_t) release = 0;
+
+    /**
+     * Internal vertexID for graph assignment
+     */
+    const(uint32_t) vertexID = 0;
 }

@@ -107,10 +107,10 @@ public final class QueryManager
     {
         auto view = View!ReadOnly(entityManager);
         return view.withComponents!(IDComponent, NameComponent,
-                VersionComponent, ReleaseComponent)
+                VersionComponent, ReleaseComponent, VertexComponent)
             .filter!((tup) => tup[2].name == pkgName)
             .map!((tup) => PackageCandidate(tup[1].id, tup[2].name,
-                    tup[3].versionID, tup[4].release));
+                    tup[3].versionID, tup[4].release, tup[5].vertexID));
     }
 
     /**
