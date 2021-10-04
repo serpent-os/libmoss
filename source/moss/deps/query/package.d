@@ -21,3 +21,7 @@
  */
 
 module moss.deps.query;
+
+public import moss.deps.query.candidate;
+public import moss.deps.query.components;
+public import moss.deps.query.source;
