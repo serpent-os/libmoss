@@ -24,17 +24,22 @@ module moss.deps.query.fauxsource;
 
 public import moss.deps.query.source;
 
+import std.algorithm : each, filter;
+
 /**
  * Helper to populate the faux source
  */
 package struct FauxPackage
 {
+    string id;
     string name;
     uint64_t release = 0;
     string versionID;
 
     /* Basic dependencies.. */
     string[] runtimeDepends;
+
+    string component;
 }
 /**
  * Our FauxSource is used entirely for unit tests.
@@ -50,20 +55,29 @@ package final class FauxSource : QuerySource
         packages[pkgID] = p;
     }
 
-    /**
-     * Return a queryable package
-     */
-    override QueryResult queryID(const(string) pkgID)
+    override void queryProviders(in ProviderType type, in string matcher, QueryCallback merger)
     {
-        auto p = pkgID in packages;
-        if (p !is null)
+        final switch (type)
         {
-            return QueryResult(PackageCandidate(pkgID, p.name, p.versionID, p.release), true);
+        case ProviderType.PackageID:
+            auto p = matcher in packages;
+            if (p is null)
+            {
+                return;
+            }
+            auto pkg = PackageCandidate(p.id, p.name, p.versionID, p.release);
+            merger(pkg);
+            break;
+        case ProviderType.PackageName:
+            packages.values
+                .filter!((ref p) => p.name == matcher)
+                .each!((ref p) => {
+                    auto pkg = PackageCandidate(p.id, p.name, p.versionID, p.release);
+                    merger(pkg);
+                }());
+            break;
         }
-        return QueryResult(PackageCandidate.init, false);
     }
-
-private:
 
     FauxPackage[string] packages;
 }
@@ -85,8 +99,8 @@ unittest
     em.build();
     em.step();
 
-    auto nanoPkg = FauxPackage("nano", 12, "2.4");
-    auto nanoPkg2 = FauxPackage("nano", 13, "2.5");
+    auto nanoPkg = FauxPackage("nano-pkg1", "nano", 12, "2.4");
+    auto nanoPkg2 = FauxPackage("nano-pkg2", "nano", 13, "2.5");
     fs.addPackage("nano-pkg1", nanoPkg);
     fs.addPackage("nano-pkg2", nanoPkg2);
 
