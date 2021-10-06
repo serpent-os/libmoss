@@ -25,6 +25,15 @@ module moss.deps.query.source;
 public import moss.deps.query.candidate;
 
 /**
+ * When querying we can lookup by name, ID, etc.
+ */
+enum ProviderType
+{
+    PackageName,
+    PackageID,
+}
+
+/**
  * QueryResult can be successful (found) and set, or empty and false
  */
 public struct QueryResult
@@ -39,17 +48,22 @@ public struct QueryResult
      */
     bool found = false;
 }
+
+/**
+ * A QueryCallback is provided to QuerySource implementations so that the owning
+ * QueryManager can build a list of potential candidates from incoming sources
+ */
+alias QueryCallback = void delegate(in PackageCandidate candidate);
+
 /**
  * A QuerySource is added to the QueryManager allowing it to load data from pkgIDs
  * if present.
  */
 public interface QuerySource
 {
-
     /**
-     * Attempt to return a PackageCandidate for the given ID.
-     * It is illegal for any source to contain more than one candidate for a given
-     * ID as they should be keyed by ID internally.
+     * The QuerySource will be given a callback to execute if it finds any
+     * matching providers for the input string and type
      */
-    QueryResult queryID(const(string) pkgID);
+    void queryProviders(in ProviderType type, in string matcher, QueryCallback merger);
 }
