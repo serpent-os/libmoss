@@ -83,21 +83,15 @@ public final class QueryManager
      */
     void loadID(const(string) pkgID)
     {
-        auto v = View!ReadWrite(entityManager);
+        loadByProvider(ProviderType.PackageID, pkgID);
+    }
 
-        sources.each!((s) => {
-            auto qRes = s.queryID(pkgID);
-            if (!qRes.found)
-            {
-                return;
-            }
-            auto entity = v.createEntity();
-            v.addComponent(entity, IDComponent(qRes.candidate.id));
-            v.addComponent(entity, NameComponent(qRes.candidate.name));
-            v.addComponent(entity, VersionComponent(qRes.candidate.versionID));
-            v.addComponent(entity, ReleaseComponent(qRes.candidate.release));
-            v.addComponent(entity, VertexComponent(vertexID.atomicFetchAdd(1)));
-        }());
+    /**
+     * Attempt to load all packages with the given name
+     */
+    void loadName(const(string) pkgID)
+    {
+        loadByProvider(ProviderType.PackageName, pkgID);
     }
 
     /**
@@ -122,6 +116,32 @@ public final class QueryManager
     }
 
 private:
+
+    /**
+     * Internal helper to load packages by a given provider type
+     */
+    void loadByProvider(in ProviderType provider, in string matcher)
+    {
+        auto v = View!ReadWrite(entityManager);
+
+        sources.each!((s) => {
+            s.queryProviders(provider, matcher, (pkg) => {
+                auto existingPackages = v.withComponents!(IDComponent)
+                .filter!((t) => pkg.id == t[1].id);
+                if (!existingPackages.empty)
+                {
+                    return;
+                }
+
+                auto entity = v.createEntity();
+                v.addComponent(entity, IDComponent(pkg.id));
+                v.addComponent(entity, NameComponent(pkg.name));
+                v.addComponent(entity, VersionComponent(pkg.versionID));
+                v.addComponent(entity, ReleaseComponent(pkg.release));
+                v.addComponent(entity, VertexComponent(vertexID.atomicFetchAdd(1)));
+            }());
+        }());
+    }
 
     EntityManager entityManager;
     QuerySource[] sources;
