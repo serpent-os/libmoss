@@ -23,7 +23,6 @@
 module moss.deps.query.source;
 
 public import moss.deps.query.candidate;
-public import moss.deps.query.dependency;
 
 /**
  * When querying we can lookup by name, ID, etc.
@@ -33,8 +32,6 @@ enum ProviderType
     PackageName,
     PackageID,
 }
-
-alias DependencyCallback = void delegate(in Dependency dependency);
 
 /**
  * A QuerySource is added to the QueryManager allowing it to load data from pkgIDs
@@ -46,12 +43,5 @@ public interface QuerySource
      * The QuerySource will be given a callback to execute if it finds any
      * matching providers for the input string and type
      */
-    PackageCandidate[] queryProviders(in ProviderType type, in string matcher);
-
-    /**
-     * The queryDependencies call will usually happen within the context of the
-     * QueryCallback call of queryProviders, to allow merging the dependencies
-     * of a given package without relying on extra allocations.
-     */
-    void queryDependencies(in string pkgID, DependencyCallback merger);
+    const(PackageCandidate)[] queryProviders(in ProviderType type, in string matcher);
 }
