@@ -7,10 +7,5 @@
 	"license": "Zlib",
 	"version": "0.0.1",
 	"name": "moss-deps",
-	"targetType": "autodetect",
-	"dependencies": {
-		"serpent-ecs": {
-			"path": "external/serpent-ecs"
-		}
-	}
+	"targetType": "autodetect"
 }

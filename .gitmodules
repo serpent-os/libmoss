@@ -1,3 +1,0 @@
-[submodule "external/serpent-ecs"]
-	path = external/serpent-ecs
-	url = https://gitlab.com/serpent-engine/serpent-ecs.git
