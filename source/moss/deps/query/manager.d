@@ -56,6 +56,7 @@ public final class QueryManager
         entityManager.registerComponent!VersionComponent;
         entityManager.registerComponent!ReleaseComponent;
         entityManager.registerComponent!VertexComponent;
+        entityManager.registerComponent!DependencyComponent;
 
         vertexID.atomicStore(0);
     }

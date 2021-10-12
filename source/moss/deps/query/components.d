@@ -24,6 +24,7 @@ module moss.deps.query.components;
 
 public import std.stdint : uint32_t, uint64_t;
 public import serpent.ecs.component;
+public import moss.deps.query.dependency : Dependency;
 
 /**
  * Store the "pkgID" at runtime
@@ -80,4 +81,20 @@ public import serpent.ecs.component;
      * 32-bit vertex ID
      */
     uint32_t vertexID = 0;
+}
+
+/**
+ * New entities created for every dependency encountered.
+ */
+@serpentComponent public struct DependencyComponent
+{
+    /**
+     * Which package owns this dependency?
+     */
+    uint32_t originVertex = 0;
+
+    /**
+     * The real dependency object
+     */
+    Dependency dep;
 }
