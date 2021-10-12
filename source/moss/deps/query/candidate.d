@@ -33,25 +33,25 @@ struct PackageCandidate
     /**
      * Unique ID for the package candidate within DBs. Internal format
      */
-    const(string) id = null;
+    string id = null;
 
     /**
      * Real package name, i.e. "nano"
      */
-    const(string) name = null;
+    string name = null;
 
     /**
      * Software version. Display purposes only.
      */
-    const(string) versionID = null;
+    string versionID = null;
 
     /**
      * Release field, increments only.
      */
-    const(uint64_t) release = 0;
+    uint64_t release = 0;
 
     /**
      * Internal vertexID for graph assignment
      */
-    const(uint32_t) vertexID = 0;
+    uint32_t vertexID = 0;
 }
