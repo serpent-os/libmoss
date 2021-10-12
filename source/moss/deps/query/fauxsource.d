@@ -61,19 +61,29 @@ package final class FauxSource : QuerySource
     PackageCandidate[string] packages;
 }
 
+/**
+ * Helpers for defining packages
+ */
 import moss.deps.query.dependency : DependencyType, Dependency;
 
+static PackageCandidate P(const(string) name)
+{
+    return PackageCandidate(name, name, "no.version", 1, 0, []);
+}
+
+static PackageCandidate P(const(string) name, Dependency[] deps)
+{
+    return PackageCandidate(name, name, "no.version", 1, 0, deps);
+}
+
+static Dependency D(const(string) name)
+{
+    return Dependency(name, DependencyType.PackageName);
+}
+
 static PackageCandidate[] worldPackages = [
-    PackageCandidate("nano", "nano", "2.4", 12, 0, [
-            Dependency("ncurses", DependencyType.PackageName),
-            Dependency("glibc", DependencyType.PackageName),
-            ]),
-    PackageCandidate("glibc", "glibc", "2.17", 1, 0, [
-            Dependency("baselayout", DependencyType.PackageName),
-            ]),
-    PackageCandidate("ncurses", "ncurses", "6.2", 2, 0, [
-            Dependency("glibc", DependencyType.PackageName),
-            ]), PackageCandidate("baselayout", "baselayout", "1.0", 50, 0),
+    P("nano", [D("glibc"), D("ncurses"),]), P("ncurses", [D("glibc"),]),
+    P("baselayout", []), P("glibc"),
 ];
 
 /**
@@ -92,5 +102,6 @@ unittest
 
     auto result = qm.byName("nano").array;
     enforce(result.length == 1);
-    enforce(result[0].versionID == "2.4");
+    auto nano = result[0];
+    enforce(nano.dependencies.length == 2);
 }
