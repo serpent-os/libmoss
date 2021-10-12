@@ -22,6 +22,8 @@
 
 module moss.deps.query.candidate;
 
+public import moss.deps.query.dependency : Dependency;
+
 public import std.stdint : uint32_t, uint64_t;
 
 /**
@@ -54,4 +56,6 @@ struct PackageCandidate
      * Internal vertexID for graph assignment
      */
     uint32_t vertexID = 0;
+
+    Dependency[] dependencies;
 }

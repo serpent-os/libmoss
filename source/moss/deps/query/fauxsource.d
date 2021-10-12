@@ -61,6 +61,11 @@ package final class FauxSource : QuerySource
     PackageCandidate[string] packages;
 }
 
+static PackageCandidate[] worldPackages = [
+    PackageCandidate("nano-pkg1", "nano", "2.4", 12),
+    PackageCandidate("nano-pkg2", "nano", "2.5", 13),
+];
+
 /**
  * Ensure basic query is working as expected.
  */
@@ -73,10 +78,7 @@ unittest
     auto fs = new FauxSource();
     qm.addSource(fs);
 
-    auto nanoPkg = PackageCandidate("nano-pkg1", "nano", "2.4", 12);
-    auto nanoPkg2 = PackageCandidate("nano-pkg2", "nano", "2.5", 13);
-    fs.addPackage(nanoPkg);
-    fs.addPackage(nanoPkg2);
+    worldPackages.each!((p) => fs.addPackage(p));
 
     auto result = qm.byName("nano").array;
     enforce(result.length == 2);
