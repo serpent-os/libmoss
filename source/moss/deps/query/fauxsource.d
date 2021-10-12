@@ -24,23 +24,9 @@ module moss.deps.query.fauxsource;
 
 public import moss.deps.query.source;
 
-import std.algorithm : each, filter;
+import std.algorithm : each, filter, map;
+import std.array : array;
 
-/**
- * Helper to populate the faux source
- */
-package struct FauxPackage
-{
-    string id;
-    string name;
-    uint64_t release = 0;
-    string versionID;
-
-    /* Basic dependencies.. */
-    string[] runtimeDepends;
-
-    string component;
-}
 /**
  * Our FauxSource is used entirely for unit tests.
  */
@@ -50,12 +36,12 @@ package final class FauxSource : QuerySource
     /**
      * Add a package to this query source.
      */
-    void addPackage(const(string) pkgID, ref FauxPackage p)
+    void addPackage(ref PackageCandidate p)
     {
-        packages[pkgID] = p;
+        packages[p.id] = p;
     }
 
-    override void queryProviders(in ProviderType type, in string matcher, QueryCallback merger)
+    override const(PackageCandidate)[] queryProviders(in ProviderType type, in string matcher)
     {
         final switch (type)
         {
@@ -63,23 +49,16 @@ package final class FauxSource : QuerySource
             auto p = matcher in packages;
             if (p is null)
             {
-                return;
+                return null;
             }
-            auto pkg = PackageCandidate(p.id, p.name, p.versionID, p.release);
-            merger(pkg);
-            break;
+            return [PackageCandidate(p.id, p.name, p.versionID, p.release)];
+
         case ProviderType.PackageName:
-            packages.values
-                .filter!((ref p) => p.name == matcher)
-                .each!((ref p) => {
-                    auto pkg = PackageCandidate(p.id, p.name, p.versionID, p.release);
-                    merger(pkg);
-                }());
-            break;
+            return packages.values.filter!((ref p) => p.name == matcher).array();
         }
     }
 
-    FauxPackage[string] packages;
+    PackageCandidate[string] packages;
 }
 
 /**
@@ -88,34 +67,19 @@ package final class FauxSource : QuerySource
 unittest
 {
     import moss.deps.query : QueryManager;
-    import serpent.ecs : EntityManager;
     import std.exception : enforce;
-    import std.array : array;
 
-    auto em = new EntityManager();
-    auto qm = new QueryManager(em);
+    auto qm = new QueryManager();
     auto fs = new FauxSource();
     qm.addSource(fs);
-    em.build();
-    em.step();
 
-    auto nanoPkg = FauxPackage("nano-pkg1", "nano", 12, "2.4");
-    auto nanoPkg2 = FauxPackage("nano-pkg2", "nano", 13, "2.5");
-    fs.addPackage("nano-pkg1", nanoPkg);
-    fs.addPackage("nano-pkg2", nanoPkg2);
-
-    qm.update();
-    qm.loadID("nano-pkg1");
-    qm.loadID("nano-pkg2");
+    auto nanoPkg = PackageCandidate("nano-pkg1", "nano", "2.4", 12);
+    auto nanoPkg2 = PackageCandidate("nano-pkg2", "nano", "2.5", 13);
+    fs.addPackage(nanoPkg);
+    fs.addPackage(nanoPkg2);
 
     auto result = qm.byName("nano").array;
     enforce(result.length == 2);
     enforce(result[0].versionID == "2.4");
     enforce(result[1].versionID == "2.5");
-
-    scope (exit)
-    {
-        qm.update();
-        em.destroy();
-    }
 }
