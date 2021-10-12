@@ -61,9 +61,19 @@ package final class FauxSource : QuerySource
     PackageCandidate[string] packages;
 }
 
+import moss.deps.query.dependency : DependencyType, Dependency;
+
 static PackageCandidate[] worldPackages = [
-    PackageCandidate("nano-pkg1", "nano", "2.4", 12),
-    PackageCandidate("nano-pkg2", "nano", "2.5", 13),
+    PackageCandidate("nano", "nano", "2.4", 12, 0, [
+            Dependency("ncurses", DependencyType.PackageName),
+            Dependency("glibc", DependencyType.PackageName),
+            ]),
+    PackageCandidate("glibc", "glibc", "2.17", 1, 0, [
+            Dependency("baselayout", DependencyType.PackageName),
+            ]),
+    PackageCandidate("ncurses", "ncurses", "6.2", 2, 0, [
+            Dependency("glibc", DependencyType.PackageName),
+            ]), PackageCandidate("baselayout", "baselayout", "1.0", 50, 0),
 ];
 
 /**
@@ -81,7 +91,6 @@ unittest
     worldPackages.each!((p) => fs.addPackage(p));
 
     auto result = qm.byName("nano").array;
-    enforce(result.length == 2);
+    enforce(result.length == 1);
     enforce(result[0].versionID == "2.4");
-    enforce(result[1].versionID == "2.5");
 }
