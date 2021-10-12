@@ -23,7 +23,6 @@
 module moss.deps.query;
 
 public import moss.deps.query.candidate;
-public import moss.deps.query.components;
 public import moss.deps.query.dependency;
 public import moss.deps.query.manager;
 public import moss.deps.query.source;

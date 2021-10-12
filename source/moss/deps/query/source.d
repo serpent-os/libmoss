@@ -34,28 +34,6 @@ enum ProviderType
     PackageID,
 }
 
-/**
- * QueryResult can be successful (found) and set, or empty and false
- */
-public struct QueryResult
-{
-    /**
-     * Candidate to return if the query was successfully found
-     */
-    PackageCandidate candidate;
-
-    /**
-     * Set to true if we find the candidate
-     */
-    bool found = false;
-}
-
-/**
- * A QueryCallback is provided to QuerySource implementations so that the owning
- * QueryManager can build a list of potential candidates from incoming sources
- */
-alias QueryCallback = void delegate(in PackageCandidate candidate);
-
 alias DependencyCallback = void delegate(in Dependency dependency);
 
 /**
@@ -68,7 +46,7 @@ public interface QuerySource
      * The QuerySource will be given a callback to execute if it finds any
      * matching providers for the input string and type
      */
-    void queryProviders(in ProviderType type, in string matcher, QueryCallback merger);
+    PackageCandidate[] queryProviders(in ProviderType type, in string matcher);
 
     /**
      * The queryDependencies call will usually happen within the context of the

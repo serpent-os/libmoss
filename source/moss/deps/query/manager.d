@@ -23,41 +23,21 @@
 module moss.deps.query.manager;
 
 import core.atomic : atomicFetchAdd, atomicStore;
-import serpent.ecs;
-import moss.deps.query.components;
 public import moss.deps.query.source;
 
 import std.algorithm : each, filter, map;
 
 /**
- * The QueryManager is a centralisation point within moss to permit loading
- * "Hot" packages into the runtime system, and query those packages for potential
- * update paths, name resolution, dependencies, etc.
- *
- * At present this is a huge WIP to bolt name resolution into moss, but will ofc
- * be extended in time.
+ * Encapsulation of multiple underlying "query sources"
  */
 public final class QueryManager
 {
 
-    @disable this();
-
     /**
-     * Construct a new QueryManager and initialise the runtime
-     * system.
+     * Construct a new QueryManager
      */
-    this(EntityManager entityManager)
+    this()
     {
-        this.entityManager = entityManager;
-
-        /* PackageCandidate */
-        entityManager.registerComponent!IDComponent;
-        entityManager.registerComponent!NameComponent;
-        entityManager.registerComponent!VersionComponent;
-        entityManager.registerComponent!ReleaseComponent;
-        entityManager.registerComponent!VertexComponent;
-        entityManager.registerComponent!DependencyComponent;
-
         vertexID.atomicStore(0);
     }
 
@@ -80,90 +60,17 @@ public final class QueryManager
     }
 
     /**
-     * Attempt to load the ID into our runtime
-     */
-    void loadID(const(string) pkgID)
-    {
-        loadByProvider(ProviderType.PackageID, pkgID);
-    }
-
-    /**
-     * Attempt to load all packages with the given name
-     */
-    void loadName(const(string) pkgID)
-    {
-        loadByProvider(ProviderType.PackageName, pkgID);
-    }
-
-    /**
      * Return all PackageCandidates by Name
      */
     auto byName(const(string) pkgName)
     {
-        auto view = View!ReadOnly(entityManager);
-        return view.withComponents!(IDComponent, NameComponent,
-                VersionComponent, ReleaseComponent, VertexComponent)
-            .filter!((tup) => tup[2].name == pkgName)
-            .map!((tup) => PackageCandidate(tup[1].id, tup[2].name,
-                    tup[3].versionID, tup[4].release, tup[5].vertexID));
-    }
+        import std.algorithm : joiner;
 
-    /**
-     * Sync all writes for reading
-     */
-    void update()
-    {
-        entityManager.step();
+        return sources.map!((s) => s.queryProviders(ProviderType.PackageName, pkgName)).joiner();
     }
 
 private:
 
-    /**
-     * Internal helper to load packages by a given provider type
-     */
-    void loadByProvider(in ProviderType provider, in string matcher)
-    {
-        auto v = View!ReadWrite(entityManager);
-
-        /**
-         * Merge dependency during load
-         */
-        void mergeDependency(uint32_t dependencyOrigin, in Dependency d)
-        {
-            auto ent = v.createEntity();
-            auto dc = DependencyComponent(dependencyOrigin, d);
-            v.addComponent(ent, dc);
-        }
-
-        /**
-         * Merge packages
-         */
-        void mergePackages(QuerySource s, in PackageCandidate pkg)
-        {
-            auto existingPackages = v.withComponents!(IDComponent)
-                .filter!((t) => pkg.id == t[1].id);
-            if (!existingPackages.empty)
-            {
-                return;
-            }
-
-            auto entity = v.createEntity();
-            v.addComponent(entity, IDComponent(pkg.id));
-            v.addComponent(entity, NameComponent(pkg.name));
-            v.addComponent(entity, VersionComponent(pkg.versionID));
-            v.addComponent(entity, ReleaseComponent(pkg.release));
-            auto vid = vertexID.atomicFetchAdd(1);
-            v.addComponent(entity, VertexComponent(vid));
-
-            s.queryDependencies(pkg.id, (p) => mergeDependency(vid, p));
-        }
-
-        sources.each!((s) => {
-            s.queryProviders(provider, matcher, (p) => mergePackages(s, p));
-        }());
-    }
-
-    EntityManager entityManager;
     QuerySource[] sources;
     uint32_t vertexID;
 }
