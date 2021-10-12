@@ -23,6 +23,7 @@
 module moss.deps.query.source;
 
 public import moss.deps.query.candidate;
+public import moss.deps.query.dependency;
 
 /**
  * When querying we can lookup by name, ID, etc.
@@ -55,6 +56,8 @@ public struct QueryResult
  */
 alias QueryCallback = void delegate(in PackageCandidate candidate);
 
+alias DependencyCallback = void delegate(in Dependency dependency);
+
 /**
  * A QuerySource is added to the QueryManager allowing it to load data from pkgIDs
  * if present.
@@ -66,4 +69,11 @@ public interface QuerySource
      * matching providers for the input string and type
      */
     void queryProviders(in ProviderType type, in string matcher, QueryCallback merger);
+
+    /**
+     * The queryDependencies call will usually happen within the context of the
+     * QueryCallback call of queryProviders, to allow merging the dependencies
+     * of a given package without relying on extra allocations.
+     */
+    void queryDependencies(in string pkgID, DependencyCallback merger);
 }

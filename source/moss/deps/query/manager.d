@@ -125,22 +125,41 @@ private:
     {
         auto v = View!ReadWrite(entityManager);
 
-        sources.each!((s) => {
-            s.queryProviders(provider, matcher, (pkg) => {
-                auto existingPackages = v.withComponents!(IDComponent)
-                .filter!((t) => pkg.id == t[1].id);
-                if (!existingPackages.empty)
-                {
-                    return;
-                }
+        /**
+         * Merge dependency during load
+         */
+        void mergeDependency(uint32_t dependencyOrigin, in Dependency d)
+        {
+            auto ent = v.createEntity();
+            auto dc = DependencyComponent(dependencyOrigin, d);
+            v.addComponent(ent, dc);
+        }
 
-                auto entity = v.createEntity();
-                v.addComponent(entity, IDComponent(pkg.id));
-                v.addComponent(entity, NameComponent(pkg.name));
-                v.addComponent(entity, VersionComponent(pkg.versionID));
-                v.addComponent(entity, ReleaseComponent(pkg.release));
-                v.addComponent(entity, VertexComponent(vertexID.atomicFetchAdd(1)));
-            }());
+        /**
+         * Merge packages
+         */
+        void mergePackages(QuerySource s, in PackageCandidate pkg)
+        {
+            auto existingPackages = v.withComponents!(IDComponent)
+                .filter!((t) => pkg.id == t[1].id);
+            if (!existingPackages.empty)
+            {
+                return;
+            }
+
+            auto entity = v.createEntity();
+            v.addComponent(entity, IDComponent(pkg.id));
+            v.addComponent(entity, NameComponent(pkg.name));
+            v.addComponent(entity, VersionComponent(pkg.versionID));
+            v.addComponent(entity, ReleaseComponent(pkg.release));
+            auto vid = vertexID.atomicFetchAdd(1);
+            v.addComponent(entity, VertexComponent(vid));
+
+            s.queryDependencies(pkg.id, (p) => mergeDependency(vid, p));
+        }
+
+        sources.each!((s) => {
+            s.queryProviders(provider, matcher, (p) => mergePackages(s, p));
         }());
     }
 
