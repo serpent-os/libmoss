@@ -213,11 +213,13 @@ public final class DependencyGraph(L)
      */
     void dfs(BuildCallback cb)
     {
+        /* Discolour/reset each vertex */
         foreach (vertex; vertices)
         {
             vertex.status = VertexStatus.Undiscovered;
         }
 
+        /* For every unvisited vertex, begin search */
         foreach (vertex; vertices)
         {
             if (vertex.status == VertexStatus.Undiscovered)
