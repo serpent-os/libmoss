@@ -33,24 +33,36 @@ import std.stdio : File, stdout;
  */
 unittest
 {
+    import moss.deps.query.dependency : Dependency, DependencyType;
+
     static struct Pkg
     {
         string name;
-        string[] dependencies;
+        Dependency[] deps;
     }
 
     Pkg[] pkgs = [
-        Pkg("baselayout"), Pkg("glibc", ["baselayout"]),
-        Pkg("nano", ["libtinfo", "ncurses", "glibc"]), Pkg("libtinfo",
-                ["glibc"]), Pkg("ncurses", ["libtinfo", "glibc"]),
+        Pkg("baselayout"),
+        Pkg("nano", [
+                Dependency("libtinfo", DependencyType.PackageName),
+                Dependency("ncurses", DependencyType.PackageName),
+                Dependency("glibc", DependencyType.PackageName),
+                ]),
+        Pkg("ncurses", [
+                Dependency("libtinfo", DependencyType.PackageName),
+                Dependency("glibc", DependencyType.PackageName),
+                ]),
+        Pkg("libtinfo", [Dependency("glibc", DependencyType.PackageName)]),
+        Pkg("glibc", [Dependency("baselayout", DependencyType.PackageName),]),
     ];
-    auto g = new DependencyGraph!string();
+
+    auto g = new DependencyGraph!(Dependency, string)();
     foreach (p; pkgs)
     {
         g.addNode(p.name);
-        foreach (d; p.dependencies)
+        foreach (d; p.deps)
         {
-            g.addEdge(p.name, d);
+            g.addEdge(p.name, d.target, d);
         }
     }
     auto expectedOrder = ["baselayout", "glibc", "libtinfo", "ncurses", "nano"];
@@ -82,13 +94,79 @@ private enum VertexStatus
     Explored,
 }
 
+private struct EdgeSet(D, L)
+{
+    alias DepType = D;
+    alias LabelType = L;
+    alias EdgeStorage = RedBlackTree!(LabelType, "a < b", false);
+
+    /**
+     * The dependency we're grouped by
+     */
+    immutable(DepType) dep;
+
+    /**
+     * Our actual set of potential edges
+     */
+    EdgeStorage edges;
+
+    /**
+     * Insert edge into our candidate edges
+     */
+    void addEdge(LabelType edge)
+    {
+        edges.insert(edge);
+    }
+
+    /**
+     * Create a new EdgeSet
+     */
+    static EdgeSet!(DepType, LabelType)* create(DepType d)
+    {
+        return new EdgeSet(d, new EdgeStorage());
+    }
+
+    /**
+     * Return true if both edges are equal
+     */
+    bool opEquals()(auto ref const EdgeSet!(DepType, LabelType) other) const
+    {
+        return other.dep == this.dep;
+    }
+
+    /**
+     * Compare two edges with the same type
+     */
+    int opCmp(ref const EdgeSet!(DepType, LabelType) other) const
+    {
+        if (this.dep < other.dep)
+        {
+            return -1;
+        }
+        else if (this.dep > other.dep)
+        {
+            return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * Return the hash code for the dep
+     */
+    ulong toHash() @safe nothrow const
+    {
+        return typeid(DepType).getHash(&dep);
+    }
+}
+
 /**
  * We use allocated Vertex structs to maintain each vertex, or node, in our
  * graph structure. Additionally each Vertex may contain a set of edges that
  * connect it to another Vertex in a single direction.
  */
-private struct Vertex(L)
+private struct Vertex(D, L)
 {
+    alias DepType = D;
     alias LabelType = L;
     alias EdgeStorage = RedBlackTree!(LabelType, "a < b", false);
 
@@ -105,17 +183,17 @@ private struct Vertex(L)
     /**
      * Factory to create a new Vertex
      */
-    static Vertex!(LabelType)* create(in LabelType label)
+    static Vertex!(DepType, LabelType)* create(in LabelType label)
     {
-        return new Vertex!(LabelType)(label, new EdgeStorage());
+        return new Vertex!(DepType, LabelType)(label, new EdgeStorage());
     }
 
     /**
      * Factory to create a comparator Vertex
      */
-    static Vertex!(LabelType) refConstruct(in LabelType label)
+    static Vertex!(DepType, LabelType) refConstruct(in LabelType label)
     {
-        return Vertex!(LabelType)(label);
+        return Vertex!(DepType, LabelType)(label);
     }
 
     /**
@@ -129,7 +207,7 @@ private struct Vertex(L)
     /**
      * Compare two vertices with the same type
      */
-    int opCmp(ref const Vertex!(LabelType) other) const
+    int opCmp(ref const Vertex!(DepType, LabelType) other) const
     {
         if (this.label < other.label)
         {
@@ -165,10 +243,11 @@ private struct Vertex(L)
  * intelligent use than a simple Depth-First Search, so that we can support
  * multiple candidate scenarios.
  */
-public final class DependencyGraph(L)
+public final class DependencyGraph(D, L)
 {
     alias LabelType = L;
-    alias VertexDescriptor = Vertex!(LabelType);
+    alias DepType = D;
+    alias VertexDescriptor = Vertex!(DepType, LabelType);
     alias VertexTree = RedBlackTree!(VertexDescriptor*, "a.label < b.label", false);
     alias BuildCallback = void delegate(LabelType l);
 
@@ -201,7 +280,7 @@ public final class DependencyGraph(L)
     /**
      * Add an edge between the two named vertices
      */
-    void addEdge(in LabelType u, in LabelType v)
+    void addEdge(in LabelType u, in LabelType v, in DepType d)
     {
         auto desc = VertexDescriptor.refConstruct(u);
         auto match = vertices.equalRange(&desc);
