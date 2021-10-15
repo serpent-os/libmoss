@@ -25,6 +25,7 @@ module moss.deps.graph.depgraph;
 import std.container.rbtree;
 import std.exception : enforce;
 import std.string : format;
+import std.stdio : File, stdout;
 
 /**
  * Validate **basic** topological sorting. We achieve this by passing a closure
@@ -56,6 +57,8 @@ unittest
     string[] computedOrder;
     g.dfs((n) => { computedOrder ~= n; }());
     assert(computedOrder == expectedOrder, "Wrong ordering of dependencies");
+
+    g.emitGraph();
 }
 
 /**
@@ -228,6 +231,23 @@ public final class DependencyGraph(L)
                 dfsVisit(vertex, cb);
             }
         }
+    }
+
+    /**
+     * Emit the graph to the given output stream.
+     * Highly simplistic
+     */
+    void emitGraph(File output = stdout)
+    {
+        output.writeln("digraph G {");
+        foreach (v; vertices)
+        {
+            foreach (edge; v.edges)
+            {
+                output.writefln("%s -> %s;", v.label, getNode(edge).label);
+            }
+        }
+        output.writeln("}");
     }
 
 private:
