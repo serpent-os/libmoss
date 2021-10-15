@@ -51,7 +51,9 @@ package final class FauxSource : QuerySource
             {
                 return null;
             }
-            return [PackageCandidate(p.id, p.name, p.versionID, p.release)];
+            return [
+                PackageCandidate(p.id, p.name, p.versionID, p.release, 0, p.dependencies)
+            ];
 
         case ProviderType.PackageName:
             return packages.values.filter!((ref p) => p.name == matcher).array();
@@ -83,7 +85,7 @@ static Dependency D(const(string) name)
 
 static PackageCandidate[] worldPackages = [
     P("nano", [D("glibc"), D("ncurses"),]), P("ncurses", [D("glibc"),]),
-    P("baselayout", []), P("glibc"),
+    P("baselayout", []), P("glibc", [D("baselayout")]),
 ];
 
 /**
@@ -93,6 +95,7 @@ unittest
 {
     import moss.deps.query : QueryManager;
     import std.exception : enforce;
+    import moss.deps.graph : DependencyGraph;
 
     auto qm = new QueryManager();
     auto fs = new FauxSource();
@@ -104,4 +107,38 @@ unittest
     enforce(result.length == 1);
     auto nano = result[0];
     enforce(nano.dependencies.length == 2);
+
+    auto g = new DependencyGraph!string;
+
+    /**
+     * TODO: Change to a nice loop.
+     */
+    void addRecursive(in PackageCandidate p)
+    {
+        if (!g.hasNode(p.id))
+        {
+            g.addNode(p.id);
+        }
+        foreach (dep; p.dependencies)
+        {
+            auto candidates = qm.byName(dep.target).array;
+            enforce(candidates.length == 1);
+            auto c = candidates[0];
+            g.addEdge(p.id, c.id);
+            addRecursive(c);
+        }
+    }
+
+    auto nanoCandidates = qm.byID("nano").array;
+    enforce(nanoCandidates.length == 1);
+    auto nanoC = nanoCandidates[0];
+    addRecursive(nanoC);
+    string[] computedOrder;
+    g.dfs((n) => { computedOrder ~= n; }());
+
+    import std.stdio : writeln;
+
+    enforce(computedOrder == ["baselayout", "glibc", "ncurses", "nano"]);
+    g.emitGraph();
+
 }

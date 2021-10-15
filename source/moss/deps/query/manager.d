@@ -60,13 +60,29 @@ public final class QueryManager
     }
 
     /**
-     * Return all PackageCandidates by Name
+     * Return all PackageCandidates by provider
      */
-    auto byName(const(string) pkgName)
+    auto byProvider(in ProviderType providerType, const(string) provider)
     {
         import std.algorithm : joiner;
 
-        return sources.map!((s) => s.queryProviders(ProviderType.PackageName, pkgName)).joiner();
+        return sources.map!((s) => s.queryProviders(providerType, provider)).joiner();
+    }
+
+    /**
+     * Return all PackageCandidates by Name
+     */
+    pragma(inline, true) auto byName(const(string) pkgName)
+    {
+        return byProvider(ProviderType.PackageName, pkgName);
+    }
+
+    /**
+     * Return all PackageCandidates by ID
+     */
+    pragma(inline, true) auto byID(const(string) pkgID)
+    {
+        return byProvider(ProviderType.PackageID, pkgID);
     }
 
 private:
