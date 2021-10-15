@@ -43,10 +43,10 @@ unittest
         Pkg("nano", ["libtinfo", "ncurses", "glibc"]), Pkg("libtinfo",
                 ["glibc"]), Pkg("ncurses", ["libtinfo", "glibc"]),
     ];
-    auto g = new DependencyGraph!(string, Pkg)();
+    auto g = new DependencyGraph!string();
     foreach (p; pkgs)
     {
-        g.addNode(p.name, cast(Pkg) p);
+        g.addNode(p.name);
         foreach (d; p.dependencies)
         {
             g.addEdge(p.name, d);
@@ -84,21 +84,15 @@ private enum VertexStatus
  * graph structure. Additionally each Vertex may contain a set of edges that
  * connect it to another Vertex in a single direction.
  */
-private struct Vertex(L, V)
+private struct Vertex(L)
 {
     alias LabelType = L;
-    alias StorageType = V;
     alias EdgeStorage = RedBlackTree!(LabelType, "a < b", false);
 
     /**
      * Label is used for sorting the vertices and referencing it
      */
     immutable(LabelType) label;
-
-    /**
-     * Associated storage for the Vertex
-     */
-    StorageType storage;
 
     /**
      * Store any edge references
@@ -108,23 +102,23 @@ private struct Vertex(L, V)
     /**
      * Factory to create a new Vertex
      */
-    static Vertex!(LabelType, StorageType)* create(in LabelType label, StorageType storage)
+    static Vertex!(LabelType)* create(in LabelType label)
     {
-        return new Vertex!(LabelType, StorageType)(label, storage, new EdgeStorage());
+        return new Vertex!(LabelType)(label, new EdgeStorage());
     }
 
     /**
      * Factory to create a comparator Vertex
      */
-    static Vertex!(LabelType, StorageType) refConstruct(in LabelType label)
+    static Vertex!(LabelType) refConstruct(in LabelType label)
     {
-        return Vertex!(LabelType, StorageType)(label);
+        return Vertex!(LabelType)(label);
     }
 
     /**
      * Return true if both vertices are equal
      */
-    bool opEquals()(auto ref const Vertex!(LabelType, StorageType) other) const
+    bool opEquals()(auto ref const Vertex!(LabelType) other) const
     {
         return other.label == this.label;
     }
@@ -132,7 +126,7 @@ private struct Vertex(L, V)
     /**
      * Compare two vertices with the same type
      */
-    int opCmp(ref const Vertex!(LabelType, StorageType) other) const
+    int opCmp(ref const Vertex!(LabelType) other) const
     {
         if (this.label < other.label)
         {
@@ -168,11 +162,10 @@ private struct Vertex(L, V)
  * intelligent use than a simple Depth-First Search, so that we can support
  * multiple candidate scenarios.
  */
-public final class DependencyGraph(L, V)
+public final class DependencyGraph(L)
 {
     alias LabelType = L;
-    alias StorageType = V;
-    alias VertexDescriptor = Vertex!(LabelType, StorageType);
+    alias VertexDescriptor = Vertex!(LabelType);
     alias VertexTree = RedBlackTree!(VertexDescriptor*, "a.label < b.label", false);
     alias BuildCallback = void delegate(LabelType l);
 
@@ -196,10 +189,10 @@ public final class DependencyGraph(L, V)
     /**
      * Add a new node to the tree.
      */
-    void addNode(in LabelType label, StorageType storage)
+    void addNode(in LabelType label)
     {
         enforce(!hasNode(label), "Cannot add duplicate node");
-        vertices.insert(VertexDescriptor.create(label, storage));
+        vertices.insert(VertexDescriptor.create(label));
     }
 
     /**
