@@ -27,6 +27,38 @@ import std.exception : enforce;
 import std.string : format;
 
 /**
+ * Validate **basic** topological sorting. We achieve this by passing a closure
+ * to the depth-first search functions.
+ */
+unittest
+{
+    static struct Pkg
+    {
+        string name;
+        string[] dependencies;
+    }
+
+    Pkg[] pkgs = [
+        Pkg("baselayout"), Pkg("glibc", ["baselayout"]),
+        Pkg("nano", ["libtinfo", "ncurses", "glibc"]), Pkg("libtinfo",
+                ["glibc"]), Pkg("ncurses", ["libtinfo", "glibc"]),
+    ];
+    auto g = new DependencyGraph!(string, Pkg)();
+    foreach (p; pkgs)
+    {
+        g.addNode(p.name, cast(Pkg) p);
+        foreach (d; p.dependencies)
+        {
+            g.addEdge(p.name, d);
+        }
+    }
+    auto expectedOrder = ["baselayout", "glibc", "libtinfo", "ncurses", "nano"];
+    string[] computedOrder;
+    g.dfs((n) => { computedOrder ~= n; }());
+    assert(computedOrder == expectedOrder, "Wrong ordering of dependencies");
+}
+
+/**
  * Track status of vertex visits
  */
 private enum VertexStatus
@@ -76,7 +108,7 @@ private struct Vertex(L, V)
     /**
      * Factory to create a new Vertex
      */
-    static Vertex!(LabelType, StorageType)* create(in LabelType label, in StorageType storage)
+    static Vertex!(LabelType, StorageType)* create(in LabelType label, StorageType storage)
     {
         return new Vertex!(LabelType, StorageType)(label, storage, new EdgeStorage());
     }
@@ -164,7 +196,7 @@ public final class DependencyGraph(L, V)
     /**
      * Add a new node to the tree.
      */
-    void addNode(in LabelType label, in StorageType storage)
+    void addNode(in LabelType label, StorageType storage)
     {
         enforce(!hasNode(label), "Cannot add duplicate node");
         vertices.insert(VertexDescriptor.create(label, storage));
