@@ -213,6 +213,7 @@ public final class DependencyGraph(L)
      */
     void dfs(BuildCallback cb)
     {
+        enforce(cb !is null, "Cannot perform search without a closure");
         /* Discolour/reset each vertex */
         foreach (vertex; vertices)
         {
