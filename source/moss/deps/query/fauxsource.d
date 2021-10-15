@@ -57,6 +57,12 @@ package final class FauxSource : QuerySource
 
         case ProviderType.PackageName:
             return packages.values.filter!((ref p) => p.name == matcher).array();
+        case ProviderType.LibraryName:
+            if (matcher == "libc.so.6")
+            {
+                return [packages["glibc"]];
+            }
+            return [];
         }
     }
 
@@ -83,9 +89,15 @@ static Dependency D(const(string) name)
     return Dependency(name, DependencyType.PackageName);
 }
 
+static Dependency LD(const(string) name)
+{
+    return Dependency(name, DependencyType.LibraryName);
+}
+
 static PackageCandidate[] worldPackages = [
-    P("nano", [D("glibc"), D("ncurses"),]), P("ncurses", [D("glibc"),]),
-    P("baselayout", []), P("glibc", [D("baselayout")]),
+    P("nano", [LD("libc.so.6"), D("ncurses"),]), P("ncurses", [
+            LD("libc.so.6"),
+            ]), P("baselayout", []), P("glibc", [D("baselayout")]),
 ];
 
 /**
@@ -121,11 +133,25 @@ unittest
         }
         foreach (dep; p.dependencies)
         {
-            auto candidates = qm.byName(dep.target).array;
-            enforce(candidates.length == 1);
-            auto c = candidates[0];
-            g.addEdge(p.id, c.id);
-            addRecursive(c);
+            PackageCandidate candidate;
+
+            switch (dep.type)
+            {
+            case DependencyType.PackageName:
+                auto c = qm.byName(dep.target);
+                enforce(!c.empty);
+                candidate = cast(PackageCandidate) c.front;
+                break;
+            case DependencyType.LibraryName:
+                auto c = qm.byProvider(ProviderType.LibraryName, dep.target);
+                enforce(!c.empty);
+                candidate = cast(PackageCandidate) c.front;
+                break;
+            default:
+                assert(0 == 1, "UNHANDLED DEPENDENCY");
+            }
+            g.addEdge(p.id, candidate.id);
+            addRecursive(candidate);
         }
     }
 

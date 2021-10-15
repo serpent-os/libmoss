@@ -31,6 +31,7 @@ enum ProviderType
 {
     PackageName,
     PackageID,
+    LibraryName,
 }
 
 /**
