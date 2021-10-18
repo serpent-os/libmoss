@@ -1,0 +1,3 @@
+[submodule "external/elf-d"]
+	path = external/elf-d
+	url = https://gitlab.com/serpent-os/dlang/elf-d.git
