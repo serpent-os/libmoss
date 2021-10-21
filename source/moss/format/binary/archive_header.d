@@ -57,6 +57,9 @@ enum MossFileType : uint8_t
 
     /** Repository index */
     Repository = 3,
+
+    /** Manifest file */
+    BuildManifest = 4,
 }
 
 /**
