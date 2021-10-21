@@ -22,4 +22,6 @@
 
 module moss.deps.analysis;
 
+public import moss.deps.analysis.analyser;
+public import moss.deps.analysis.chain;
 public import moss.deps.analysis.fileinfo;
