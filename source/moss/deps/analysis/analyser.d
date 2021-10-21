@@ -22,53 +22,86 @@
 
 module moss.deps.analysis.analyser;
 
-public import moss.deps.analysis.fileinfo : FileInfo;
+public import moss.deps.analysis.chain;
+
+import std.exception : enforce;
+import std.string : format;
 
 /**
- * Chains can force the control flow depending on their return status
+ * The Analyser is used to query sets of files for inclusion status as well
+ * as permit post processing on files as and when they're encountered. As
+ * such we can support dependency collection, etc.
  */
-enum AnalysisReturn
+public final class Analyser
 {
-    /**
-     * Pass this file onto the next handler. We're uninterested in it
-     */
-    NextHandler = 0,
+
+private:
 
     /**
-     * Move to the next function in this chain.
+     * Process just one file.
+     *
+     * We'll execute all functions from all chains with a deterministic order
+     * all the time we get a NextHandler or NextFunction call. Our goal is to
+     * traverse the chains to get an Include or Ignore result from a whole
+     * chain to allow full processing.
      */
-    NextFunction,
+    void processOne(ref FileInfo fi)
+    {
+        static enum Action
+        {
+            IncludeFile,
+            IgnoreFile,
+            Unhandled
+        }
 
-    /**
-     * Ignore this file, nobody will want it
-     */
-    IgnoreFile,
+        auto fileAction = Action.Unhandled;
+        primary_loop: foreach (i; 0 .. chains.length)
+        {
+            auto chain = &chains[i];
 
-    /**
-     * End chain execution, include the file
-     */
-    IncludeFile,
+            enforce(chain.funcs !is null && chain.funcs.length > 0, "Non functioning handler");
+
+            auto funcIndex = 0;
+            AnalysisFunc func = null;
+            long chainLength = cast(long) chain.funcs.length;
+            immutable auto cmp = chainLength - 1;
+
+            secondary_loop: while (true)
+            {
+                func = chain.funcs[funcIndex];
+                immutable auto ret = func(fi);
+                final switch (ret)
+                {
+                case AnalysisReturn.NextFunction:
+                    ++funcIndex;
+                    enforce(funcIndex <= cmp);
+                    continue secondary_loop;
+                case AnalysisReturn.NextHandler:
+                    continue primary_loop;
+                case AnalysisReturn.IncludeFile:
+                    fileAction = Action.IncludeFile;
+                    break primary_loop;
+                case AnalysisReturn.IgnoreFile:
+                    fileAction = Action.IgnoreFile;
+                    break primary_loop;
+                }
+            }
+        }
+
+        enforce(fileAction != Action.Unhandled, "Unhandled file: %s".format(fi.fullPath));
+
+        if (fileAction == Action.IgnoreFile)
+        {
+            return;
+        }
+
+        /* TODO: now include in the relevant bucket */
+    }
+
+    AnalysisChain[] chains;
 }
 
-/**
- * An analysis function may use the incoming FileInfo to discover further
- * details about it.
- */
-alias AnalysisFunc = AnalysisReturn function(in FileInfo fi);
-
-/**
- * An AnalysisChain is simply a named set of handlers which control the flow
- * for analysis evaluation.
- */
-public struct AnalysisChain
+unittest
 {
-    /**
-     * Name of the handler
-     */
-    const(string) name;
-
-    /**
-     * Set of functions to control flow
-     */
-    AnalysisFunc[] funcs;
+    auto a = new Analyser();
 }
