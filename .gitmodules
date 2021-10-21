@@ -7,3 +7,6 @@
 [submodule "external/zstd"]
 	path = external/zstd
 	url = https://github.com/repeatedly/zstd-d.git
+[submodule "external/moss-core"]
+	path = external/moss-core
+	url = https://gitlab.com/serpent-os/core/moss-core.git
