@@ -34,35 +34,3 @@ public import moss.format.binary.writer;
  * Current version of the package format that we target.
  */
 const uint32_t mossFormatVersionNumber = 1;
-
-/**
- * A FileType is a simple tagging mechanism so that we're able to record the
- * destination file type (*Nix) in the layout, so that it may be reapplied
- * upon extraction.
- */
-enum FileType : uint8_t
-{
-    /* Catch errors */
-    Unknown = 0,
-
-    /** Regular file **/
-    Regular = 1,
-
-    /** Symbolic link to another location */
-    Symlink = 2,
-
-    /** Directory */
-    Directory = 3,
-
-    /** Character Device */
-    CharacterDevice = 4,
-
-    /** Block device */
-    BlockDevice = 5,
-
-    /** Fifo pipe */
-    Fifo = 6,
-
-    /** Socket */
-    Socket = 7,
-}
