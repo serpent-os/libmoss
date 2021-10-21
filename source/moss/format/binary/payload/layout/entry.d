@@ -25,7 +25,7 @@ module moss.format.binary.payload.layout.entry;
 public import std.stdint;
 
 import moss.format.binary.endianness;
-import moss.format.binary : FileType;
+import moss.core : FileType;
 import moss.format.binary.reader : ReaderToken;
 import moss.format.binary.writer : WriterToken;
 

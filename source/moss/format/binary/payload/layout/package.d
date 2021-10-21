@@ -143,7 +143,7 @@ public:
     void addLayout(LayoutEntry entry, string source, string target = null)
     {
         import std.exception : enforce;
-        import moss.format.binary : FileType;
+        import moss.core : FileType;
 
         sets ~= EntrySet();
         auto length = cast(long) sets.length;
