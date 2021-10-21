@@ -22,5 +22,5 @@
 
 module moss.deps;
 
-public import moss.deps.generator;
+public import moss.deps.analysis;
 public import moss.deps.query;
