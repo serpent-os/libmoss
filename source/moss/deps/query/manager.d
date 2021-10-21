@@ -22,7 +22,6 @@
 
 module moss.deps.query.manager;
 
-import core.atomic : atomicFetchAdd, atomicStore;
 public import moss.deps.query.source;
 
 import std.algorithm : each, filter, map;
@@ -32,15 +31,6 @@ import std.algorithm : each, filter, map;
  */
 public final class QueryManager
 {
-
-    /**
-     * Construct a new QueryManager
-     */
-    this()
-    {
-        vertexID.atomicStore(0);
-    }
-
     /**
      * Add a source to the QueryManager
      */
@@ -88,5 +78,4 @@ public final class QueryManager
 private:
 
     QuerySource[] sources;
-    uint32_t vertexID;
 }

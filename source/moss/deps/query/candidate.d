@@ -52,10 +52,5 @@ struct PackageCandidate
      */
     uint64_t release = 0;
 
-    /**
-     * Internal vertexID for graph assignment
-     */
-    uint32_t vertexID = 0;
-
     Dependency[] dependencies;
 }

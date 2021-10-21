@@ -52,7 +52,7 @@ package final class FauxSource : QuerySource
                 return null;
             }
             return [
-                PackageCandidate(p.id, p.name, p.versionID, p.release, 0, p.dependencies)
+                PackageCandidate(p.id, p.name, p.versionID, p.release, p.dependencies)
             ];
 
         case ProviderType.PackageName:
@@ -76,12 +76,12 @@ import moss.deps.query.dependency : DependencyType, Dependency;
 
 static PackageCandidate P(const(string) name)
 {
-    return PackageCandidate(name, name, "no.version", 1, 0, []);
+    return PackageCandidate(name, name, "no.version", 1, []);
 }
 
 static PackageCandidate P(const(string) name, Dependency[] deps)
 {
-    return PackageCandidate(name, name, "no.version", 1, 0, deps);
+    return PackageCandidate(name, name, "no.version", 1, deps);
 }
 
 static Dependency D(const(string) name)
