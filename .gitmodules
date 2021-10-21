@@ -1,3 +1,6 @@
 [submodule "external/elf-d"]
 	path = external/elf-d
 	url = https://gitlab.com/serpent-os/dlang/elf-d.git
+[submodule "external/moss-core"]
+	path = external/moss-core
+	url = https://gitlab.com/serpent-os/core/moss-core.git
