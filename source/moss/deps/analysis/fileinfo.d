@@ -24,7 +24,7 @@ module moss.deps.analysis.fileinfo;
 
 import std.path;
 import std.file;
-import moss.core : FileType;
+import moss.core : FileType, computeSHA256;
 import core.sys.posix.sys.stat;
 
 /**
@@ -84,7 +84,6 @@ public struct FileInfo
             break;
         case S_IFREG:
             _type = FileType.Regular;
-            _data = checkHash(fullPath);
             break;
         case S_IFSOCK:
             _type = FileType.Socket;
@@ -178,25 +177,16 @@ public struct FileInfo
         return statResult;
     }
 
-private:
-
     /**
-     * Ugly utility to check a hash
+     * Compute hash sum for this file
      */
-    string checkHash(const(string) path) @trusted
+    void computeHash()
     {
-        import std.stdio : File;
-        import std.digest.sha : SHA256Digest, toHexString;
-        import std.string : toLower;
-
-        auto sha = new SHA256Digest();
-        auto input = File(path, "rb");
-        foreach (ubyte[] buffer; input.byChunk(16 * 1024 * 1024))
-        {
-            sha.put(buffer);
-        }
-        return toHexString(sha.finish()).toLower();
+        /* Use mmap if the file is larger than 16kib */
+        _data = computeSHA256(_fullPath, statResult.st_size > 1024 * 16);
     }
+
+private:
 
     FileType _type = FileType.Unknown;
     string _data = null;
