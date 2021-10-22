@@ -108,7 +108,6 @@ string computeSHA256(in string path, bool useMmap = false)
         dataMap.chunks(ChunkSize).each!((b) => sha.put(b));
     }
 
-ret:
     return toHexString(sha.finish()).toLower();
 }
 
