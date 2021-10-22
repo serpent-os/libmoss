@@ -30,7 +30,7 @@ import core.sys.posix.sys.stat;
 /**
  * We use mmap when beyond 16kib
  */
-immutable auto MmapThreshhold = 16 * 1024;
+static enum MmapThreshhold = 16 * 1024;
 
 /**
  * FileInfo collects essential information about each file in a package
