@@ -27,6 +27,19 @@ import core.stdc.string;
 import core.stdc.errno;
 import std.exception : enforce;
 import std.string : format, toStringz;
+import std.range : chunks;
+import std.digest : makeDigest;
+import std.stdio : File;
+import std.digest.sha : SHA256, toHexString;
+import std.string : toLower;
+import std.mmfile;
+import std.algorithm : each;
+
+/**
+ * Various parts of the moss codebases perform file copies, and should all
+ * use a standard chunk size of 4mib.
+ */
+const auto ChunkSize = 4 * 1024 * 1024;
 
 /**
  * Attempt construction of a hardlink.
@@ -67,4 +80,38 @@ pragma(inline, true) void hardLinkOrCopy(const(string) sourcePath, const(string)
 pragma(inline, true) bool checkWritable(const(string) path) @trusted
 {
     return access(path.toStringz, W_OK) == 0;
+}
+
+/**
+ * Compute SHA256sum for the given input path, optionally using mmap
+ */
+string computeSHA256(in string path, bool useMmap = false)
+{
+    auto sha = makeDigest!SHA256();
+    auto inp = File(path, "rb");
+    scope (exit)
+    {
+        inp.close();
+    }
+    if (!useMmap)
+    {
+        inp.byChunk(ChunkSize).each!((b) => sha.put(b));
+        return toHexString(sha.finish()).toLower();
+    }
+
+    auto mapped = new MmFile(inp);
+    auto dataMap = cast(ubyte[]) mapped[0 .. mapped.length];
+    dataMap.chunks(ChunkSize).each!((b) => sha.put(b));
+    return toHexString(sha.finish()).toLower();
+}
+
+unittest
+{
+    const auto expHash = "6aad886e25795d06dfe468782caac1d4991a9b4fca7f003d754d0b326abb43dc";
+
+    immutable auto directHash = computeSHA256("LICENSE");
+    immutable auto mapHash = computeSHA256("LICENSE", true);
+
+    assert(expHash == directHash, "Mismatch in direct hash");
+    assert(expHash == directHash, "Mismatch in mmap hash");
 }
