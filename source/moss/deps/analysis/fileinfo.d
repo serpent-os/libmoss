@@ -36,21 +36,35 @@ public struct FileInfo
 
 package:
 
+    /**
+     * Construct a new FileInfo from the given paths
+     */
     this(const(string) relativePath, const(string) fullPath)
     {
         import std.string : toStringz, format;
         import std.exception : enforce;
 
-        _path = relativePath;
-        _fullPath = fullPath;
         auto z = fullPath.toStringz;
-        auto ret = lstat(z, &statResult);
+        stat_t tStat = {0};
+        auto ret = lstat(z, &tStat);
         enforce(ret == 0, "FileInfo: unable to stat() %s".format(fullPath));
 
+        this(relativePath, fullPath, tStat);
+
+    }
+
+    /**
+     * Construct a new FileInfo using the given relative path, full path,
+     * and populated stat result
+     */
+    this(const(string) relativePath, const(string) fullPath, in stat_t statResult)
+    {
+        this.statResult = statResult;
+        _path = relativePath;
+        _fullPath = fullPath;
+
         /**
-         * Determine underlying file type and decide exactly what to do with
-         * it. For most things we just set the type, for regular files we source
-         * the hash sum, and for symlinks we read the link itself.
+         * Stat the file so we can set the appropriate file type
          */
         switch (statResult.st_mode & S_IFMT)
         {
