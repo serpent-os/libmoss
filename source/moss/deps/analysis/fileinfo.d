@@ -122,8 +122,7 @@ public:
     {
         import std.exception : enforce;
 
-        enforce(type == FileType.Symlink,
-                "CollectionResult.symlinkResolved() only supported for symlinks");
+        enforce(type == FileType.Symlink, "FileInfo.symlinkResolved() only supported for symlinks");
 
         auto dirn = path.dirName;
         return dirn.buildPath(data.relativePath(dirn));
