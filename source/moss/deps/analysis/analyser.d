@@ -37,6 +37,14 @@ public final class Analyser
 {
 
     /**
+     * Add a processing chain
+     */
+    void addChain(AnalysisChain chain)
+    {
+        chains ~= chain;
+    }
+
+    /**
      * Add a single file for processing
      */
     void addFile(ref FileInfo file)
@@ -144,5 +152,21 @@ private:
 
 unittest
 {
+    static AnalysisReturn acceptLicense(in FileInfo fi)
+    {
+        if (fi.path == "LICENSE")
+        {
+            return AnalysisReturn.IncludeFile;
+        }
+        return AnalysisReturn.NextHandler;
+    }
+
+    auto licenseChain = AnalysisChain("license", [&acceptLicense]);
+
     auto a = new Analyser();
+    a.addChain(licenseChain);
+    auto l = FileInfo("LICENSE", "LICENSE");
+    l.target = "main";
+    a.addFile(l);
+    a.process();
 }
