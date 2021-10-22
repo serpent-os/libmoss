@@ -36,6 +36,39 @@ import std.string : format;
 public final class Analyser
 {
 
+    /**
+     * Add a single file for processing
+     */
+    void addFile(ref FileInfo file)
+    {
+        enforce(file.target != "" && file.target !is null, "FileInfo has no target");
+        pendingFiles ~= file;
+
+        /* Ensure bucket exists! */
+        if (file.target in buckets)
+        {
+            return;
+        }
+        buckets[file.target] = new AnalysisBucket(file.target);
+    }
+
+    /**
+     * Very simple method to process all incoming files 
+     */
+    void process()
+    {
+        auto numFiles = pendingFiles.length;
+
+        while (numFiles > 0)
+        {
+            foreach (ref fi; pendingFiles)
+            {
+                processOne(fi);
+            }
+            numFiles = pendingFiles.length;
+        }
+    }
+
 private:
 
     /**
@@ -48,6 +81,8 @@ private:
      */
     void processOne(ref FileInfo fi)
     {
+        import std.algorithm : remove;
+
         static enum Action
         {
             IncludeFile,
@@ -89,28 +124,22 @@ private:
             }
         }
 
+        /* remove file from pending set */
         enforce(fileAction != Action.Unhandled, "Unhandled file: %s".format(fi.fullPath));
+        pendingFiles = pendingFiles.remove!((r) => r.fullPath == fi.fullPath);
 
         if (fileAction == Action.IgnoreFile)
         {
             return;
         }
 
-        /* Add to existing bucket */
-        if (fi.target in buckets)
-        {
-            buckets[fi.target].add(fi);
-            return;
-        }
-
-        /* Add to new bucket */
-        auto b = new AnalysisBucket(fi.target);
-        b.add(fi);
-        buckets[fi.target] = b;
+        /* Made it this far. Own it */
+        buckets[fi.target].add(fi);
     }
 
     AnalysisChain[] chains;
     AnalysisBucket[string] buckets;
+    FileInfo[] pendingFiles;
 }
 
 unittest
