@@ -89,19 +89,25 @@ string computeSHA256(in string path, bool useMmap = false)
 {
     auto sha = makeDigest!SHA256();
     auto inp = File(path, "rb");
+    MmFile mapped = null;
+    ubyte[] dataMap;
+
     scope (exit)
     {
         inp.close();
     }
+
     if (!useMmap)
     {
         inp.byChunk(ChunkSize).each!((b) => sha.put(b));
-        return toHexString(sha.finish()).toLower();
+        goto ret;
     }
 
-    auto mapped = new MmFile(inp);
-    auto dataMap = cast(ubyte[]) mapped[0 .. mapped.length];
+    mapped = new MmFile(inp);
+    dataMap = cast(ubyte[]) mapped[0 .. mapped.length];
     dataMap.chunks(ChunkSize).each!((b) => sha.put(b));
+
+ret:
     return toHexString(sha.finish()).toLower();
 }
 
