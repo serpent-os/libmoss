@@ -34,8 +34,6 @@ import core.sys.posix.sys.stat;
 public struct FileInfo
 {
 
-package:
-
     /**
      * Construct a new FileInfo from the given paths
      */
@@ -96,8 +94,6 @@ package:
             break;
         }
     }
-
-public:
 
     /**
      * Return the underlying file type
