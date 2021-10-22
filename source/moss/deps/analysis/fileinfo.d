@@ -28,6 +28,11 @@ import moss.core : FileType, computeSHA256;
 import core.sys.posix.sys.stat;
 
 /**
+ * We use mmap when beyond 16kib
+ */
+immutable auto MmapThreshhold = 16 * 1024;
+
+/**
  * FileInfo collects essential information about each file in a package
  * to allow further proessing.
  */
@@ -183,7 +188,7 @@ public struct FileInfo
     void computeHash()
     {
         /* Use mmap if the file is larger than 16kib */
-        _data = computeSHA256(_fullPath, statResult.st_size > 1024 * 16);
+        _data = computeSHA256(_fullPath, !(statResult.st_size <= MmapThreshhold));
     }
 
 private:
