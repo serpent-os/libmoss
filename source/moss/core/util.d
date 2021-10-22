@@ -39,7 +39,7 @@ import std.algorithm : each;
  * Various parts of the moss codebases perform file copies, and should all
  * use a standard chunk size of 4mib.
  */
-const auto ChunkSize = 4 * 1024 * 1024;
+public immutable auto ChunkSize = 4 * 1024 * 1024;
 
 /**
  * Attempt construction of a hardlink.
