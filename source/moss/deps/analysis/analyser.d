@@ -22,6 +22,7 @@
 
 module moss.deps.analysis.analyser;
 
+public import moss.deps.analysis.bucket;
 public import moss.deps.analysis.chain;
 
 import std.exception : enforce;
@@ -95,10 +96,21 @@ private:
             return;
         }
 
-        /* TODO: now include in the relevant bucket */
+        /* Add to existing bucket */
+        if (fi.target in buckets)
+        {
+            buckets[fi.target].add(fi);
+            return;
+        }
+
+        /* Add to new bucket */
+        auto b = new AnalysisBucket(fi.target);
+        b.add(fi);
+        buckets[fi.target] = b;
     }
 
     AnalysisChain[] chains;
+    AnalysisBucket[string] buckets;
 }
 
 unittest

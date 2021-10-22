@@ -24,6 +24,9 @@ module moss.deps.analysis.bucket;
 
 import std.container.rbtree;
 
+import moss.core : FileType;
+public import moss.deps.analysis.fileinfo;
+
 /**
  * An AnalysisBucket is created for each subpackage so we know ahead of time
  * which files go where.
@@ -39,6 +42,17 @@ public final class AnalysisBucket
     pure @property const(string) name() @safe @nogc nothrow
     {
         return _name;
+    }
+
+    /**
+     * Add this FileInfo to our own
+     */
+    void add(ref FileInfo info)
+    {
+        if (info.type == FileType.Regular)
+        {
+            info.computeHash();
+        }
     }
 
 package:
