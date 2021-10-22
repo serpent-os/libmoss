@@ -102,7 +102,7 @@ public struct FileInfo
     /**
      * Return the underlying file type
      */
-    pure @property FileType type() @safe @nogc nothrow
+    pure @property FileType type() const @safe @nogc nothrow
     {
         return _type;
     }
@@ -110,7 +110,7 @@ public struct FileInfo
     /**
      * Return the data (symlink target or hash)
      */
-    pure @property const(string) data() @safe
+    pure @property const(string) data() const @safe
     {
         import std.exception : enforce;
 
@@ -122,7 +122,7 @@ public struct FileInfo
     /**
      * Return true if this is a relative symlink
      */
-    pure @property bool relativeSymlink() @safe
+    pure @property bool relativeSymlink() const @safe
     {
         import std.string : startsWith;
 
@@ -132,7 +132,7 @@ public struct FileInfo
     /**
      * Return the fully resolved symlink
      */
-    pure @property const(string) symlinkResolved() @safe
+    pure @property const(string) symlinkResolved() const @safe
     {
         import std.exception : enforce;
 
@@ -145,7 +145,7 @@ public struct FileInfo
     /**
      * Return the target filesystem path
      */
-    pure @property const(string) path() @safe @nogc nothrow
+    pure @property const(string) path() const @safe @nogc nothrow
     {
         return _path;
     }
@@ -153,7 +153,7 @@ public struct FileInfo
     /**
      * Return the full path to the file on the host disk
      */
-    pure @property const(string) fullPath() @safe @nogc nothrow
+    pure @property const(string) fullPath() const @safe @nogc nothrow
     {
         return _fullPath;
     }
@@ -161,7 +161,7 @@ public struct FileInfo
     /**
      * Return the target for this file
      */
-    pure @property const(string) target() @safe @nogc nothrow
+    pure @property const(string) target() const @safe @nogc nothrow
     {
         return _target;
     }
@@ -177,7 +177,7 @@ public struct FileInfo
     /**
      * Return underlying stat buffer
      */
-    pure @property stat_t stat() @safe @nogc nothrow
+    pure @property stat_t stat() const @safe @nogc nothrow
     {
         return statResult;
     }
