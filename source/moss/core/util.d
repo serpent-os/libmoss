@@ -100,12 +100,13 @@ string computeSHA256(in string path, bool useMmap = false)
     if (!useMmap)
     {
         inp.byChunk(ChunkSize).each!((b) => sha.put(b));
-        goto ret;
     }
-
-    mapped = new MmFile(inp);
-    dataMap = cast(ubyte[]) mapped[0 .. mapped.length];
-    dataMap.chunks(ChunkSize).each!((b) => sha.put(b));
+    else
+    {
+        mapped = new MmFile(inp);
+        dataMap = cast(ubyte[]) mapped[0 .. mapped.length];
+        dataMap.chunks(ChunkSize).each!((b) => sha.put(b));
+    }
 
 ret:
     return toHexString(sha.finish()).toLower();
