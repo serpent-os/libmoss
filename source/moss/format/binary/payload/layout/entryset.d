@@ -82,8 +82,9 @@ extern (C) public struct EntrySet
     void encode(scope WriterToken wr) @trusted
     {
         /* Write record + value */
+        auto strings = encodeStrings();
         entry.encode(wr);
-        wr.appendData(encodeStrings());
+        wr.appendData(strings);
     }
 
     /**
