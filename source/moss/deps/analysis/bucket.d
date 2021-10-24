@@ -25,6 +25,7 @@ module moss.deps.analysis.bucket;
 import std.container.rbtree;
 
 import moss.core : FileType;
+public import moss.deps.query.dependency;
 public import moss.deps.analysis.fileinfo;
 
 /**
@@ -33,6 +34,10 @@ public import moss.deps.analysis.fileinfo;
  */
 public final class AnalysisBucket
 {
+    /**
+     * Store dependencies in unique tree
+     */
+    alias DependencyTree = RedBlackTree!(Dependency, "a < b", false);
 
     @disable this();
 
@@ -53,6 +58,15 @@ public final class AnalysisBucket
         {
             info.computeHash();
         }
+        files ~= info;
+    }
+
+    /**
+     * Add a dependency to this bucket.
+     */
+    void addDependency(ref Dependency d)
+    {
+        deps.insert(d);
     }
 
 package:
@@ -63,9 +77,12 @@ package:
     this(in string name)
     {
         _name = name;
+        deps = new DependencyTree();
     }
 
 private:
 
     string _name = null;
+    FileInfo[] files;
+    DependencyTree deps;
 }
