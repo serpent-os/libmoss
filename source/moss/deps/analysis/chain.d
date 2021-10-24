@@ -78,3 +78,19 @@ public struct AnalysisChain
      */
     ulong priority = 0;
 }
+
+/**
+ * End a chain by dropping a file
+ */
+public pure AnalysisReturn dropFile(scope Analyser analyser, in FileInfo fileInfo)
+{
+    return AnalysisReturn.IgnoreFile;
+}
+
+/**
+ * End a chain with including a file
+ */
+public pure AnalysisReturn includeFile(scope Analyser analyser, in FileInfo fileInfo)
+{
+    return AnalysisReturn.IncludeFile;
+}
