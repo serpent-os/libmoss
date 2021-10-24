@@ -73,6 +73,7 @@ public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileIn
 public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo)
 {
     import elf : ELF, DynamicLinkingTable;
+    import std.string : format;
 
     auto fi = ELF.fromFile(fileInfo.fullPath);
     foreach (section; fi.sections)
@@ -84,7 +85,8 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
         auto dynTable = DynamicLinkingTable(section);
         foreach (dtNeeded; dynTable.needed)
         {
-            auto d = Dependency(dtNeeded, DependencyType.LibraryName);
+            auto d = Dependency("soname:%s(%s)".format(dtNeeded,
+                    fi.header.machineISA), DependencyType.LibraryName);
             analyser.bucket(fileInfo).addDependency(d);
         }
     }
