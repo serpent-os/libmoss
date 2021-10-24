@@ -24,8 +24,10 @@ module moss.deps.analysis.fileinfo;
 
 import std.path;
 import std.file;
-import moss.core : FileType, computeSHA256;
+import moss.core : computeSHA256;
 import core.sys.posix.sys.stat;
+
+public import moss.core : FileType;
 
 /**
  * We use mmap when beyond 16kib

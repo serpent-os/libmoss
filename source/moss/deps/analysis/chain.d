@@ -23,7 +23,7 @@
 module moss.deps.analysis.chain;
 
 public import moss.deps.analysis.analyser : Analyser;
-public import moss.deps.analysis.fileinfo : FileInfo;
+public import moss.deps.analysis.fileinfo;
 
 /**
  * Chains can force the control flow depending on their return status
