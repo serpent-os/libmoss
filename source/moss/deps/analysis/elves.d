@@ -22,6 +22,7 @@
 
 module moss.deps.analysis.elves;
 
+public import moss.deps.query.dependency;
 public import moss.deps.analysis.chain;
 
 /**
@@ -58,4 +59,54 @@ public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileIn
 
     /* Eligible */
     return AnalysisReturn.NextFunction;
+}
+
+/**
+ * Assuming the input is a valid ELF file, i.e. from using acceptElfFiles, we
+ * can scan the binary for any dependencies (DT_NEEDED) and provided SONAME.
+ */
+public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo)
+{
+    import elf : ELF, DynamicLinkingTable;
+
+    auto fi = ELF.fromFile(fileInfo.fullPath);
+    foreach (section; fi.sections)
+    {
+        if (section.name != ".dynamic")
+        {
+            continue;
+        }
+        auto dynTable = DynamicLinkingTable(section);
+        foreach (dtNeeded; dynTable.needed)
+        {
+            auto d = Dependency(dtNeeded, DependencyType.LibraryName);
+            analyser.bucket(fileInfo).addDependency(d);
+        }
+    }
+    return AnalysisReturn.NextFunction;
+}
+
+unittest
+{
+    import std.file : thisExePath;
+    import moss.deps.analysis.analyser : Analyser;
+
+    auto ourname = thisExePath;
+
+    auto fi = FileInfo(ourname, ourname);
+    auto rule = AnalysisChain("elves", [
+            &acceptElfFiles, &scanElfFiles, &includeFile
+            ]);
+    fi.target = "main";
+    auto an = new Analyser();
+    an.addFile(fi);
+    an.addChain(rule);
+    an.process();
+
+    import std.stdio : writeln;
+
+    auto deps = an.bucket("main").dependencies;
+    assert(!deps.empty, "Cannot find dependenies for this test");
+    writeln(deps);
+
 }
