@@ -74,7 +74,7 @@ public final class Analyser
     /**
      * Return bucket for the given FileInfo
      */
-    @property AnalysisBucket bucket(in FileInfo info)
+    pure @property AnalysisBucket bucket(in FileInfo info)
     {
         return bucket(info.target);
     }
@@ -82,7 +82,7 @@ public final class Analyser
     /**
      * Return a bucket by name
      */
-    @property AnalysisBucket bucket(in string name)
+    pure @property AnalysisBucket bucket(in string name)
     {
         return buckets[name];
     }
