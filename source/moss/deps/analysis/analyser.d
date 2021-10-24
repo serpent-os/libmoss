@@ -108,7 +108,7 @@ private:
      * traverse the chains to get an Include or Ignore result from a whole
      * chain to allow full processing.
      */
-    Action processOne(ref FileInfo fi)
+    immutable(Action) processOne(ref FileInfo fi)
     {
         import std.algorithm : remove;
 
