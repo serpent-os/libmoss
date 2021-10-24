@@ -66,18 +66,39 @@ public final class Analyser
     void process()
     {
         auto numFiles = pendingFiles.length;
+        import std.algorithm : remove;
 
         while (numFiles > 0)
         {
-            foreach (ref fi; pendingFiles)
+            auto fi = pendingFiles[0];
+            immutable auto fileAction = processOne(fi);
+
+            /* remove file from pending set */
+            pendingFiles = pendingFiles.remove(0);
+
+            final switch (fileAction)
             {
-                processOne(fi);
+            case Action.IncludeFile:
+                buckets[fi.target].add(fi);
+                break;
+            case Action.IgnoreFile:
+                break;
+            case Action.Unhandled:
+                throw new Exception("Unhandle file: %s".format(fi.fullPath));
             }
+
             numFiles = pendingFiles.length;
         }
     }
 
 private:
+
+    static enum Action
+    {
+        IncludeFile,
+        IgnoreFile,
+        Unhandled
+    }
 
     /**
      * Process just one file.
@@ -87,16 +108,9 @@ private:
      * traverse the chains to get an Include or Ignore result from a whole
      * chain to allow full processing.
      */
-    void processOne(ref FileInfo fi)
+    Action processOne(ref FileInfo fi)
     {
         import std.algorithm : remove;
-
-        static enum Action
-        {
-            IncludeFile,
-            IgnoreFile,
-            Unhandled
-        }
 
         auto fileAction = Action.Unhandled;
         primary_loop: foreach (i; 0 .. chains.length)
@@ -132,17 +146,7 @@ private:
             }
         }
 
-        /* remove file from pending set */
-        enforce(fileAction != Action.Unhandled, "Unhandled file: %s".format(fi.fullPath));
-        pendingFiles = pendingFiles.remove!((r) => r.fullPath == fi.fullPath);
-
-        if (fileAction == Action.IgnoreFile)
-        {
-            return;
-        }
-
-        /* Made it this far. Own it */
-        buckets[fi.target].add(fi);
+        return fileAction;
     }
 
     AnalysisChain[] chains;
