@@ -38,6 +38,7 @@ public final class AnalysisBucket
      * Store dependencies in unique tree
      */
     alias DependencyTree = RedBlackTree!(Dependency, "a < b", false);
+    alias HashTree = RedBlackTree!(string, "a < b", false);
 
     @disable this();
 
@@ -57,6 +58,7 @@ public final class AnalysisBucket
         if (info.type == FileType.Regular)
         {
             info.computeHash();
+            uniqueHashes.insert(info.data);
         }
         files ~= info;
     }
@@ -78,6 +80,7 @@ package:
     {
         _name = name;
         deps = new DependencyTree();
+        uniqueHashes = new HashTree();
     }
 
 private:
@@ -85,4 +88,5 @@ private:
     string _name = null;
     FileInfo[] files;
     DependencyTree deps;
+    HashTree uniqueHashes;
 }
