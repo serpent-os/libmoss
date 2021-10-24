@@ -233,8 +233,8 @@ public struct FileInfo
                 return 0;
             }
         }
-        immutable auto pA = this._data;
-        immutable auto pB = this._data;
+        immutable auto pA = this._path;
+        immutable auto pB = this._path;
         if (pA < pB)
         {
             return -1;
