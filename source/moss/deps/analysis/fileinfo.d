@@ -192,7 +192,7 @@ public struct FileInfo
     }
 
     /**
-     * Return true if both depencies are equal
+     * Return true if both FileInfos are equal
      */
     bool opEquals()(auto ref const FileInfo other) const
     {
@@ -208,7 +208,7 @@ public struct FileInfo
     }
 
     /**
-     * Compare two eependencies with the same type
+     * Compare two FileInfos with the same type
      */
     int opCmp(ref const FileInfo other) const
     {
