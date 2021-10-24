@@ -57,7 +57,7 @@ unittest
         "baselayout", "glibc", "libtinfo", "ncurses", "nano"
     ];
     string[] computedOrder;
-    g.dfs((n) => { computedOrder ~= n; }());
+    g.topologicalSort((n) => { computedOrder ~= n; }());
     assert(computedOrder == expectedOrder, "Wrong ordering of dependencies");
 
     g.emitGraph();
@@ -172,7 +172,7 @@ public final class DependencyGraph(L)
     alias LabelType = L;
     alias VertexDescriptor = Vertex!(LabelType);
     alias VertexTree = RedBlackTree!(VertexDescriptor*, "a.label < b.label", false);
-    alias BuildCallback = void delegate(LabelType l);
+    alias DfsClosure = void delegate(LabelType l);
 
     /**
      * Construct a new DependencyGraph
@@ -216,7 +216,7 @@ public final class DependencyGraph(L)
     /**
      * Perform depth first search and execute closure on encountered nodes
      */
-    void dfs(BuildCallback cb)
+    void topologicalSort(DfsClosure cb)
     {
         enforce(cb !is null, "Cannot perform search without a closure");
         /* Discolour/reset each vertex */
@@ -269,7 +269,7 @@ private:
     /**
      * Internal depth first search visit logic
      */
-    void dfsVisit(VertexDescriptor* vertex, BuildCallback cb)
+    void dfsVisit(VertexDescriptor* vertex, DfsClosure cb)
     {
         vertex.status = VertexStatus.Discovered;
         foreach (edge; vertex.edges)

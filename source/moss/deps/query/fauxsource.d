@@ -160,7 +160,7 @@ unittest
     auto nanoC = nanoCandidates[0];
     addRecursive(nanoC);
     string[] computedOrder;
-    g.dfs((n) => { computedOrder ~= n; }());
+    g.topologicalSort((n) => { computedOrder ~= n; }());
 
     import std.stdio : writeln;
 
