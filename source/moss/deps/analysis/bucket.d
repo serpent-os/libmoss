@@ -42,6 +42,7 @@ public final class AnalysisBucket
      */
     alias DependencyTree = RedBlackTree!(Dependency, "a < b", false);
     alias HashTree = RedBlackTree!(string, "a < b", false);
+    alias FileTree = RedBlackTree!(FileInfo, "a < b", true);
 
     @disable this();
 
@@ -63,7 +64,7 @@ public final class AnalysisBucket
             info.computeHash();
             uniqueHashes.insert(info.data);
         }
-        files ~= info;
+        files.insert(info);
     }
 
     /**
@@ -80,8 +81,18 @@ public final class AnalysisBucket
      */
     auto uniqueFiles()
     {
-        return uniqueHashes[].map!((h) => files.filter!((ref f) => f.type == FileType.Regular
-                && f.data == h).take(1).front);
+        return uniqueHashes[].map!((h) => {
+            auto comparator = FileInfo.regularComparator(h);
+            return files.equalRange(comparator).take(1).front;
+        }());
+    }
+
+    /**
+     * Return all files within this set
+     */
+    auto allFiles()
+    {
+        return files[];
     }
 
 package:
@@ -94,12 +105,13 @@ package:
         _name = name;
         deps = new DependencyTree();
         uniqueHashes = new HashTree();
+        files = new FileTree();
     }
 
 private:
 
     string _name = null;
-    FileInfo[] files;
+    FileTree files;
     DependencyTree deps;
     HashTree uniqueHashes;
 }

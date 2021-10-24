@@ -191,6 +191,82 @@ public struct FileInfo
         _data = computeSHA256(_fullPath, !(statResult.st_size <= MmapThreshhold));
     }
 
+    /**
+     * Return true if both depencies are equal
+     */
+    bool opEquals()(auto ref const FileInfo other) const
+    {
+        if (this.type == other.type)
+        {
+            if (this.type == FileType.Regular || this.type == FileType.Symlink)
+            {
+                return this._data == other._data;
+            }
+            return this.statResult == other.statResult;
+        }
+        else
+        {
+            return false;
+        }
+        return other.type == this.type;
+    }
+
+    /**
+     * Compare two eependencies with the same type
+     */
+    int opCmp(ref const FileInfo other) const
+    {
+        if (this.type == other.type)
+        {
+            if (this.type == FileType.Regular || this.type == FileType.Symlink)
+            {
+                immutable auto dA = this._data;
+                immutable auto dB = other._data;
+                if (dA < dB)
+                {
+                    return -1;
+                }
+                else if (dA > dB)
+                {
+                    return 1;
+                }
+                return 0;
+            }
+        }
+        immutable auto pA = this._data;
+        immutable auto pB = this._data;
+        if (pA < pB)
+        {
+            return -1;
+        }
+        else if (pA > pB)
+        {
+            return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * Return the hash code for the path
+     */
+    ulong toHash() @safe nothrow const
+    {
+        return typeid(string).getHash(&_path);
+    }
+
+package:
+
+    /**
+     * Return a regular file comparison struct
+     */
+    static FileInfo regularComparator(in string hash)
+    {
+        auto f = FileInfo();
+        f._data = hash;
+        f._type = FileType.Regular;
+        return f;
+    }
+
 private:
 
     FileType _type = FileType.Unknown;
