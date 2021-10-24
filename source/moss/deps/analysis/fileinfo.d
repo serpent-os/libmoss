@@ -204,11 +204,7 @@ public struct FileInfo
             }
             return this.statResult == other.statResult;
         }
-        else
-        {
-            return false;
-        }
-        return other.type == this.type;
+        return false;
     }
 
     /**
