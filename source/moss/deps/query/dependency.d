@@ -72,4 +72,45 @@ public struct Dependency
      * matching
      */
     bool conflict = false;
+
+    /**
+     * Return true if both depencies are equal
+     */
+    bool opEquals()(auto ref const Dependency other) const
+    {
+        return other.target == target && other.type == type;
+    }
+
+    /**
+     * Compare two eependencies with the same type
+     */
+    int opCmp(ref const Dependency other) const
+    {
+        if (this.target < other.target)
+        {
+            return -1;
+        }
+        else if (this.target > other.target)
+        {
+            return 1;
+        }
+        if (this.type < other.type)
+        {
+            return -1;
+        }
+        else if (this.type > other.type)
+        {
+            return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * Return the hash code for the label
+     */
+    ulong toHash() @safe nothrow const
+    {
+        return typeid(string).getHash(&target);
+    }
+
 }
