@@ -53,7 +53,9 @@ unittest
             g.addEdge(p.name, d);
         }
     }
-    auto expectedOrder = ["baselayout", "glibc", "libtinfo", "ncurses", "nano"];
+    immutable auto expectedOrder = [
+        "baselayout", "glibc", "libtinfo", "ncurses", "nano"
+    ];
     string[] computedOrder;
     g.dfs((n) => { computedOrder ~= n; }());
     assert(computedOrder == expectedOrder, "Wrong ordering of dependencies");
