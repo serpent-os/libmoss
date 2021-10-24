@@ -95,6 +95,14 @@ public final class AnalysisBucket
         return files[];
     }
 
+    /**
+     * Return unique set of dependencies
+     */
+    auto dependencies()
+    {
+        return deps[];
+    }
+
 package:
 
     /**
