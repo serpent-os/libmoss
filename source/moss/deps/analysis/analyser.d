@@ -113,7 +113,7 @@ private:
             secondary_loop: while (true)
             {
                 func = chain.funcs[funcIndex];
-                immutable auto ret = func(fi);
+                immutable auto ret = func(this, fi);
                 final switch (ret)
                 {
                 case AnalysisReturn.NextFunction:
@@ -152,19 +152,29 @@ private:
 
 unittest
 {
-    static AnalysisReturn acceptLicense(in FileInfo fi)
+    static AnalysisReturn acceptLicense(scope Analyser analyser, in FileInfo fi)
     {
         if (fi.path == "LICENSE")
         {
+            auto f = FileInfo("README.md", "README.md");
+            f.target = "main";
+            analyser.addFile(f);
             return AnalysisReturn.IncludeFile;
         }
         return AnalysisReturn.NextHandler;
     }
 
+    static AnalysisReturn acceptAll(scope Analyser analyser, in FileInfo fi)
+    {
+        return AnalysisReturn.IncludeFile;
+    }
+
     auto licenseChain = AnalysisChain("license", [&acceptLicense]);
+    auto allChain = AnalysisChain("all", [&acceptAll]);
 
     auto a = new Analyser();
     a.addChain(licenseChain);
+    a.addChain(allChain);
     auto l = FileInfo("LICENSE", "LICENSE");
     l.target = "main";
     a.addFile(l);

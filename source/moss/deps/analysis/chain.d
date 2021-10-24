@@ -22,6 +22,7 @@
 
 module moss.deps.analysis.chain;
 
+public import moss.deps.analysis.analyser : Analyser;
 public import moss.deps.analysis.fileinfo : FileInfo;
 
 /**
@@ -54,7 +55,7 @@ enum AnalysisReturn
  * An analysis function may use the incoming FileInfo to discover further
  * details about it.
  */
-alias AnalysisFunc = AnalysisReturn function(in FileInfo fi);
+alias AnalysisFunc = AnalysisReturn function(scope Analyser analyser, in FileInfo fi);
 
 /**
  * An AnalysisChain is simply a named set of handlers which control the flow
