@@ -72,4 +72,9 @@ public struct AnalysisChain
      * Set of functions to control flow
      */
     AnalysisFunc[] funcs;
+
+    /**
+     * Higher priority always runs first
+     */
+    ulong priority = 0;
 }

@@ -27,6 +27,7 @@ public import moss.deps.analysis.chain;
 
 import std.exception : enforce;
 import std.string : format;
+import std.container.rbtree;
 
 /**
  * The Analyser is used to query sets of files for inclusion status as well
@@ -36,12 +37,22 @@ import std.string : format;
 public final class Analyser
 {
 
+    alias ChainTree = RedBlackTree!(AnalysisChain, "a.priority > b.priority", true);
+
+    /**
+     * Construct a new Analyser with presorted chain trees
+     */
+    this()
+    {
+        chains = new ChainTree();
+    }
+
     /**
      * Add a processing chain
      */
     void addChain(AnalysisChain chain)
     {
-        chains ~= chain;
+        chains.insert(chain);
     }
 
     /**
@@ -113,10 +124,8 @@ private:
         import std.algorithm : remove;
 
         auto fileAction = Action.Unhandled;
-        primary_loop: foreach (i; 0 .. chains.length)
+        primary_loop: foreach (chain; chains)
         {
-            auto chain = &chains[i];
-
             enforce(chain.funcs !is null && chain.funcs.length > 0, "Non functioning handler");
 
             auto funcIndex = 0;
@@ -149,7 +158,7 @@ private:
         return fileAction;
     }
 
-    AnalysisChain[] chains;
+    ChainTree chains;
     AnalysisBucket[string] buckets;
     FileInfo[] pendingFiles;
 }
@@ -173,8 +182,8 @@ unittest
         return AnalysisReturn.IncludeFile;
     }
 
-    auto licenseChain = AnalysisChain("license", [&acceptLicense]);
-    auto allChain = AnalysisChain("all", [&acceptAll]);
+    auto licenseChain = AnalysisChain("license", [&acceptLicense], 50);
+    auto allChain = AnalysisChain("all", [&acceptAll], 20);
 
     auto a = new Analyser();
     a.addChain(licenseChain);
