@@ -38,6 +38,11 @@ public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileIn
 {
     import std.stdio : File;
 
+    if (fileInfo.type != FileType.Regular)
+    {
+        return AnalysisReturn.NextHandler;
+    }
+
     auto fi = File(fileInfo.fullPath, "rb");
     scope (exit)
     {
