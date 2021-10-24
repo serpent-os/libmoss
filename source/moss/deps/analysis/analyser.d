@@ -72,6 +72,22 @@ public final class Analyser
     }
 
     /**
+     * Return bucket for the given FileInfo
+     */
+    AnalysisBucket bucket(in FileInfo info)
+    {
+        return bucket(info.target);
+    }
+
+    /**
+     * Return a bucket by name
+     */
+    AnalysisBucket bucket(in string name)
+    {
+        return buckets[name];
+    }
+
+    /**
      * Very simple method to process all incoming files 
      */
     void process()
