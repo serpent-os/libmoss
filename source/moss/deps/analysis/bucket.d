@@ -28,6 +28,9 @@ import moss.core : FileType;
 public import moss.deps.query.dependency;
 public import moss.deps.analysis.fileinfo;
 
+import std.algorithm : map, filter;
+import std.range : take;
+
 /**
  * An AnalysisBucket is created for each subpackage so we know ahead of time
  * which files go where.
@@ -69,6 +72,16 @@ public final class AnalysisBucket
     void addDependency(ref Dependency d)
     {
         deps.insert(d);
+    }
+
+    /**
+     * Return a set of unique files in hash order. For improved compression
+     * implementations should resort by locality.
+     */
+    auto uniqueFiles()
+    {
+        return uniqueHashes[].map!((h) => files.filter!((ref f) => f.type == FileType.Regular
+                && f.data == h).take(1).front);
     }
 
 package:
