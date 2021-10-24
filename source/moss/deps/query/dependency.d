@@ -68,13 +68,7 @@ public struct Dependency
     DependencyType type = DependencyType.Invalid;
 
     /**
-     * A dependency may be marked as a conflict, disallowing
-     * matching
-     */
-    bool conflict = false;
-
-    /**
-     * Return true if both depencies are equal
+     * Return true if both dependencies are equal
      */
     bool opEquals()(auto ref const Dependency other) const
     {
@@ -82,7 +76,7 @@ public struct Dependency
     }
 
     /**
-     * Compare two eependencies with the same type
+     * Compare two dependencies with the same type
      */
     int opCmp(ref const Dependency other) const
     {
