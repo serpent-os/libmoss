@@ -75,28 +75,31 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
     import elf : ELF, DynamicLinkingTable;
     import std.string : format;
     import std.string : fromStringz;
+    import std.algorithm : each;
 
     auto fi = ELF.fromFile(fileInfo.fullPath);
     foreach (section; fi.sections)
     {
-        if (section.name == ".interp")
+        switch (section.name)
         {
-            auto chars = cast(char[]) section.contents;
-            auto sz = fromStringz(chars.ptr);
-            import std.stdio : writeln;
-
-            writeln("Dynamic interpreter: ", sz);
-        }
-        if (section.name != ".dynamic")
-        {
-            continue;
-        }
-        auto dynTable = DynamicLinkingTable(section);
-        foreach (dtNeeded; dynTable.needed)
-        {
-            auto d = Dependency("%s(%s)".format(dtNeeded,
-                    fi.header.machineISA), DependencyType.SharedLibraryName);
+        case ".interp":
+            /* Extract DT_INTERP, program interpreter */
+            auto dtInterp = cast(char[]) section.contents;
+            auto dtInterpSz = fromStringz(dtInterp.ptr);
+            auto d = Dependency("%s(%s)".format(dtInterpSz,
+                    fi.header.machineISA), DependencyType.Interpeter);
             analyser.bucket(fileInfo).addDependency(d);
+            break;
+        case ".dynamic":
+            /* Extract DT_NEEDED, shared libraty dependencies */
+            DynamicLinkingTable(section).needed.each!((r) => {
+                auto dtNeeded = "%s(%s)".format(r, fi.header.machineISA);
+                auto d = Dependency(dtNeeded, DependencyType.SharedLibraryName);
+                analyser.bucket(fileInfo).addDependency(d);
+            }());
+            break;
+        default:
+            break;
         }
     }
     return AnalysisReturn.NextFunction;
