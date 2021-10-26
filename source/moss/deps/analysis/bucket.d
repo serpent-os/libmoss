@@ -41,6 +41,7 @@ public final class AnalysisBucket
      * Store dependencies in unique tree
      */
     alias DependencyTree = RedBlackTree!(Dependency, "a < b", false);
+    alias ProviderTree = RedBlackTree!(Provider, "a < b", false);
     alias HashTree = RedBlackTree!(string, "a < b", false);
     alias FileTree = RedBlackTree!(FileInfo, "a < b", true);
 
@@ -76,6 +77,14 @@ public final class AnalysisBucket
     }
 
     /**
+     * Add a provider to this bucket
+     */
+    void addProvider(ref Provider p)
+    {
+        provs.insert(p);
+    }
+
+    /**
      * Return a set of unique files in hash order. For improved compression
      * implementations should resort by locality.
      */
@@ -103,6 +112,14 @@ public final class AnalysisBucket
         return deps[];
     }
 
+    /**
+     * Return unique set of providers
+     */
+    auto providers()
+    {
+        return provs[];
+    }
+
 package:
 
     /**
@@ -112,6 +129,7 @@ package:
     {
         _name = name;
         deps = new DependencyTree();
+        provs = new ProviderTree();
         uniqueHashes = new HashTree();
         files = new FileTree();
     }
@@ -121,5 +139,6 @@ private:
     string _name = null;
     FileTree files;
     DependencyTree deps;
+    ProviderTree provs;
     HashTree uniqueHashes;
 }
