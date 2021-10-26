@@ -116,11 +116,64 @@ public struct Dependency
 }
 
 /**
+ * A Provider is virtually identical to a Dependency but we have a solid definition
+ * for type safe purposes
+ */
+public struct Provider
+{
+    /**
+     * The dependant target string
+     */
+    string target = null;
+
+    /**
+     * Type of the provides
+     */
+    ProviderType type = ProviderType.Invalid;
+
+    /**
+     * Return true if both providers are equal
+     */
+    bool opEquals()(auto ref const Provider other) const
+    {
+        return other.target == target && other.type == type;
+    }
+
+    /**
+     * Compare two providers with the same type
+     */
+    int opCmp(ref const Provider other) const
+    {
+        if (this.target < other.target)
+        {
+            return -1;
+        }
+        else if (this.target > other.target)
+        {
+            return 1;
+        }
+        if (this.type < other.type)
+        {
+            return -1;
+        }
+        else if (this.type > other.type)
+        {
+            return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * Return the hash code for the prvider
+     */
+    ulong toHash() @safe nothrow const
+    {
+        return typeid(string).getHash(&target);
+    }
+
+}
+
+/**
  * In our model, A DependencyType is satisfied by the same ProviderType
  */
 public alias ProviderType = DependencyType;
-
-/**
- * In our model, a Dependency is satisfied by the same Provider
- */
-public alias Provider = Dependency;
