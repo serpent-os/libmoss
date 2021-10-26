@@ -22,6 +22,12 @@
 
 module moss.deps.analysis.elves;
 
+import elf : ELF, DynamicLinkingTable;
+import std.string : format;
+import std.string : fromStringz;
+import std.algorithm : each;
+import std.stdio : File;
+
 public import moss.deps.query.dependency;
 public import moss.deps.analysis.chain;
 
@@ -36,8 +42,6 @@ static private immutable ubyte[4] elfMagic = [0x7f, 0x45, 0x4c, 0x46];
  */
 public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileInfo)
 {
-    import std.stdio : File;
-
     if (fileInfo.type != FileType.Regular)
     {
         return AnalysisReturn.NextHandler;
@@ -72,11 +76,6 @@ public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileIn
  */
 public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo)
 {
-    import elf : ELF, DynamicLinkingTable;
-    import std.string : format;
-    import std.string : fromStringz;
-    import std.algorithm : each;
-
     auto fi = ELF.fromFile(fileInfo.fullPath);
     foreach (section; fi.sections)
     {
