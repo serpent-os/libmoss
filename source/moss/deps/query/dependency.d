@@ -49,6 +49,12 @@ public enum DependencyType : uint8_t
      * Provided by the name field of the pkgconfig .pc file
      */
     PkgconfigName,
+
+    /**
+     * A special kind of dependency denoting which program or
+     * script interpreter is required to run a specific file.
+     */
+    Interpeter,
 }
 
 /**
