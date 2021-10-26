@@ -74,10 +74,19 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
 {
     import elf : ELF, DynamicLinkingTable;
     import std.string : format;
+    import std.string : fromStringz;
 
     auto fi = ELF.fromFile(fileInfo.fullPath);
     foreach (section; fi.sections)
     {
+        if (section.name == ".interp")
+        {
+            auto chars = cast(char[]) section.contents;
+            auto sz = fromStringz(chars.ptr);
+            import std.stdio : writeln;
+
+            writeln("Dynamic interpreter: ", sz);
+        }
         if (section.name != ".dynamic")
         {
             continue;
