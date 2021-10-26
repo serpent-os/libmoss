@@ -88,6 +88,14 @@ public final class Analyser
     }
 
     /**
+     * Return all known buckets
+     */
+    pure @property auto buckets()
+    {
+        return _buckets.values();
+    }
+
+    /**
      * Very simple method to process all incoming files 
      */
     void process()
