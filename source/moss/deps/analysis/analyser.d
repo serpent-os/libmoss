@@ -64,11 +64,11 @@ public final class Analyser
         pendingFiles ~= file;
 
         /* Ensure bucket exists! */
-        if (file.target in buckets)
+        if (file.target in _buckets)
         {
             return;
         }
-        buckets[file.target] = new AnalysisBucket(file.target);
+        _buckets[file.target] = new AnalysisBucket(file.target);
     }
 
     /**
@@ -84,7 +84,7 @@ public final class Analyser
      */
     pure @property AnalysisBucket bucket(in string name)
     {
-        return buckets[name];
+        return _buckets[name];
     }
 
     /**
@@ -106,7 +106,7 @@ public final class Analyser
             final switch (fileAction)
             {
             case Action.IncludeFile:
-                buckets[fi.target].add(fi);
+                _buckets[fi.target].add(fi);
                 break;
             case Action.IgnoreFile:
                 break;
@@ -175,7 +175,7 @@ private:
     }
 
     ChainTree chains;
-    AnalysisBucket[string] buckets;
+    AnalysisBucket[string] _buckets;
     FileInfo[] pendingFiles;
 }
 
