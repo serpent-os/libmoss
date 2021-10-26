@@ -41,11 +41,11 @@ package final class FauxSource : QuerySource
         packages[p.id] = p;
     }
 
-    override const(PackageCandidate)[] queryProviders(in ProviderType type, in string matcher)
+    override const(PackageCandidate)[] queryProviders(in MatchType type, in string matcher)
     {
         final switch (type)
         {
-        case ProviderType.PackageID:
+        case MatchType.PackageID:
             auto p = matcher in packages;
             if (p is null)
             {
@@ -55,9 +55,9 @@ package final class FauxSource : QuerySource
                 PackageCandidate(p.id, p.name, p.versionID, p.release, p.dependencies)
             ];
 
-        case ProviderType.PackageName:
+        case MatchType.PackageName:
             return packages.values.filter!((ref p) => p.name == matcher).array();
-        case ProviderType.LibraryName:
+        case MatchType.LibraryName:
             if (matcher == "libc.so.6")
             {
                 return [packages["glibc"]];
@@ -143,7 +143,7 @@ unittest
                 candidate = cast(PackageCandidate) c.front;
                 break;
             case DependencyType.SharedLibraryName:
-                auto c = qm.byProvider(ProviderType.LibraryName, dep.target);
+                auto c = qm.byProvider(MatchType.LibraryName, dep.target);
                 enforce(!c.empty);
                 candidate = cast(PackageCandidate) c.front;
                 break;

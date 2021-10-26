@@ -52,11 +52,11 @@ public final class QueryManager
     /**
      * Return all PackageCandidates by provider
      */
-    auto byProvider(in ProviderType providerType, const(string) provider)
+    auto byProvider(in MatchType MatchType, const(string) provider)
     {
         import std.algorithm : joiner;
 
-        return sources.map!((s) => s.queryProviders(providerType, provider)).joiner();
+        return sources.map!((s) => s.queryProviders(MatchType, provider)).joiner();
     }
 
     /**
@@ -64,7 +64,7 @@ public final class QueryManager
      */
     pragma(inline, true) auto byName(const(string) pkgName)
     {
-        return byProvider(ProviderType.PackageName, pkgName);
+        return byProvider(MatchType.PackageName, pkgName);
     }
 
     /**
@@ -72,7 +72,7 @@ public final class QueryManager
      */
     pragma(inline, true) auto byID(const(string) pkgID)
     {
-        return byProvider(ProviderType.PackageID, pkgID);
+        return byProvider(MatchType.PackageID, pkgID);
     }
 
 private:

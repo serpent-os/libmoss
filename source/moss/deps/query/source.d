@@ -27,7 +27,7 @@ public import moss.deps.query.candidate;
 /**
  * When querying we can lookup by name, ID, etc.
  */
-enum ProviderType
+enum MatchType
 {
     PackageName,
     PackageID,
@@ -44,5 +44,5 @@ public interface QuerySource
      * The QuerySource will be given a callback to execute if it finds any
      * matching providers for the input string and type
      */
-    const(PackageCandidate)[] queryProviders(in ProviderType type, in string matcher);
+    const(PackageCandidate)[] queryProviders(in MatchType type, in string matcher);
 }

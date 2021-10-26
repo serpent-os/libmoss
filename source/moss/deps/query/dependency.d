@@ -114,3 +114,13 @@ public struct Dependency
     }
 
 }
+
+/**
+ * In our model, A DependencyType is satisfied by the same ProviderType
+ */
+public alias ProviderType = DependencyType;
+
+/**
+ * In our model, a Dependency is satisfied by the same Provider
+ */
+public alias Provider = Dependency;
