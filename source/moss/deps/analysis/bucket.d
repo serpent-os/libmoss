@@ -88,7 +88,7 @@ public final class AnalysisBucket
      * Return a set of unique files in hash order. For improved compression
      * implementations should resort by locality.
      */
-    auto uniqueFiles()
+    auto uniqueFiles() @safe
     {
         return uniqueHashes[].map!((h) => {
             auto comparator = FileInfo.regularComparator(h);
@@ -99,7 +99,7 @@ public final class AnalysisBucket
     /**
      * Return all files within this set
      */
-    auto allFiles()
+    auto allFiles() @safe @nogc nothrow
     {
         return files[];
     }
@@ -107,7 +107,7 @@ public final class AnalysisBucket
     /**
      * Return unique set of dependencies
      */
-    auto dependencies()
+    auto dependencies() @safe @nogc nothrow
     {
         return deps[];
     }
@@ -115,9 +115,17 @@ public final class AnalysisBucket
     /**
      * Return unique set of providers
      */
-    auto providers()
+    auto providers() @safe @nogc nothrow
     {
         return provs[];
+    }
+
+    /**
+     * Returns true if this bucket is empty
+     */
+    pure bool empty() @safe @nogc nothrow
+    {
+        return files.length() == 0;
     }
 
 package:
