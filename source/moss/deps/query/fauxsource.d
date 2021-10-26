@@ -142,7 +142,7 @@ unittest
                 enforce(!c.empty);
                 candidate = cast(PackageCandidate) c.front;
                 break;
-            case DependencyType.LibraryName:
+            case DependencyType.SharedLibraryName:
                 auto c = qm.byProvider(ProviderType.LibraryName, dep.target);
                 enforce(!c.empty);
                 candidate = cast(PackageCandidate) c.front;
