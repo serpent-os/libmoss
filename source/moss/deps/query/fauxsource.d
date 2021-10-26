@@ -91,7 +91,7 @@ static Dependency D(const(string) name)
 
 static Dependency LD(const(string) name)
 {
-    return Dependency(name, DependencyType.LibraryName);
+    return Dependency(name, DependencyType.SharedLibraryName);
 }
 
 static PackageCandidate[] worldPackages = [

@@ -43,7 +43,7 @@ public enum DependencyType : uint8_t
     /**
      * Depends on a specific ELF SONAME
      */
-    LibraryName,
+    SharedLibraryName,
 
     /**
      * Provided by the name field of the pkgconfig .pc file

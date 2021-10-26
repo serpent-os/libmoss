@@ -86,7 +86,7 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
         foreach (dtNeeded; dynTable.needed)
         {
             auto d = Dependency("soname:%s(%s)".format(dtNeeded,
-                    fi.header.machineISA), DependencyType.LibraryName);
+                    fi.header.machineISA), DependencyType.SharedLibraryName);
             analyser.bucket(fileInfo).addDependency(d);
         }
     }
