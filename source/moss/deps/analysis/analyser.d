@@ -216,4 +216,10 @@ unittest
     l.target = "main";
     a.addFile(l);
     a.process();
+
+    auto mainBucket = a.bucket("main");
+    auto allFiles = mainBucket.allFiles();
+    assert(!allFiles.empty);
+    auto uniqueFiles = mainBucket.uniqueFiles();
+    assert(!uniqueFiles.empty);
 }
