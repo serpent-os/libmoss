@@ -108,9 +108,12 @@ public final class AnalysisBucket
     /**
      * Return unique set of dependencies
      */
-    auto dependencies() @safe @nogc nothrow
+    auto dependencies() @safe nothrow
     {
-        return deps[];
+        import std.algorithm : canFind;
+
+        return deps[].filter!((d) => !provs[].canFind!((p) => p.type == d.type
+                && p.target == d.target));
     }
 
     /**
