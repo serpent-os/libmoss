@@ -96,6 +96,14 @@ public final class Analyser
     }
 
     /**
+     * Return true if we have a bucket with the given name
+     */
+    pure bool hasBucket(in string name)
+    {
+        return (name in _buckets) !is null;
+    }
+
+    /**
      * Very simple method to process all incoming files 
      */
     void process()
