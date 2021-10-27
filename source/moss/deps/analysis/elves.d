@@ -86,7 +86,7 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
             auto dtInterp = cast(char[]) section.contents;
             auto dtInterpSz = fromStringz(dtInterp.ptr);
             auto d = Dependency("%s(%s)".format(dtInterpSz,
-                    fi.header.machineISA), DependencyType.Interpeter);
+                    fi.header.machineISA), DependencyType.Interpreter);
             analyser.bucket(fileInfo).addDependency(d);
             break;
         case ".dynamic":

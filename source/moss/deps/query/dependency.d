@@ -54,7 +54,7 @@ public enum DependencyType : uint8_t
      * A special kind of dependency denoting which program or
      * script interpreter is required to run a specific file.
      */
-    Interpeter,
+    Interpreter,
 }
 
 /**
