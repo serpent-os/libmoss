@@ -90,10 +90,11 @@ public final class AnalysisBucket
      */
     auto uniqueFiles() @safe
     {
-        return uniqueHashes[].map!((h) => {
-            auto comparator = FileInfo.regularComparator(h);
-            return files.equalRange(comparator).take(1).front;
-        }());
+        /* This needs optimising at a future date, but equalRange isn't working properly
+         * for our FileInfo just yet.
+         */
+        return uniqueHashes[].map!((h) => files[].filter!((f) => f.type == FileType.Regular
+                && f.data == h).front);
     }
 
     /**
