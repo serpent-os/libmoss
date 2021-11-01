@@ -112,29 +112,31 @@ public final class Analyser
      */
     void process()
     {
-        auto numFiles = pendingFiles.length;
         import std.algorithm : remove;
+        import std.parallelism : parallel;
 
-        while (numFiles > 0)
+        currentFiles = pendingFiles;
+        while (currentFiles.length > 0)
         {
-            auto fi = pendingFiles[0];
-            immutable auto fileAction = processOne(fi);
+            pendingFiles = [];
 
-            /* remove file from pending set */
-            pendingFiles = pendingFiles.remove(0);
-
-            final switch (fileAction)
+            foreach (fi; currentFiles.parallel())
             {
-            case Action.IncludeFile:
-                _buckets[fi.target].add(fi);
-                break;
-            case Action.IgnoreFile:
-                break;
-            case Action.Unhandled:
-                throw new Exception("Unhandle file: %s".format(fi.fullPath));
+                immutable auto fileAction = processOne(fi);
+
+                final switch (fileAction)
+                {
+                case Action.IncludeFile:
+                    _buckets[fi.target].add(fi);
+                    break;
+                case Action.IgnoreFile:
+                    break;
+                case Action.Unhandled:
+                    throw new Exception("Unhandled file: %s".format(fi.fullPath));
+                }
             }
 
-            numFiles = pendingFiles.length;
+            currentFiles = pendingFiles;
         }
     }
 
@@ -197,6 +199,7 @@ private:
     ChainTree chains;
     AnalysisBucket[string] _buckets;
     FileInfo[] pendingFiles;
+    FileInfo[] currentFiles;
 }
 
 unittest
