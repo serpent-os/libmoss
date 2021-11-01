@@ -61,14 +61,18 @@ public final class Analyser
     void addFile(ref FileInfo file)
     {
         enforce(file.target != "" && file.target !is null, "FileInfo has no target");
-        pendingFiles ~= file;
 
-        /* Ensure bucket exists! */
-        if (file.target in _buckets)
+        synchronized (this)
         {
-            return;
+            pendingFiles ~= file;
+
+            /* Ensure bucket exists! */
+            if (file.target in _buckets)
+            {
+                return;
+            }
+            _buckets[file.target] = new AnalysisBucket(file.target);
         }
-        _buckets[file.target] = new AnalysisBucket(file.target);
     }
 
     /**

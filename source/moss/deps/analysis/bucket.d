@@ -63,9 +63,16 @@ public final class AnalysisBucket
         if (info.type == FileType.Regular)
         {
             info.computeHash();
-            uniqueHashes.insert(info.data);
+            synchronized (uniqueHashes)
+            {
+                uniqueHashes.insert(info.data);
+            }
         }
-        files.insert(info);
+
+        synchronized (files)
+        {
+            files.insert(info);
+        }
     }
 
     /**
@@ -73,7 +80,10 @@ public final class AnalysisBucket
      */
     void addDependency(ref Dependency d)
     {
-        deps.insert(d);
+        synchronized (deps)
+        {
+            deps.insert(d);
+        }
     }
 
     /**
@@ -81,7 +91,10 @@ public final class AnalysisBucket
      */
     void addProvider(ref Provider p)
     {
-        provs.insert(p);
+        synchronized (provs)
+        {
+            provs.insert(p);
+        }
     }
 
     /**
