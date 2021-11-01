@@ -25,7 +25,7 @@ module moss.deps.analysis.elves;
 import elf : ELF, DynamicLinkingTable;
 import std.string : format;
 import std.string : fromStringz;
-import std.algorithm : each;
+import std.algorithm : each, canFind;
 import std.stdio : File;
 
 public import moss.deps.query.dependency;
@@ -101,7 +101,7 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
             /* Soname exposed? Lets share it. */
             /* TODO: Only expose ACTUAL libraries */
             auto soname = dynTable.soname;
-            if (soname == "")
+            if (soname == "" || !fileInfo.fullPath.canFind(".so"))
             {
                 break;
             }
