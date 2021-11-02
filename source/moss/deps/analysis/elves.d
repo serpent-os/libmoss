@@ -22,14 +22,17 @@
 
 module moss.deps.analysis.elves;
 
-import elf : ELF, DynamicLinkingTable;
+import elf : ELF, DynamicLinkingTable, ELFSection;
 import std.string : format;
 import std.string : fromStringz;
+import std.exception : enforce;
 import std.algorithm : each, canFind;
 import std.stdio : File;
 
 public import moss.deps.query.dependency;
 public import moss.deps.analysis.chain;
+
+import std.stdint : uint32_t;
 
 /**
  * Used to match the first 4 bytes of files
@@ -71,6 +74,54 @@ public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileIn
 }
 
 /**
+ * Raw binary header for a .note
+ */
+private struct ElfNoteHeader
+{
+align(1):
+
+    uint32_t namesz;
+    uint32_t descz;
+    uint32_t type;
+
+}
+
+/**
+ * Convenience struct that handles most of the .note parsing for us.
+ */
+private struct ElfNote
+{
+    string name;
+    ubyte[] description;
+    uint32_t type;
+
+    /**
+     * Construct a new ELF Note from the given section
+     */
+    static ElfNote from(ELFSection section)
+    {
+        import std.string : fromStringz;
+
+        ElfNote ret = ElfNote();
+        auto contents = section.contents;
+
+        enforce(contents.length > ElfNoteHeader.sizeof);
+        auto hdr = cast(ElfNoteHeader*) contents[0 .. ElfNoteHeader.sizeof];
+        ret.type = hdr.type;
+
+        enforce(contents.length == ElfNoteHeader.sizeof + hdr.namesz + hdr.descz);
+        enforce(hdr.namesz > 0 && hdr.descz > 0);
+
+        auto namez = cast(char[]) contents[ElfNoteHeader.sizeof .. ElfNoteHeader.sizeof + hdr
+            .namesz];
+        ret.name = cast(string) fromStringz(namez.ptr);
+        ret.description = contents[ElfNoteHeader.sizeof + hdr.namesz .. $];
+
+        return ret;
+    }
+}
+
+/**
  * Assuming the input is a valid ELF file, i.e. from using acceptElfFiles, we
  * can scan the binary for any dependencies (DT_NEEDED) and provided SONAME.
  */
@@ -108,6 +159,21 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
             soname = "%s(%s)".format(soname, fi.header.machineISA);
             auto p = Provider(soname, ProviderType.SharedLibraryName);
             analyser.bucket(fileInfo).addProvider(p);
+            break;
+        case ".note.gnu.build-id":
+            import std.stdio : writeln;
+
+            auto note = ElfNote.from(section);
+            writeln(note);
+            import std.digest : toHexString, LetterCase;
+
+            /* Look like a proper build id to us? */
+            if (note.type == 3 && note.name == "GNU")
+            {
+                enforce(note.description.length == 20);
+                writeln("gnu build id: ", note.description.toHexString!(LetterCase.lower)());
+            }
+
             break;
         default:
             break;
