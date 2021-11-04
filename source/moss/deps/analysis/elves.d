@@ -22,7 +22,7 @@
 
 module moss.deps.analysis.elves;
 
-import elf : ELF, DynamicLinkingTable, ELFSection;
+import elf : ELF, ELFSection, DynamicLinkingTable, ElfNote;
 import std.string : format;
 import std.string : fromStringz;
 import std.exception : enforce;
@@ -74,54 +74,6 @@ public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileIn
 }
 
 /**
- * Raw binary header for a .note
- */
-private struct ElfNoteHeader
-{
-align(1):
-
-    uint32_t namesz;
-    uint32_t descz;
-    uint32_t type;
-
-}
-
-/**
- * Convenience struct that handles most of the .note parsing for us.
- */
-private struct ElfNote
-{
-    string name;
-    ubyte[] description;
-    uint32_t type;
-
-    /**
-     * Construct a new ELF Note from the given section
-     */
-    static ElfNote from(ELFSection section)
-    {
-        import std.string : fromStringz;
-
-        ElfNote ret = ElfNote();
-        auto contents = section.contents;
-
-        enforce(contents.length > ElfNoteHeader.sizeof);
-        auto hdr = cast(ElfNoteHeader*) contents[0 .. ElfNoteHeader.sizeof];
-        ret.type = hdr.type;
-
-        enforce(contents.length == ElfNoteHeader.sizeof + hdr.namesz + hdr.descz);
-        enforce(hdr.namesz > 0 && hdr.descz > 0);
-
-        auto namez = cast(char[]) contents[ElfNoteHeader.sizeof .. ElfNoteHeader.sizeof + hdr
-            .namesz];
-        ret.name = cast(string) fromStringz(namez.ptr);
-        ret.description = contents[ElfNoteHeader.sizeof + hdr.namesz .. $];
-
-        return ret;
-    }
-}
-
-/**
  * Assuming the input is a valid ELF file, i.e. from using acceptElfFiles, we
  * can scan the binary for any dependencies (DT_NEEDED) and provided SONAME.
  */
@@ -163,15 +115,15 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
         case ".note.gnu.build-id":
             import std.stdio : writeln;
 
-            auto note = ElfNote.from(section);
+            auto note = ElfNote(section);
             writeln(note);
             import std.digest : toHexString, LetterCase;
 
-            /* Look like a proper build id to us? */
+            /* Look like a proper build id to us? NT_GNU_BUILD_ID = 3 */
             if (note.type == 3 && note.name == "GNU")
             {
-                enforce(note.description.length == 20);
-                writeln("gnu build id: ", note.description.toHexString!(LetterCase.lower)());
+                enforce(note.descriptor.length == 20);
+                writeln("gnu build id: ", note.descriptor.toHexString!(LetterCase.lower)());
             }
 
             break;
