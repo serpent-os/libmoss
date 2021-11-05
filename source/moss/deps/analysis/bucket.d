@@ -31,6 +31,8 @@ public import moss.deps.analysis.fileinfo;
 import std.algorithm : map, filter;
 import std.range : take;
 
+import xxhash : XXH3_128;
+
 /**
  * An AnalysisBucket is created for each subpackage so we know ahead of time
  * which files go where.
@@ -58,11 +60,11 @@ public final class AnalysisBucket
     /**
      * Add this FileInfo to our own
      */
-    void add(ref FileInfo info)
+    void add(ref FileInfo info, XXH3_128 hashHelper)
     {
         if (info.type == FileType.Regular)
         {
-            info.computeHash();
+            info.computeHash(hashHelper);
             synchronized (uniqueHashes)
             {
                 uniqueHashes.insert(info.data);

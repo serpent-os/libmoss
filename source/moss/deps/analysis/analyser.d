@@ -29,6 +29,9 @@ import std.exception : enforce;
 import std.string : format;
 import std.container.rbtree;
 
+import std.parallelism : taskPool, totalCPUs, parallel;
+import xxhash : XXH3_128;
+
 /**
  * The Analyser is used to query sets of files for inclusion status as well
  * as permit post processing on files as and when they're encountered. As
@@ -45,6 +48,13 @@ public final class Analyser
     this()
     {
         chains = new ChainTree();
+
+        /* Set up hash helpers */
+        numCPUs = totalCPUs();
+        foreach (i; 0 .. numCPUs)
+        {
+            hashHelpers ~= new XXH3_128();
+        }
     }
 
     /**
@@ -113,7 +123,6 @@ public final class Analyser
     void process()
     {
         import std.algorithm : remove;
-        import std.parallelism : parallel;
 
         currentFiles = pendingFiles;
         while (currentFiles.length > 0)
@@ -123,11 +132,13 @@ public final class Analyser
             foreach (fi; currentFiles.parallel())
             {
                 immutable auto fileAction = processOne(fi);
+                auto localHelper = hashHelpers[taskPool.workerIndex];
+                localHelper.reset();
 
                 final switch (fileAction)
                 {
                 case Action.IncludeFile:
-                    _buckets[fi.target].add(fi);
+                    _buckets[fi.target].add(fi, localHelper);
                     break;
                 case Action.IgnoreFile:
                     break;
@@ -159,9 +170,8 @@ private:
      */
     immutable(Action) processOne(ref FileInfo fi)
     {
-        import std.algorithm : remove;
-
         auto fileAction = Action.Unhandled;
+
         primary_loop: foreach (chain; chains)
         {
             enforce(chain.funcs !is null && chain.funcs.length > 0, "Non functioning handler");
@@ -200,6 +210,8 @@ private:
     AnalysisBucket[string] _buckets;
     FileInfo[] pendingFiles;
     FileInfo[] currentFiles;
+    uint numCPUs = 0;
+    XXH3_128[] hashHelpers;
 }
 
 unittest

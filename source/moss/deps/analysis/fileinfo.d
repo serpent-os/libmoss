@@ -24,10 +24,11 @@ module moss.deps.analysis.fileinfo;
 
 import std.path;
 import std.file;
-import moss.core : computeSHA256;
+import moss.core : ChunkSize;
 import core.sys.posix.sys.stat;
 
 public import moss.core : FileType;
+import xxhash : computeXXH3_hexdigest128, XXH3_128;
 
 /**
  * We use mmap when beyond 16kib
@@ -187,10 +188,11 @@ public struct FileInfo
     /**
      * Compute hash sum for this file
      */
-    void computeHash()
+    void computeHash(XXH3_128 helper)
     {
         /* Use mmap if the file is larger than 16kib */
-        _data = computeSHA256(_fullPath, !(statResult.st_size <= MmapThreshhold));
+        _data = computeXXH3_hexdigest128(helper, _fullPath, ChunkSize,
+                !(statResult.st_size < MmapThreshhold)).dup;
     }
 
     /**
