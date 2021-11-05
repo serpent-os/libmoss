@@ -10,3 +10,6 @@
 [submodule "external/moss-core"]
 	path = external/moss-core
 	url = https://gitlab.com/serpent-os/core/moss-core.git
+[submodule "external/xxhash-d"]
+	path = external/xxhash-d
+	url = https://gitlab.com/serpent-os/dlang/xxhash-d.git
