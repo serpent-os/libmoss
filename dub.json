@@ -37,6 +37,9 @@
 				"moss-core": {
 					"path": "external/moss-core"
 				},
+				"xxhash-d": {
+					"path": "external/xxhash-d"
+				},
 				"zstd": {
 					"path": "external/zstd"
 				}
