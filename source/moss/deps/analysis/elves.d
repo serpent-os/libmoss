@@ -113,17 +113,14 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
             analyser.bucket(fileInfo).addProvider(p);
             break;
         case ".note.gnu.build-id":
-            import std.stdio : writeln;
-
             auto note = ElfNote(section);
-            writeln(note);
             import std.digest : toHexString, LetterCase;
 
             /* Look like a proper build id to us? NT_GNU_BUILD_ID = 3 */
             if (note.type == 3 && note.name == "GNU")
             {
                 enforce(note.descriptor.length == 20);
-                writeln("gnu build id: ", note.descriptor.toHexString!(LetterCase.lower)());
+                //writeln("gnu build id: ", note.descriptor.toHexString!(LetterCase.lower)());
             }
 
             break;
