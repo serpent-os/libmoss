@@ -151,7 +151,7 @@ public:
 
             pHdr.plainSize = wk.sizePlain;
             pHdr.storedSize = wk.sizeCompressed;
-            pHdr.crc64 = wk.crc64iso;
+            pHdr.checksum = wk.checksum;
             pHdr.numRecords = p.recordCount;
 
             correctedHeaders ~= pHdr;

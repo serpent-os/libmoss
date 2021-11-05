@@ -66,8 +66,8 @@ align(1):
     /** 8-bytes, endian-aware, size of usable Payload data */
     @AutoEndian uint64_t plainSize = 0;
 
-    /** 8-byte array containing the CRC64-ISO checksum */
-    ubyte[8] crc64 = 0; /* CRC64-ISO */
+    /** 8-byte array containing the XXHash3!64 checksum */
+    ubyte[8] checksum = 0;
 
     /** 4-bytes, endian aware, number of records within the Payload */
     @AutoEndian uint32_t numRecords = 0;
@@ -97,8 +97,9 @@ align(1):
                 "Failed to write PayloadHeader.storedSize");
         enforce(fwrite(&cp.plainSize, cp.plainSize.sizeof, 1, fp) == 1,
                 "Failed to write PayloadHeader.plainSize");
-        enforce(fwrite(cp.crc64.ptr, cp.crc64[0].sizeof, cp.crc64.length, fp) == cp.crc64.length,
-                "Failed to write PayloadHeader.crc64");
+        enforce(fwrite(cp.checksum.ptr, cp.checksum[0].sizeof,
+                cp.checksum.length, fp) == cp.checksum.length,
+                "Failed to write PayloadHeader.checksum");
         enforce(fwrite(&cp.numRecords, cp.numRecords.sizeof, 1, fp) == 1,
                 "Failed to write PayloadHeader.numRecords");
         enforce(fwrite(&cp.payloadVersion, cp.payloadVersion.sizeof, 1,

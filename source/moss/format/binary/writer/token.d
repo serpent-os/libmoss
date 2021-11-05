@@ -23,7 +23,7 @@
 module moss.format.binary.writer.token;
 
 import core.stdc.stdio : FILE;
-import std.digest.crc : CRC64ISO;
+import xxhash : XXH3_64;
 
 import moss.format.binary.payload.header;
 
@@ -39,9 +39,10 @@ public abstract class WriterToken
     /**
      * Super constructor for all WriterTokens.
      */
-    this(FILE* fp) @safe @nogc nothrow
+    this(FILE* fp) @trusted
     {
         this._fp = fp;
+        checksumHelper = new XXH3_64();
     }
 
     /**
@@ -73,7 +74,7 @@ public abstract class WriterToken
         _sizePlain += data.length;
         auto encoded = encodeData(data);
         _sizeCompressed += encoded.length;
-        checksum.put(encoded);
+        checksumHelper.put(encoded);
 
         enforce(fp !is null, "WriterToken.appendData(): No file pointer!");
 
@@ -98,7 +99,7 @@ public abstract class WriterToken
 
         /* Got something left to write... */
         _sizeCompressed += flushedSet.length;
-        checksum.put(flushedSet);
+        checksumHelper.put(flushedSet);
 
         enforce(fp !is null, "WriterToken.flush(): No file pointer!");
 
@@ -132,7 +133,7 @@ package:
         /* Reset current knowledge. */
         sizePlain = 0;
         sizeCompressed = 0;
-        crc64iso = [0, 0, 0, 0, 0, 0, 0, 0];
+        checksum = [0, 0, 0, 0, 0, 0, 0, 0];
     }
 
     /**
@@ -141,7 +142,7 @@ package:
     final void end() @trusted
     {
         flush();
-        crc64iso = checksum.finish();
+        checksum = checksumHelper.finish();
     }
 
     /**
@@ -169,11 +170,11 @@ package:
     }
 
     /**
-     * Return the calculated CRC64ISO value
+     * Return the calculated XXHash3!64 value
      */
-    pragma(inline, true) pure final @property ubyte[8] crc64iso() @safe @nogc nothrow
+    pragma(inline, true) pure final @property ubyte[8] checksum() @safe @nogc nothrow
     {
-        return _crc64iso;
+        return _checksum;
     }
 
 private:
@@ -203,18 +204,18 @@ private:
     }
 
     /**
-     * Set the known CRC64ISO value
+     * Set the known checksum value
      */
-    pragma(inline, true) pure @property void crc64iso(ubyte[8] newChecksum) @safe @nogc nothrow
+    pragma(inline, true) pure @property void checksum(ubyte[8] newChecksum) @safe @nogc nothrow
     {
-        _crc64iso = newChecksum;
+        _checksum = newChecksum;
     }
 
     FILE* _fp = null;
-    CRC64ISO checksum;
+    XXH3_64 checksumHelper;
     uint64_t _sizeCompressed = 0;
     uint64_t _sizePlain = 0;
-    ubyte[8] _crc64iso = [0, 0, 0, 0, 0, 0, 0, 0];
+    ubyte[8] _checksum = [0, 0, 0, 0, 0, 0, 0, 0];
 }
 
 /**
@@ -228,7 +229,7 @@ final class PlainWriterToken : WriterToken
     /**
      * Construct new PlainWriterToken from the given file pointer
      */
-    this(FILE* fp) @safe @nogc nothrow
+    this(FILE* fp) @safe
     {
         super(fp);
     }

@@ -30,6 +30,7 @@ import moss.format.binary.payload;
 import std.stdint : uint64_t;
 
 import std.mmfile : MmFile;
+import xxhash : XXH3_64;
 
 /**
  * Each PayloadWrapper manages an instance of Payload, which can be dynamically
@@ -147,6 +148,8 @@ public final class Reader
         readPointer = 0;
         readPointer += _header.decode(cast(ubyte[]) mappedFile[readPointer .. $]);
         _header.validate();
+
+        checksumHelper = new XXH3_64();
     }
 
     ~this() @safe
@@ -361,6 +364,7 @@ private:
     MmFile mappedFile;
     ArchiveHeader _header;
     PayloadWrapper*[] wrappers;
+    XXH3_64 checksumHelper;
 
     ulong readPointer = 0;
     ulong fileLength = 0;
@@ -462,18 +466,18 @@ private:
         import std.string : format;
         import std.exception : enforce;
         import std.conv : to;
-        import std.digest.crc : CRC64ISO;
+        import moss.core : ChunkSize;
+        import std.range : chunks;
+        import std.algorithm : each;
 
         /* Read ahead and verify the CRC64ISO before actually dealing with contents */
-        auto crcheck = CRC64ISO();
-        crcheck.put(data);
-        ubyte[8] crcheckResult = crcheck.finish();
-        import std.stdio : writeln;
+        data.chunks(ChunkSize).each!((b) => checksumHelper.put(b));
+        auto result = checksumHelper.finish();
 
-        enforce(crcheckResult == wrapper.header.crc64,
+        enforce(result == wrapper.header.checksum,
                 "Reader: Invalid checksum on payload %s, expected '%s', got '%s'".format(
-                    to!string(wrapper.type), to!string(wrapper.header.crc64),
-                    to!string(crcheckResult)));
+                    to!string(wrapper.type),
+                    to!string(wrapper.header.checksum), to!string(result)));
     }
 
 }
