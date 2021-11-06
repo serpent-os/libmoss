@@ -63,6 +63,47 @@ public:
         Reader.registerPayloadType!MetaPayload(PayloadType.Meta);
     }
 
+    /** 
+     * Return the full pkgID for a given meta payload
+     */
+    string getPkgID()
+    {
+        import std.algorithm : each;
+        import std.exception : enforce;
+        import std.string : format;
+
+        string pkgName = null;
+        uint64_t pkgRelease = 0;
+        string pkgVersion = null;
+        string pkgArchitecture = null;
+
+        pairs.each!((t) => {
+            switch (t.tag)
+            {
+            case RecordTag.Name:
+                pkgName = t.val_string;
+                break;
+            case RecordTag.Release:
+                pkgRelease = t.val_u64;
+                break;
+            case RecordTag.Version:
+                pkgVersion = t.val_string;
+                break;
+            case RecordTag.Architecture:
+                pkgArchitecture = t.val_string;
+                break;
+            default:
+                break;
+            }
+        }());
+
+        enforce(pkgName !is null, "getPkgID(): Missing Name field");
+        enforce(pkgVersion !is null, "getPkgID(): Missing Version field");
+        enforce(pkgArchitecture !is null, "getPkgID(): Missing Architecture field");
+
+        return "%s-%s-%d.%s".format(pkgName, pkgVersion, pkgRelease, pkgArchitecture);
+    }
+
     /**
      * Return true when the Range is complete.
      */
