@@ -64,7 +64,11 @@ package final class FauxSource : RegistryPlugin
      */
     override const(Dependency)[] dependencies(in string pkgID)
     {
-        return [];
+        if (!(pkgID in packages))
+        {
+            return null;
+        }
+        return packages[pkgID].dependencies;
     }
 
     /**
