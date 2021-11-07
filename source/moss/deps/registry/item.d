@@ -39,4 +39,20 @@ public struct RegistryItem
      * Origin plugin
      */
     RegistryPlugin plugin;
+
+    /**
+     * Return plugin specific dependencies for this item
+     */
+    pragma(inline, true) @property auto dependencies()
+    {
+        return plugin.dependencies(pkgID);
+    }
+
+    /**
+     * Return plugin specific providers for this item
+     */
+    pragma(inline, true) @property auto providers()
+    {
+        return plugin.providers(pkgID);
+    }
 }

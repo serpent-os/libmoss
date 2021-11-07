@@ -59,6 +59,22 @@ package final class FauxSource : RegistryPlugin
         }
     }
 
+    /**
+     * Grab dependencies for the given package
+     */
+    override const(Dependency)[] dependencies(in string pkgID)
+    {
+        return [];
+    }
+
+    /**
+     * Grab providers for the given package
+     */
+    override const(Provider)[] providers(in string pkgID)
+    {
+        return [];
+    }
+
     PackageCandidate[string] packages;
 }
 

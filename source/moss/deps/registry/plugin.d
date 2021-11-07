@@ -23,7 +23,7 @@
 module moss.deps.registry.plugin;
 
 public import moss.deps.registry.candidate;
-public import moss.deps.registry.dependency : ProviderType;
+public import moss.deps.registry.dependency : Dependency, Provider, ProviderType;
 
 /**
  * A RegistryPlugin is added to the RegistryManager allowing it to load data from pkgIDs
@@ -36,4 +36,14 @@ public interface RegistryPlugin
      * matching providers for the input string and type
      */
     const(PackageCandidate)[] queryProviders(in ProviderType type, in string matcher);
+
+    /**
+     * Return the dependencies for a given package ID
+     */
+    const(Dependency)[] dependencies(in string pkgID);
+
+    /**
+     * Return the providers for a given package ID
+     */
+    const(Provider)[] providers(in string pkgID);
 }
