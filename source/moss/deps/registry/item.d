@@ -43,7 +43,7 @@ public struct RegistryItem
     /**
      * Return plugin specific dependencies for this item
      */
-    pragma(inline, true) @property auto dependencies()
+    pragma(inline, true) @property auto dependencies() const
     {
         return plugin.dependencies(pkgID);
     }
@@ -51,7 +51,7 @@ public struct RegistryItem
     /**
      * Return plugin specific providers for this item
      */
-    pragma(inline, true) @property auto providers()
+    pragma(inline, true) @property auto providers() const
     {
         return plugin.providers(pkgID);
     }
