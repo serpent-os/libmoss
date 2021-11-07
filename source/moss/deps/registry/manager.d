@@ -20,9 +20,9 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.deps.query.manager;
+module moss.deps.registry.manager;
 
-public import moss.deps.query.source;
+public import moss.deps.registry.source;
 
 import std.algorithm : each, filter, map;
 

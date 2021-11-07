@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.deps.query.dependency;
+module moss.deps.registry.dependency;
 
 public import std.stdint : uint8_t;
 

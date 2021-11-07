@@ -20,9 +20,9 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.deps.query.fauxsource;
+module moss.deps.registry.fauxsource;
 
-public import moss.deps.query.source;
+public import moss.deps.registry.source;
 
 import std.algorithm : each, filter, map;
 import std.array : array;
@@ -72,7 +72,7 @@ package final class FauxSource : QuerySource
 /**
  * Helpers for defining packages
  */
-import moss.deps.query.dependency : DependencyType, Dependency;
+import moss.deps.registry.dependency : DependencyType, Dependency;
 
 static PackageCandidate P(const(string) name)
 {
@@ -105,7 +105,7 @@ static PackageCandidate[] worldPackages = [
  */
 unittest
 {
-    import moss.deps.query : QueryManager;
+    import moss.deps.registry : QueryManager;
     import std.exception : enforce;
     import moss.deps.graph : DependencyGraph;
 

@@ -20,9 +20,9 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.deps.query.candidate;
+module moss.deps.registry.candidate;
 
-public import moss.deps.query.dependency : Dependency;
+public import moss.deps.registry.dependency : Dependency;
 
 public import std.stdint : uint32_t, uint64_t;
 

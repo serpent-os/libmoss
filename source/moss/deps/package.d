@@ -23,4 +23,4 @@
 module moss.deps;
 
 public import moss.deps.analysis;
-public import moss.deps.query;
+public import moss.deps.registry;

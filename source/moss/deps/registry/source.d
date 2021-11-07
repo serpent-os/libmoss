@@ -20,9 +20,29 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.deps.query;
+module moss.deps.registry.source;
 
-public import moss.deps.query.candidate;
-public import moss.deps.query.dependency;
-public import moss.deps.query.manager;
-public import moss.deps.query.source;
+public import moss.deps.registry.candidate;
+
+/**
+ * When querying we can lookup by name, ID, etc.
+ */
+enum MatchType
+{
+    PackageName,
+    PackageID,
+    LibraryName,
+}
+
+/**
+ * A QuerySource is added to the QueryManager allowing it to load data from pkgIDs
+ * if present.
+ */
+public interface QuerySource
+{
+    /**
+     * The QuerySource will be given a callback to execute if it finds any
+     * matching providers for the input string and type
+     */
+    const(PackageCandidate)[] queryProviders(in MatchType type, in string matcher);
+}
