@@ -22,7 +22,7 @@
 
 module moss.deps.registry.plugin;
 
-public import moss.deps.registry.candidate;
+public import moss.deps.registry.item;
 public import moss.deps.registry.dependency : Dependency, Provider, ProviderType;
 
 /**
@@ -35,15 +35,15 @@ public interface RegistryPlugin
      * The RegistryPlugin will be given a callback to execute if it finds any
      * matching providers for the input string and type
      */
-    const(PackageCandidate)[] queryProviders(in ProviderType type, in string matcher);
+    RegistryItem[] queryProviders(in ProviderType type, in string matcher);
 
     /**
      * Return the dependencies for a given package ID
      */
-    const(Dependency)[] dependencies(in string pkgID);
+    const(Dependency)[] dependencies(in string pkgID) const;
 
     /**
      * Return the providers for a given package ID
      */
-    const(Provider)[] providers(in string pkgID);
+    const(Provider)[] providers(in string pkgID) const;
 }
