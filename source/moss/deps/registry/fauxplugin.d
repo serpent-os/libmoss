@@ -26,6 +26,7 @@ public import moss.deps.registry.plugin;
 
 import std.algorithm : each, filter, map;
 import std.array : array;
+import moss.deps.registry.candidate;
 
 /**
  * Our FauxSource is used entirely for unit tests.
@@ -41,7 +42,7 @@ package final class FauxSource : RegistryPlugin
         packages[p.id] = p;
     }
 
-    override const(PackageCandidate)[] queryProviders(in ProviderType type, in string matcher)
+    override RegistryItem[] queryProviders(in ProviderType type, in string matcher)
     {
         final switch (type)
         {
@@ -49,11 +50,14 @@ package final class FauxSource : RegistryPlugin
         case ProviderType.Interpreter:
             return [];
         case ProviderType.PackageName:
-            return packages.values.filter!((ref p) => p.name == matcher).array();
+            return packages.values
+                .filter!((ref p) => p.name == matcher)
+                .map!((ref p) => RegistryItem(p.id, this))
+                .array();
         case ProviderType.SharedLibraryName:
             if (matcher == "libc.so.6")
             {
-                return [packages["glibc"]];
+                return [RegistryItem(packages["glibc"].id, this)];
             }
             return [];
         }
@@ -62,7 +66,7 @@ package final class FauxSource : RegistryPlugin
     /**
      * Grab dependencies for the given package
      */
-    override const(Dependency)[] dependencies(in string pkgID)
+    override const(Dependency)[] dependencies(in string pkgID) const
     {
         if (!(pkgID in packages))
         {
@@ -74,7 +78,7 @@ package final class FauxSource : RegistryPlugin
     /**
      * Grab providers for the given package
      */
-    override const(Provider)[] providers(in string pkgID)
+    override const(Provider)[] providers(in string pkgID) const
     {
         return [];
     }
@@ -120,7 +124,6 @@ unittest
 {
     import moss.deps.registry : RegistryManager;
     import std.exception : enforce;
-    import moss.deps.graph : DependencyGraph;
 
     auto qm = new RegistryManager();
     auto fs = new FauxSource();
@@ -132,52 +135,4 @@ unittest
     enforce(result.length == 1);
     auto nano = result[0];
     enforce(nano.dependencies.length == 2);
-
-    auto g = new DependencyGraph!string;
-
-    /**
-     * TODO: Change to a nice loop.
-     */
-    void addRecursive(in PackageCandidate p)
-    {
-        if (!g.hasNode(p.id))
-        {
-            g.addNode(p.id);
-        }
-        foreach (dep; p.dependencies)
-        {
-            PackageCandidate candidate;
-
-            switch (dep.type)
-            {
-            case DependencyType.PackageName:
-                auto c = qm.byName(dep.target);
-                enforce(!c.empty);
-                candidate = cast(PackageCandidate) c.front;
-                break;
-            case DependencyType.SharedLibraryName:
-                auto c = qm.byProvider(ProviderType.SharedLibraryName, dep.target);
-                enforce(!c.empty);
-                candidate = cast(PackageCandidate) c.front;
-                break;
-            default:
-                assert(0 == 1, "UNHANDLED DEPENDENCY");
-            }
-            g.addEdge(p.id, candidate.id);
-            addRecursive(candidate);
-        }
-    }
-
-    auto nanoCandidates = qm.byName("nano").array;
-    enforce(nanoCandidates.length == 1);
-    auto nanoC = nanoCandidates[0];
-    addRecursive(nanoC);
-    string[] computedOrder;
-    g.topologicalSort((n) => { computedOrder ~= n; }());
-
-    import std.stdio : writeln;
-
-    enforce(computedOrder == ["baselayout", "glibc", "ncurses", "nano"]);
-    g.emitGraph();
-
 }
