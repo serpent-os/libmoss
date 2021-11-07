@@ -105,11 +105,11 @@ static PackageCandidate[] worldPackages = [
  */
 unittest
 {
-    import moss.deps.registry : QueryManager;
+    import moss.deps.registry : RegistryManager;
     import std.exception : enforce;
     import moss.deps.graph : DependencyGraph;
 
-    auto qm = new QueryManager();
+    auto qm = new RegistryManager();
     auto fs = new FauxSource();
     qm.addSource(fs);
 

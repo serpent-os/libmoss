@@ -29,10 +29,10 @@ import std.algorithm : each, filter, map;
 /**
  * Encapsulation of multiple underlying "query sources"
  */
-public final class QueryManager
+public final class RegistryManager
 {
     /**
-     * Add a source to the QueryManager
+     * Add a source to the RegistryManager
      */
     void addSource(QuerySource source)
     {
