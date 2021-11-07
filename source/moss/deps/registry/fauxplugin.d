@@ -111,7 +111,7 @@ unittest
 
     auto qm = new RegistryManager();
     auto fs = new FauxSource();
-    qm.addSource(fs);
+    qm.addPlugin(fs);
 
     worldPackages.each!((p) => fs.addPackage(p));
 
