@@ -22,7 +22,7 @@
 
 module moss.deps.registry.fauxsource;
 
-public import moss.deps.registry.source;
+public import moss.deps.registry.plugin;
 
 import std.algorithm : each, filter, map;
 import std.array : array;
@@ -30,7 +30,7 @@ import std.array : array;
 /**
  * Our FauxSource is used entirely for unit tests.
  */
-package final class FauxSource : RegistrySource
+package final class FauxSource : RegistryPlugin
 {
 
     /**

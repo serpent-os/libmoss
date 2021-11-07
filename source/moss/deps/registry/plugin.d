@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.deps.registry.source;
+module moss.deps.registry.plugin;
 
 public import moss.deps.registry.candidate;
 
@@ -35,13 +35,13 @@ enum MatchType
 }
 
 /**
- * A RegistrySource is added to the RegistryManager allowing it to load data from pkgIDs
+ * A RegistryPlugin is added to the RegistryManager allowing it to load data from pkgIDs
  * if present.
  */
-public interface RegistrySource
+public interface RegistryPlugin
 {
     /**
-     * The RegistrySource will be given a callback to execute if it finds any
+     * The RegistryPlugin will be given a callback to execute if it finds any
      * matching providers for the input string and type
      */
     const(PackageCandidate)[] queryProviders(in MatchType type, in string matcher);

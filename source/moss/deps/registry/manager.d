@@ -22,7 +22,7 @@
 
 module moss.deps.registry.manager;
 
-public import moss.deps.registry.source;
+public import moss.deps.registry.plugin;
 
 import std.algorithm : each, filter, map;
 
@@ -34,7 +34,7 @@ public final class RegistryManager
     /**
      * Add a source to the RegistryManager
      */
-    void addSource(RegistrySource source)
+    void addSource(RegistryPlugin source)
     {
         sources ~= source;
     }
@@ -42,7 +42,7 @@ public final class RegistryManager
     /**
      * Remove an existing source from this manager
      */
-    void removeSource(RegistrySource source)
+    void removeSource(RegistryPlugin source)
     {
         import std.algorithm : remove;
 
@@ -77,5 +77,5 @@ public final class RegistryManager
 
 private:
 
-    RegistrySource[] sources;
+    RegistryPlugin[] sources;
 }
