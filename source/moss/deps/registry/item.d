@@ -20,10 +20,23 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.deps.registry;
+module moss.deps.registry.item;
 
-public import moss.deps.registry.candidate;
-public import moss.deps.registry.dependency;
-public import moss.deps.registry.item;
-public import moss.deps.registry.manager;
-public import moss.deps.registry.plugin;
+public import moss.deps.registry.plugin : RegistryPlugin;
+
+/**
+ * Each item in the registry is associated with a specific plugin
+ * and a unique ID per the origin plugin
+ */
+public struct RegistryItem
+{
+    /**
+     * Unique package ID
+     */
+    immutable(string) pkgID;
+
+    /**
+     * Origin plugin
+     */
+    RegistryPlugin plugin;
+}
