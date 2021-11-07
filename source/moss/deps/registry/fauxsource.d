@@ -30,7 +30,7 @@ import std.array : array;
 /**
  * Our FauxSource is used entirely for unit tests.
  */
-package final class FauxSource : QuerySource
+package final class FauxSource : RegistrySource
 {
 
     /**

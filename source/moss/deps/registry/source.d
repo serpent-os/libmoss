@@ -35,13 +35,13 @@ enum MatchType
 }
 
 /**
- * A QuerySource is added to the QueryManager allowing it to load data from pkgIDs
+ * A RegistrySource is added to the RegistryManager allowing it to load data from pkgIDs
  * if present.
  */
-public interface QuerySource
+public interface RegistrySource
 {
     /**
-     * The QuerySource will be given a callback to execute if it finds any
+     * The RegistrySource will be given a callback to execute if it finds any
      * matching providers for the input string and type
      */
     const(PackageCandidate)[] queryProviders(in MatchType type, in string matcher);

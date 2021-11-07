@@ -34,7 +34,7 @@ public final class RegistryManager
     /**
      * Add a source to the RegistryManager
      */
-    void addSource(QuerySource source)
+    void addSource(RegistrySource source)
     {
         sources ~= source;
     }
@@ -42,7 +42,7 @@ public final class RegistryManager
     /**
      * Remove an existing source from this manager
      */
-    void removeSource(QuerySource source)
+    void removeSource(RegistrySource source)
     {
         import std.algorithm : remove;
 
@@ -77,5 +77,5 @@ public final class RegistryManager
 
 private:
 
-    QuerySource[] sources;
+    RegistrySource[] sources;
 }
