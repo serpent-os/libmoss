@@ -41,23 +41,16 @@ package final class FauxSource : RegistryPlugin
         packages[p.id] = p;
     }
 
-    override const(PackageCandidate)[] queryProviders(in MatchType type, in string matcher)
+    override const(PackageCandidate)[] queryProviders(in ProviderType type, in string matcher)
     {
         final switch (type)
         {
-        case MatchType.PackageID:
-            auto p = matcher in packages;
-            if (p is null)
-            {
-                return null;
-            }
-            return [
-                PackageCandidate(p.id, p.name, p.versionID, p.release, p.dependencies)
-            ];
-
-        case MatchType.PackageName:
+        case ProviderType.PkgconfigName:
+        case ProviderType.Interpreter:
+            return [];
+        case ProviderType.PackageName:
             return packages.values.filter!((ref p) => p.name == matcher).array();
-        case MatchType.LibraryName:
+        case ProviderType.SharedLibraryName:
             if (matcher == "libc.so.6")
             {
                 return [packages["glibc"]];
@@ -143,7 +136,7 @@ unittest
                 candidate = cast(PackageCandidate) c.front;
                 break;
             case DependencyType.SharedLibraryName:
-                auto c = qm.byProvider(MatchType.LibraryName, dep.target);
+                auto c = qm.byProvider(ProviderType.SharedLibraryName, dep.target);
                 enforce(!c.empty);
                 candidate = cast(PackageCandidate) c.front;
                 break;
@@ -155,7 +148,7 @@ unittest
         }
     }
 
-    auto nanoCandidates = qm.byID("nano").array;
+    auto nanoCandidates = qm.byName("nano").array;
     enforce(nanoCandidates.length == 1);
     auto nanoC = nanoCandidates[0];
     addRecursive(nanoC);

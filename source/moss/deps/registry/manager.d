@@ -52,11 +52,11 @@ public final class RegistryManager
     /**
      * Return all PackageCandidates by provider
      */
-    auto byProvider(in MatchType MatchType, const(string) provider)
+    auto byProvider(in ProviderType type, const(string) provider)
     {
         import std.algorithm : joiner;
 
-        return plugins.map!((s) => s.queryProviders(MatchType, provider)).joiner();
+        return plugins.map!((s) => s.queryProviders(type, provider)).joiner();
     }
 
     /**
@@ -64,15 +64,7 @@ public final class RegistryManager
      */
     pragma(inline, true) auto byName(const(string) pkgName)
     {
-        return byProvider(MatchType.PackageName, pkgName);
-    }
-
-    /**
-     * Return all PackageCandidates by ID
-     */
-    pragma(inline, true) auto byID(const(string) pkgID)
-    {
-        return byProvider(MatchType.PackageID, pkgID);
+        return byProvider(ProviderType.PackageName, pkgName);
     }
 
 private:

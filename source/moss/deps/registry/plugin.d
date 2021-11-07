@@ -23,16 +23,7 @@
 module moss.deps.registry.plugin;
 
 public import moss.deps.registry.candidate;
-
-/**
- * When querying we can lookup by name, ID, etc.
- */
-enum MatchType
-{
-    PackageName,
-    PackageID,
-    LibraryName,
-}
+public import moss.deps.registry.dependency : ProviderType;
 
 /**
  * A RegistryPlugin is added to the RegistryManager allowing it to load data from pkgIDs
@@ -44,5 +35,5 @@ public interface RegistryPlugin
      * The RegistryPlugin will be given a callback to execute if it finds any
      * matching providers for the input string and type
      */
-    const(PackageCandidate)[] queryProviders(in MatchType type, in string matcher);
+    const(PackageCandidate)[] queryProviders(in ProviderType type, in string matcher);
 }

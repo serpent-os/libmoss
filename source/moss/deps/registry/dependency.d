@@ -31,11 +31,6 @@ public import std.stdint : uint8_t;
 public enum DependencyType : uint8_t
 {
     /**
-     * Invalid (unsupported) dependency
-     */
-    Invalid = 0,
-
-    /**
      * A basic name dependency
      */
     PackageName,
@@ -71,7 +66,7 @@ public struct Dependency
     /**
      * Type of the dependency
      */
-    DependencyType type = DependencyType.Invalid;
+    DependencyType type = DependencyType.PackageName;
 
     /**
      * Return true if both dependencies are equal
@@ -129,7 +124,7 @@ public struct Provider
     /**
      * Type of the provides
      */
-    ProviderType type = ProviderType.Invalid;
+    ProviderType type = ProviderType.PackageName;
 
     /**
      * Return true if both providers are equal
