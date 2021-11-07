@@ -59,7 +59,7 @@ package final class FauxSource : RegistryPlugin
             {
                 return [RegistryItem(packages["glibc"].id, this)];
             }
-            return [];
+            return null;
         }
     }
 
