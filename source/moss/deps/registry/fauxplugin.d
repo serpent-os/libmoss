@@ -71,7 +71,7 @@ package final class FauxSource : RegistryPlugin
                 .map!((ref p) => RegistryItem(p.id, this))
                 .array();
         case ProviderType.SharedLibraryName:
-            if (matcher == "libc.so.6")
+            if (matcher == "libc.so.6(x86_64)")
             {
                 return [RegistryItem(packages["glibc"].id, this)];
             }
@@ -128,9 +128,9 @@ static Dependency LD(const(string) name)
 }
 
 static PackageCandidate[] worldPackages = [
-    P("nano", [LD("libc.so.6"), D("ncurses"),]), P("ncurses", [
-            LD("libc.so.6"),
-            ]), P("baselayout", []), P("glibc", [D("baselayout")]),
+    P("nano", [LD("libc.so.6(x86_64)"), D("ncurses"),]),
+    P("ncurses", [LD("libc.so.6(x86_64)"),]), P("baselayout", []),
+    P("glibc", [D("baselayout")]),
 ];
 
 /**
