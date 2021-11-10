@@ -73,7 +73,8 @@ public final class RegistryManager
     pragma(inline, true) auto byID(const(string) pkgID)
     {
         return plugins.map!((s) => s.queryID(pkgID))
-            .filter!((r) => !r.isNull());
+            .filter!((r) => !r.isNull())
+            .map!((r) => RegistryItem(r.get.pkgID, r.get.plugin));
     }
 
 private:
