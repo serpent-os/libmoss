@@ -138,8 +138,9 @@ static PackageCandidate[] worldPackages = [
  */
 unittest
 {
-    import moss.deps.registry : RegistryManager;
+    import moss.deps.registry : RegistryManager, RegistryItem;
     import std.exception : enforce;
+    import moss.deps.graph : DependencyGraph;
 
     auto qm = new RegistryManager();
     auto fs = new FauxSource();
@@ -151,4 +152,30 @@ unittest
     enforce(result.length == 1);
     auto nano = result[0];
     enforce(nano.dependencies.length == 2);
+
+    auto dg = new DependencyGraph!string();
+    void addRecurse(in string pkgID)
+    {
+        if (!dg.hasNode(pkgID))
+        {
+            dg.addNode(pkgID);
+        }
+        auto results = qm.byID(pkgID);
+        assert(!results.empty);
+        foreach (dep; results.front.dependencies)
+        {
+            auto r = qm.byProvider(dep.type, dep.target);
+            enforce(!r.empty);
+            addRecurse(r.front.pkgID);
+            dg.addEdge(pkgID, r.front.pkgID);
+        }
+    }
+
+    addRecurse(nano.pkgID);
+
+    string[] computedOrder;
+    dg.topologicalSort((n) => { computedOrder ~= n; }());
+    assert(computedOrder == ["baselayout", "glibc", "ncurses", "nano"]);
+
+    dg.emitGraph();
 }
