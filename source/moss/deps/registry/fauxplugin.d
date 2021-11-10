@@ -178,4 +178,10 @@ unittest
     assert(computedOrder == ["baselayout", "glibc", "ncurses", "nano"]);
 
     dg.emitGraph();
+
+    auto unknownName = qm.byName("not known");
+    assert(unknownName.empty);
+
+    auto unknownSymbol = qm.byProvider(ProviderType.SharedLibraryName, "libz.so.1(x86_64)");
+    assert(unknownSymbol.empty);
 }
