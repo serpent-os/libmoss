@@ -67,6 +67,15 @@ public final class RegistryManager
         return byProvider(ProviderType.PackageName, pkgName);
     }
 
+    /**
+     * Return all package candidates matching the given ID
+     */
+    pragma(inline, true) auto byID(const(string) pkgID)
+    {
+        return plugins.map!((s) => s.queryID(pkgID))
+            .filter!((r) => !r.isNull());
+    }
+
 private:
 
     RegistryPlugin[] plugins;

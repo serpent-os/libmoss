@@ -24,6 +24,7 @@ module moss.deps.registry.plugin;
 
 public import moss.deps.registry.item;
 public import moss.deps.registry.dependency : Dependency, Provider, ProviderType;
+public import std.typecons : Nullable;
 
 /**
  * A RegistryPlugin is added to the RegistryManager allowing it to load data from pkgIDs
@@ -36,6 +37,12 @@ public interface RegistryPlugin
      * matching providers for the input string and type
      */
     RegistryItem[] queryProviders(in ProviderType type, in string matcher);
+
+    /**
+     * Return a registry item for the given ID. Return will be isNull() if
+     * the pkgID cannot be located.
+     */
+    Nullable!RegistryItem queryID(in string pkgID);
 
     /**
      * Return the dependencies for a given package ID
