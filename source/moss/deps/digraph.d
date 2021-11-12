@@ -20,7 +20,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.deps.depgraph;
+module moss.deps.digraph;
 
 import std.container.rbtree;
 import std.exception : enforce;

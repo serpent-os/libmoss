@@ -23,6 +23,6 @@
 module moss.deps;
 
 public import moss.deps.dependency;
-public import moss.deps.depgraph;
+public import moss.deps.digraph;
 public import moss.deps.analysis;
 public import moss.deps.registry;
