@@ -29,7 +29,7 @@ import std.exception : enforce;
 import std.algorithm : each, canFind;
 import std.stdio : File;
 
-public import moss.deps.registry.dependency;
+public import moss.deps.dependency;
 public import moss.deps.analysis.chain;
 
 import std.stdint : uint32_t;

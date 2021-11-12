@@ -105,7 +105,7 @@ package final class FauxSource : RegistryPlugin
 /**
  * Helpers for defining packages
  */
-import moss.deps.registry.dependency : DependencyType, Dependency;
+import moss.deps.dependency : DependencyType, Dependency;
 
 static PackageCandidate P(const(string) name)
 {

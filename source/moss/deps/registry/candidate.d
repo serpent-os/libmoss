@@ -22,7 +22,7 @@
 
 module moss.deps.registry.candidate;
 
-public import moss.deps.registry.dependency : Dependency;
+public import moss.deps.dependency : Dependency;
 
 public import std.stdint : uint32_t, uint64_t;
 

@@ -25,7 +25,7 @@ module moss.deps.analysis.bucket;
 import std.container.rbtree;
 
 import moss.core : FileType;
-public import moss.deps.registry.dependency;
+public import moss.deps.dependency;
 public import moss.deps.analysis.fileinfo;
 
 import std.algorithm : map, filter;

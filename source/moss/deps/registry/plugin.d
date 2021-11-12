@@ -23,7 +23,7 @@
 module moss.deps.registry.plugin;
 
 public import moss.deps.registry.item;
-public import moss.deps.registry.dependency : Dependency, Provider, ProviderType;
+public import moss.deps.dependency;
 public import std.typecons : Nullable;
 
 /**
