@@ -47,7 +47,7 @@ unittest
     auto g = new DependencyGraph!string();
     foreach (p; pkgs)
     {
-        g.addNode(p.name);
+        g.addVertex(p.name);
         foreach (d; p.dependencies)
         {
             g.addEdge(p.name, d);
@@ -185,7 +185,7 @@ public final class DependencyGraph(L)
     /**
      * Return true if we already have this node
      */
-    bool hasNode(in LabelType label)
+    bool hasVertex(in LabelType label)
     {
         auto desc = VertexDescriptor.refConstruct(label);
         return !vertices.equalRange(&desc).empty;
@@ -194,9 +194,9 @@ public final class DependencyGraph(L)
     /**
      * Add a new node to the tree.
      */
-    void addNode(in LabelType label)
+    void addVertex(in LabelType label)
     {
-        enforce(!hasNode(label), "Cannot add duplicate node");
+        enforce(!hasVertex(label), "Cannot add duplicate node");
         vertices.insert(VertexDescriptor.create(label));
     }
 
@@ -246,7 +246,7 @@ public final class DependencyGraph(L)
         {
             foreach (edge; v.edges)
             {
-                output.writefln("%s -> %s;", v.label, getNode(edge).label);
+                output.writefln("%s -> %s;", v.label, getVertex(edge).label);
             }
         }
         output.writeln("}");
@@ -257,7 +257,7 @@ private:
     /**
      * Helper to return a node
      */
-    auto getNode(in LabelType v)
+    auto getVertex(in LabelType v)
     {
         auto desc = VertexDescriptor.refConstruct(v);
         auto match = vertices.equalRange(&desc);
@@ -274,7 +274,7 @@ private:
         vertex.status = VertexStatus.Discovered;
         foreach (edge; vertex.edges)
         {
-            auto edgeNode = getNode(edge);
+            auto edgeNode = getVertex(edge);
 
             /* Not yet visited, go take a looksie */
             if (edgeNode.status == VertexStatus.Undiscovered)

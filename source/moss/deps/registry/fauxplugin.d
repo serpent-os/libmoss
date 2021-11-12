@@ -156,9 +156,9 @@ unittest
     auto dg = new DependencyGraph!string();
     void addRecurse(in string pkgID)
     {
-        if (!dg.hasNode(pkgID))
+        if (!dg.hasVertex(pkgID))
         {
-            dg.addNode(pkgID);
+            dg.addVertex(pkgID);
         }
         auto results = qm.byID(pkgID);
         assert(!results.empty);
