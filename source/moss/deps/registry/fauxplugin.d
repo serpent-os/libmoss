@@ -140,7 +140,7 @@ unittest
 {
     import moss.deps.registry : RegistryManager, RegistryItem;
     import std.exception : enforce;
-    import moss.deps : DependencyGraph;
+    import moss.deps : DirectedAcyclicalGraph;
 
     auto qm = new RegistryManager();
     auto fs = new FauxSource();
@@ -153,7 +153,7 @@ unittest
     auto nano = result[0];
     enforce(nano.dependencies.length == 2);
 
-    auto dg = new DependencyGraph!string();
+    auto dg = new DirectedAcyclicalGraph!string();
     void addRecurse(in string pkgID)
     {
         if (!dg.hasVertex(pkgID))

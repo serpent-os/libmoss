@@ -44,7 +44,7 @@ unittest
         Pkg("nano", ["libtinfo", "ncurses", "glibc"]), Pkg("libtinfo",
                 ["glibc"]), Pkg("ncurses", ["libtinfo", "glibc"]),
     ];
-    auto g = new DependencyGraph!string();
+    auto g = new DirectedAcyclicalGraph!string();
     foreach (p; pkgs)
     {
         g.addVertex(p.name);
@@ -159,15 +159,14 @@ private struct Vertex(L)
 }
 
 /**
- * The DependencyGraph is currently a very simple directed acyclical graph for
- * generating dependency ordering information and ensuring completeness, whilst
+ * The Directed Acyclical Graoh is used for ordering information and ensuring completeness, whilst
  * detecting dependency cycles.
  *
  * The use of DependencyGraph will be expanded upon in future to permit more
  * intelligent use than a simple Depth-First Search, so that we can support
  * multiple candidate scenarios.
  */
-public final class DependencyGraph(L)
+public final class DirectedAcyclicalGraph(L)
 {
     alias LabelType = L;
     alias VertexDescriptor = Vertex!(LabelType);
