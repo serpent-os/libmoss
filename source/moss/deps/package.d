@@ -22,5 +22,6 @@
 
 module moss.deps;
 
+public import moss.deps.depgraph;
 public import moss.deps.analysis;
 public import moss.deps.registry;

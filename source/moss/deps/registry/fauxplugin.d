@@ -140,7 +140,7 @@ unittest
 {
     import moss.deps.registry : RegistryManager, RegistryItem;
     import std.exception : enforce;
-    import moss.deps.graph : DependencyGraph;
+    import moss.deps : DependencyGraph;
 
     auto qm = new RegistryManager();
     auto fs = new FauxSource();
