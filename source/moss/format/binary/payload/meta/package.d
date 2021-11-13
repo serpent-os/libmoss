@@ -77,25 +77,26 @@ public:
         string pkgVersion = null;
         string pkgArchitecture = null;
 
-        pairs.each!((t) => {
+        foreach (ref t; pairs)
+        {
             switch (t.tag)
             {
             case RecordTag.Name:
-                pkgName = t.val_string;
+                pkgName = t.get!string;
                 break;
             case RecordTag.Release:
-                pkgRelease = t.val_u64;
+                pkgRelease = t.get!uint64_t();
                 break;
             case RecordTag.Version:
-                pkgVersion = t.val_string;
+                pkgVersion = t.get!string();
                 break;
             case RecordTag.Architecture:
-                pkgArchitecture = t.val_string;
+                pkgArchitecture = t.get!string();
                 break;
             default:
                 break;
             }
-        }());
+        }
 
         enforce(pkgName !is null, "getPkgID(): Missing Name field");
         enforce(pkgVersion !is null, "getPkgID(): Missing Version field");
@@ -172,7 +173,7 @@ public:
     /**
      * Add a new Record to the pair set for future encoding
      */
-    void addRecord(R : RecordTag, T)(R key, auto const ref T datum) @system
+    void addRecord(T)(RecordType type, RecordTag tag, auto const ref T datum) @system
     {
         import std.traits : EnumMembers, OriginalType;
         import std.conv : to;
@@ -181,98 +182,9 @@ public:
         pairs ~= RecordPair();
         auto length = cast(long) pairs.length;
         auto pair = &pairs[length - 1];
-        pair.tag = key;
         recordCount = cast(uint32_t) length;
 
-        static foreach (i, m; EnumMembers!RecordTag)
-        {
-            if (i == key)
-            {
-
-                mixin("enum memberName = __traits(identifier, EnumMembers!RecordTag[i]);");
-                mixin("enum attrs = __traits(getAttributes, RecordTag." ~ to!string(
-                        memberName) ~ ");");
-                static assert(attrs.length == 1,
-                        "Missing validation tag for RecordTag." ~ to!string(memberName));
-
-                pair.type = attrs[0];
-                static if (is(T == string))
-                {
-                    switch (attrs[0])
-                    {
-
-                    case RecordType.String:
-                        assert(typeid(OriginalType!T) == typeid(string),
-                                "addRecord(RecordTag." ~ memberName ~ ") expects string, not " ~ typeof(datum)
-                                .stringof);
-                        pair.val_string = datum;
-                        break;
-                    default:
-                        assert(0, "INCOMPLETE SUPPORT");
-                    }
-                }
-                else
-                {
-                    switch (attrs[0])
-                    {
-
-                    case RecordType.Int8:
-                        assert(typeid(OriginalType!T) == typeid(int8_t),
-                                "addRecord(RecordTag." ~ memberName ~ ") expects int8_t, not " ~ typeof(datum)
-                                .stringof);
-                        pair.val_i8 = cast(int8_t) datum;
-                        break;
-                    case RecordType.Uint8:
-                        assert(typeid(OriginalType!T) == typeid(uint8_t),
-                                "addRecord(RecordTag." ~ memberName ~ ") expects uint8_t, not " ~ typeof(datum)
-                                .stringof);
-                        pair.val_u8 = cast(uint8_t) datum;
-                        break;
-
-                    case RecordType.Int16:
-                        assert(typeid(OriginalType!T) == typeid(int16_t),
-                                "addRecord(RecordTag." ~ memberName ~ ") expects int16_t, not " ~ typeof(datum)
-                                .stringof);
-                        pair.val_i16 = cast(int16_t) datum;
-                        break;
-                    case RecordType.Uint16:
-                        assert(typeid(OriginalType!T) == typeid(uint16_t),
-                                "addRecord(RecordTag." ~ memberName ~ ") expects uint16_t, not " ~ typeof(datum)
-                                .stringof);
-                        pair.val_u16 = cast(uint16_t) datum;
-                        break;
-                    case RecordType.Int32:
-                        assert(typeid(OriginalType!T) == typeid(int32_t),
-                                "addRecord(RecordTag." ~ memberName ~ ") expects int32_t, not " ~ typeof(datum)
-                                .stringof);
-                        pair.val_i32 = cast(int32_t) datum;
-                        break;
-                    case RecordType.Uint32:
-                        assert(typeid(OriginalType!T) == typeid(uint32_t),
-                                "addRecord(RecordTag." ~ memberName ~ ") expects uint32_t, not " ~ typeof(datum)
-                                .stringof);
-                        pair.val_u32 = cast(uint32_t) datum;
-                        break;
-                    case RecordType.Int64:
-                        assert(typeid(OriginalType!T) == typeid(int64_t),
-                                "addRecord(RecordTag." ~ memberName ~ ") expects int64_t, not " ~ typeof(datum)
-                                .stringof);
-                        pair.val_i64 = cast(int64_t) datum;
-                        break;
-                    case RecordType.Uint64:
-                        assert(typeid(OriginalType!T) == typeid(uint64_t),
-                                "addRecord(RecordTag." ~ memberName ~ ") expects uint64_t, not " ~ typeof(datum)
-                                .stringof);
-                        pair.val_u64 = cast(uint64_t) datum;
-                        break;
-                    default:
-                        assert(0, "INCOMPLETE SUPPORT");
-                    }
-                }
-            }
-        }
-
-        enforce(pair.type != RecordType.Unknown, "Unable to marshal " ~ R.stringof);
+        pair.set(type, tag, datum);
     }
 
 private:

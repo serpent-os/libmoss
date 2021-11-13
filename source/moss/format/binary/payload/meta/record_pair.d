@@ -25,6 +25,7 @@ module moss.format.binary.payload.meta.record_pair;
 public import std.stdint;
 public import moss.format.binary.payload.meta.record;
 
+import moss.core.encoding;
 import moss.format.binary.reader : ReaderToken;
 import moss.format.binary.writer : WriterToken;
 
@@ -35,31 +36,19 @@ import moss.format.binary.writer : WriterToken;
 extern (C) package struct RecordPair
 {
     /**
-     * Fixed tag for the Record key
+     * Return the record tag
      */
-    RecordTag tag;
-
-    /**
-     * Fixed type for the Record value *type*
-     */
-    RecordType type;
-
-    /**
-     * Anonymous union containing all potential values so
-     * that we can store a RecordPair in memory with its
-     * associated value
-     */
-    union
+    pure @property RecordTag tag() @safe @nogc nothrow
     {
-        uint8_t val_u8;
-        uint16_t val_u16;
-        uint32_t val_u32;
-        uint64_t val_u64;
-        int8_t val_i8;
-        int16_t val_i16;
-        int32_t val_i32;
-        int64_t val_i64;
-        string val_string;
+        return record.tag;
+    }
+
+    /**
+     * Return the record type
+     */
+    pure @property RecordType type() @safe @nogc nothrow
+    {
+        return record.type;
     }
 
     /**
@@ -68,54 +57,18 @@ extern (C) package struct RecordPair
      */
     void decode(scope ReaderToken rdr) @trusted
     {
-        Record rcrd;
-        rcrd.decode(rdr);
-        rcrd.validate();
-
-        tag = rcrd.tag;
-        type = rcrd.type;
+        record = Record.init;
+        record.decode(rdr);
+        record.validate();
 
         /* Don't decode empty values */
-        if (rcrd.length < 1)
+        if (record.length < 1)
         {
+            data = null;
             return;
         }
 
-        final switch (type)
-        {
-        case RecordType.Int8:
-            decodeNumeric(val_i8, &rcrd, rdr);
-            break;
-        case RecordType.Uint8:
-            decodeNumeric(val_u8, &rcrd, rdr);
-            break;
-        case RecordType.Int16:
-            decodeNumeric(val_i16, &rcrd, rdr);
-            break;
-        case RecordType.Uint16:
-            decodeNumeric(val_u16, &rcrd, rdr);
-            break;
-        case RecordType.Int32:
-            decodeNumeric(val_i32, &rcrd, rdr);
-            break;
-        case RecordType.Uint32:
-            decodeNumeric(val_u32, &rcrd, rdr);
-            break;
-        case RecordType.Int64:
-            decodeNumeric(val_i64, &rcrd, rdr);
-            break;
-        case RecordType.Uint64:
-            decodeNumeric(val_u64, &rcrd, rdr);
-            break;
-        case RecordType.String:
-            const auto data = rdr.readData(rcrd.length);
-            auto strlength = cast(long) rcrd.length;
-            val_string = cast(string) data[0 .. strlength - 1];
-            break;
-        case RecordType.Unknown:
-            assert(0 == 0,
-                    "RecordPair.encode(): Unknown encoding not supported");
-        }
+        data = rdr.readData(record.length);
     }
 
     /**
@@ -123,132 +76,30 @@ extern (C) package struct RecordPair
      */
     void encode(scope WriterToken wr) @trusted
     {
-        Record r = Record();
-        r.type = this.type;
-        r.tag = this.tag;
+        record.encode(wr);
+        wr.appendData(data);
+    }
 
-        final switch (r.type)
-        {
-        case RecordType.Int8:
-            encodeNumeric(val_i8, &r, wr);
-            break;
-        case RecordType.Uint8:
-            encodeNumeric(val_u8, &r, wr);
-            break;
-        case RecordType.Int16:
-            encodeNumeric(val_i16, &r, wr);
-            break;
-        case RecordType.Uint16:
-            encodeNumeric(val_u16, &r, wr);
-            break;
-        case RecordType.Int32:
-            encodeNumeric(val_i32, &r, wr);
-            break;
-        case RecordType.Uint32:
-            encodeNumeric(val_u32, &r, wr);
-            break;
-        case RecordType.Int64:
-            encodeNumeric(val_i64, &r, wr);
-            break;
-        case RecordType.Uint64:
-            encodeNumeric(val_u64, &r, wr);
-            break;
-        case RecordType.String:
-            encodeString(val_string, &r, wr);
-            break;
-        case RecordType.Unknown:
-            assert(0 == 0,
-                    "RecordPair.encode(): Unknown encoding not supported");
-        }
+package:
+
+    void set(T)(RecordType rType, RecordTag rTag, const auto ref T datum)
+    {
+        static assert(isMossEncodable!T, stringifyNonEncodableType!T);
+        data = cast(Datum) datum.mossEncode();
+        record.type = rType;
+        record.length = cast(uint) data.length;
+        record.tag = rTag;
+    }
+
+    T get(T)()
+    {
+        T decoded;
+        mossDecode!T(decoded, cast(ImmutableDatum) data);
+        return decoded;
     }
 
 private:
 
-    /**
-     * Endian-aware helper that can decode the range of numerics we support
-     * from the underlying stream data
-     */
-    void decodeNumeric(T)(ref T datum, scope Record* record, scope ReaderToken rdr)
-    {
-        import std.exception : enforce;
-        import std.bitmanip : bigEndianToNative;
-
-        enforce(record.length == T.sizeof, "Record size mismatch");
-
-        auto readData = rdr.readData(T.sizeof);
-
-        static if (T.sizeof > 1)
-        {
-            version (LittleEndian)
-            {
-                datum = bigEndianToNative!(T, T.sizeof)(readData[0 .. T.sizeof]);
-            }
-            else
-            {
-                datum = *cast(T*) readData.ptr;
-            }
-        }
-        else
-        {
-            datum = *cast(T*) readData.ptr;
-        }
-    }
-
-    /**
-     * Handle encoding of all our numeric data types in a generic way, also
-     * ensuring correct endian encoding.
-     */
-    void encodeNumeric(T)(ref T datum, scope Record* record, scope WriterToken wr)
-    {
-        import std.bitmanip : nativeToBigEndian;
-        import std.stdio : fwrite;
-        import std.exception : enforce;
-
-        /* Stash length before writing record to file */
-        record.length = cast(uint32_t) T.sizeof;
-
-        /* Write record to file */
-        record.encode(wr);
-
-        /* Ensure we encode big-endian values only */
-        version (BigEndian)
-        {
-            wr.appendData((cast(ubyte*)&datum)[0 .. T.sizeof]);
-        }
-        else
-        {
-            static if (T.sizeof > 1)
-            {
-                ubyte[T.sizeof] b = nativeToBigEndian(datum);
-                wr.appendData(b);
-            }
-            else
-            {
-                /* Add single byte */
-                wr.appendData(datum);
-            }
-        }
-    }
-
-    /**
-     * Special-case handling, encode a string to the stream.
-     * Essentially we expect a UTF-8 array with no endian worries,
-     * and write this as a NUL terminated C string
-     */
-    void encodeString(ref string datum, scope Record* record, scope WriterToken wr)
-    {
-        import std.exception : enforce;
-        import std.string : toStringz;
-
-        /* Stash length before writing record to file */
-        auto z = toStringz(datum);
-        assert(datum.length < uint32_t.max, "encodeString(): String Length too long");
-        record.length = cast(uint32_t) datum.length + 1;
-        auto len = record.length;
-
-        /* Write record + string value */
-        record.encode(wr);
-        ubyte[] emitted = (cast(ubyte*) z)[0 .. len];
-        wr.appendData(emitted);
-    }
+    Datum data;
+    Record record;
 }
