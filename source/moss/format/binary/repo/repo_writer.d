@@ -88,7 +88,7 @@ public final class RepoWriter
 
         auto metaPayload = reader.payload!MetaPayload();
         enforce(metaPayload !is null, "RepoWriter.addPackage(): Unable to grab MetaPayload");
-        metaPayload.addRecord(RecordTag.PackageURI, packageURI);
+        metaPayload.addRecord(RecordType.String, RecordTag.PackageURI, packageURI);
 
         /* TODO: Add hash, size, filter records, etc. */
         archWriter.addPayload(metaPayload);
