@@ -38,7 +38,7 @@ extern (C) package struct RecordPair
     /**
      * Return the record tag
      */
-    pure @property RecordTag tag() @safe @nogc nothrow
+    pure @property RecordTag tag() @safe @nogc nothrow const
     {
         return record.tag;
     }
@@ -46,7 +46,7 @@ extern (C) package struct RecordPair
     /**
      * Return the record type
      */
-    pure @property RecordType type() @safe @nogc nothrow
+    pure @property RecordType type() @safe @nogc nothrow const
     {
         return record.type;
     }
