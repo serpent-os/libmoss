@@ -43,6 +43,8 @@ enum RecordType : uint8_t
     Int64 = 7,
     Uint64 = 8,
     String = 9,
+    Dependency = 10,
+    Provider = 11,
 }
 
 /**
@@ -75,10 +77,10 @@ enum RecordTag : uint16_t
     @(RecordType.String) SourceID = 7,
 
     /** Runtime dependencies */
-    @(RecordType.Unknown) Depends = 8,
+    @(RecordType.Dependency) Depends = 8,
 
     /** Provides some capability or name */
-    @(RecordType.Unknown) Provides = 9,
+    @(RecordType.Provider) Provides = 9,
 
     /** Conflicts with some capability or name */
     @(RecordType.Unknown) Conflicts = 10,
