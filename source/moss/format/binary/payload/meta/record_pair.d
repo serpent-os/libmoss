@@ -84,10 +84,10 @@ extern (C) package struct RecordPair
      * Decode underlying value to the type in T
      * consumers should check .type before doing so
      */
-    pure get(T)() const
+    pure T get(T)() const
     {
         T decoded;
-        mossDecode!T(decoded, cast(ImmutableDatum) data);
+        decoded.mossDecode(cast(ImmutableDatum) data);
         return decoded;
     }
 
