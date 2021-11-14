@@ -80,6 +80,17 @@ extern (C) package struct RecordPair
         wr.appendData(data);
     }
 
+    /**
+     * Decode underlying value to the type in T
+     * consumers should check .type before doing so
+     */
+    pure get(T)() const
+    {
+        T decoded;
+        mossDecode!T(decoded, cast(ImmutableDatum) data);
+        return decoded;
+    }
+
 package:
 
     void set(T)(RecordType rType, RecordTag rTag, const auto ref T datum)
@@ -89,13 +100,6 @@ package:
         record.type = rType;
         record.length = cast(uint) data.length;
         record.tag = rTag;
-    }
-
-    T get(T)()
-    {
-        T decoded;
-        mossDecode!T(decoded, cast(ImmutableDatum) data);
-        return decoded;
     }
 
 private:
