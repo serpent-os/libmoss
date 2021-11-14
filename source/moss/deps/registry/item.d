@@ -25,6 +25,17 @@ module moss.deps.registry.item;
 public import moss.deps.registry.plugin : RegistryPlugin;
 
 /**
+ * Item flags can be combined so that we have more information on a
+ * candidate without having to consult the plugin again.
+ */
+public enum ItemFlags
+{
+    None = 1 << 0,
+    Available = 1 << 1,
+    Installed = 1 << 2,
+}
+
+/**
  * Each item in the registry is associated with a specific plugin
  * and a unique ID per the origin plugin
  */
@@ -55,4 +66,32 @@ public struct RegistryItem
     {
         return plugin.providers(pkgID);
     }
+
+    /**
+     * Return the flags for this item
+     */
+    pragma(inline, true) pure @property ItemFlags flags() @safe @nogc nothrow const
+    {
+        return _flags;
+    }
+
+    /**
+     * Returns true if the candidate is available
+     */
+    pragma(inline, true) pure @property bool available() @safe @nogc nothrow const
+    {
+        return (_flags & ItemFlags.Available) == ItemFlags.Available;
+    }
+
+    /**
+     * Returns true if the candidate is installed
+     */
+    pragma(inline, true) pure @property bool installed() @safe @nogc nothrow const
+    {
+        return (_flags & ItemFlags.Installed) == ItemFlags.Installed;
+    }
+
+package:
+
+    ItemFlags _flags = ItemFlags.None;
 }
