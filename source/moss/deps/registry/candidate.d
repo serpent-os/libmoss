@@ -22,13 +22,13 @@
 
 module moss.deps.registry.candidate;
 
-public import moss.deps.dependency : Dependency;
+public import moss.deps.dependency : Dependency, Provider;
 
 public import std.stdint : uint32_t, uint64_t;
 
 /**
- * A PackageCandidate is a set of minimal fields used for further
- * resolution purposes.
+ * The PackageCandidate type is used for basic representation of a virtual
+ * package in non DB settings
  */
 struct PackageCandidate
 {
@@ -52,5 +52,13 @@ struct PackageCandidate
      */
     uint64_t release = 0;
 
+    /**
+     * List of dependencies for the package
+     */
     Dependency[] dependencies;
+
+    /**
+     * List of providers for the package
+     */
+    Provider[] providers;
 }
