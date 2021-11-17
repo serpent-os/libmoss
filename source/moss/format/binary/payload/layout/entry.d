@@ -25,7 +25,7 @@ module moss.format.binary.payload.layout.entry;
 public import std.stdint;
 
 import moss.format.binary.endianness;
-import moss.core : FileType;
+import moss.core : FileType, ImmutableDatum;
 import moss.format.binary.reader : ReaderToken;
 import moss.format.binary.writer : WriterToken;
 
@@ -98,14 +98,14 @@ align(1):
     }
 
     /**
-     * Hook to encode an entry for the moss-db library
+     * Encode this entry into a ubyte sequence
      */
-    immutable(ubyte[]) mossdbEncode()
+    ImmutableDatum mossEncode()
     {
         LayoutEntry cp = this;
         cp.toNetworkOrder();
 
-        auto ret = cast(immutable(ubyte[]))(
+        auto ret = cast(ImmutableDatum)(
                 (cast(ubyte*)&cp.time)[0 .. cp.time.sizeof] ~ (cast(
                 ubyte*)&cp.uid)[0 .. cp.uid.sizeof] ~ (cast(
                 ubyte*)&cp.gid)[0 .. cp.gid.sizeof] ~ (cast(
@@ -128,14 +128,14 @@ align(1):
     }
 
     /**
-     * Decode the entry itself from a given mossdb value
+     * Decode the entry itself from a given ubyte sequence
      */
-    void mossdbDecode(in immutable(ubyte[]) rawBytes)
+    void mossDecode(in ImmutableDatum rawBytes)
     {
         import std.exception : enforce;
 
         enforce(rawBytes.length >= LayoutEntry.sizeof,
-                "LayoutEntry.mossdbDecode(): Invalid stream size");
+                "LayoutEntry.mossDecode(): Invalid stream size");
         LayoutEntry* cp = cast(LayoutEntry*) rawBytes.ptr[0 .. LayoutEntry.sizeof];
         this = *cp;
         this.toHostOrder();

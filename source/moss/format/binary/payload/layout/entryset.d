@@ -25,6 +25,7 @@ module moss.format.binary.payload.layout.entryset;
 public import std.stdint;
 public import moss.format.binary.payload.layout.entry;
 
+import moss.core.encoding;
 import moss.format.binary.reader : ReaderToken;
 import moss.format.binary.writer : WriterToken;
 
@@ -61,8 +62,7 @@ extern (C) public struct EntrySet
         if (entry.sourceLength > 0)
         {
             const auto data = rdr.readData(entry.sourceLength);
-            auto strlength = cast(long) entry.sourceLength;
-            source = cast(string) data[0 .. strlength - 1];
+            source.mossDecode(cast(ImmutableDatum) data);
         }
 
         /* And target follows */
@@ -72,8 +72,7 @@ extern (C) public struct EntrySet
         }
 
         const auto data = rdr.readData(entry.targetLength);
-        auto strlength = cast(long) entry.targetLength;
-        target = cast(string) data[0 .. strlength - 1];
+        target.mossDecode(cast(ImmutableDatum) data);
     }
 
     /**
@@ -88,22 +87,20 @@ extern (C) public struct EntrySet
     }
 
     /**
-     * Specialist encoder for mossdb, without requiring moss-db to be linked
+     * Encode this entry set into a ubyte sequence
      */
-    immutable(ubyte[]) mossdbEncode()
+    ImmutableDatum mossEncode()
     {
-        immutable(ubyte[]) ret = cast(immutable(ubyte[]))(
-                (cast(ubyte[]) entry.mossdbEncode()) ~ encodeStrings());
-        return ret;
+        return cast(ImmutableDatum)((cast(ubyte[]) entry.mossEncode()) ~ encodeStrings());
     }
 
     /**
-     * Specialist decoder for mossdb, without requiring moss-db to be linked
+     * Decode this EntrySet from a ubyte sequence
      */
-    void mossdbDecode(in immutable(ubyte[]) rawBytes)
+    void mossDecode(in ImmutableDatum rawBytes)
     {
         this = EntrySet.init;
-        entry.mossdbDecode(rawBytes);
+        entry.mossDecode(rawBytes);
 
         /* No strings follow */
         if (LayoutEntry.sizeof + 1 >= rawBytes.length)
@@ -111,14 +108,13 @@ extern (C) public struct EntrySet
             return;
         }
 
-        immutable(ubyte[]) remainingBytes = rawBytes[LayoutEntry.sizeof .. $];
+        ImmutableDatum remainingBytes = rawBytes[LayoutEntry.sizeof .. $];
 
         /* Source is always first */
         if (entry.sourceLength > 0)
         {
             const auto data = remainingBytes[0 .. entry.sourceLength];
-            auto strlength = cast(long) entry.sourceLength;
-            source = cast(string) data[0 .. strlength - 1];
+            source.mossDecode(data);
         }
 
         /* And target follows */
@@ -127,9 +123,8 @@ extern (C) public struct EntrySet
             return;
         }
 
-        const auto data = remainingBytes[entry.sourceLength .. $];
-        auto strlength = cast(long) entry.targetLength;
-        target = cast(string) data[0 .. strlength - 1];
+        ImmutableDatum data = remainingBytes[entry.sourceLength .. $];
+        target.mossDecode(data);
     }
 
 private:
@@ -137,24 +132,21 @@ private:
     ubyte[] encodeStrings() @trusted
     {
         import std.exception : enforce;
-        import std.string : toStringz;
 
         ubyte[] encoded = null;
 
         if (source !is null && source.length > 0)
         {
             enforce(source.length < uint16_t.max, "encode(): String length too long");
-            auto z = toStringz(source);
             entry.sourceLength = cast(uint16_t)(source.length + 1);
-            encoded ~= (cast(ubyte*) z)[0 .. entry.sourceLength];
+            encoded ~= source.mossEncode();
         }
 
         if (target !is null && target.length > 0)
         {
             enforce(target.length < uint16_t.max, "encode(): String length too long");
-            auto z = toStringz(target);
             entry.targetLength = cast(uint16_t)(target.length + 1);
-            encoded ~= (cast(ubyte*) z)[0 .. entry.targetLength];
+            encoded ~= target.mossEncode();
         }
 
         return encoded;
