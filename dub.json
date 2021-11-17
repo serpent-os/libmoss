@@ -11,6 +11,9 @@
 	"dependencies": {
 		"rocksdb": {
 			"path": "external/rocksdb-binding"
+		},
+		"moss-core": {
+			"path": "external/moss-core"
 		}
 	}
 }
