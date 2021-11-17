@@ -22,7 +22,7 @@
 
 module moss.db.rocksdb.bucket;
 
-public import moss.db : Datum;
+public import moss.core : Datum;
 public import moss.db.interfaces : IReadWritable, IIterable;
 
 import moss.db.entry;

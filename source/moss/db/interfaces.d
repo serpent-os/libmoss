@@ -23,7 +23,7 @@
 module moss.db.interfaces;
 public import std.typecons : Tuple;
 public import moss.db.entry : DatabaseEntry;
-public import moss.db : Datum;
+public import moss.core : Datum;
 
 public alias DatabaseEntryPair = Tuple!(DatabaseEntry, "entry", Datum, "value");
 

@@ -22,7 +22,7 @@
 
 module moss.db.entry;
 
-public import moss.db : Datum;
+public import moss.core : Datum;
 
 import std.bitmanip : nativeToBigEndian, bigEndianToNative;
 import std.exception : enforce;

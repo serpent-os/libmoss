@@ -25,17 +25,3 @@ module moss.db;
 public import moss.db.entry;
 public import moss.db.interfaces;
 public import moss.db.encoding;
-
-/**
- * We encode all db keys and values as ubyte[] internally which must take into
- * account any host endian issues.  As such, we always store in Big Endian
- * format, and convert back to native endian upon reads.
- */
-public alias Datum = ubyte[];
-
-/**
- * Some specialised encoders must return an explicitly immutable Datum
- * which we'll use to provide some compile time guarantees over the
- * key or value integrity.
- */
-public alias ImmutableDatum = immutable(Datum);

@@ -27,7 +27,7 @@ import moss.db.rocksdb.bucket;
 import moss.db.rocksdb.iterator;
 import moss.db.rocksdb.transform;
 
-public import moss.db : Datum;
+public import moss.core : Datum;
 public import moss.db.interfaces : Database, DatabaseMutability, IReadWritable;
 
 /**
