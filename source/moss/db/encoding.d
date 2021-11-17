@@ -22,72 +22,8 @@
 
 module moss.db.encoding;
 
-import std.traits : isFloatingPoint, isIntegral, isNumeric, isBoolean;
-
-public import moss.db : Datum;
 public import moss.db.interfaces : Database, IReadWritable, IReadable;
-
-/**
- * Simply for ease of writing.
- */
-alias ImmutableDatum = immutable(Datum);
-
-/**
- * Helper to determine if a type can be encoded correctly for moss-db
- *
- * It must implement the "mossdbEncode()" function, which must in turn return
- * a "Datum" (ubyte[]) value.
- */
-auto isMossDbEncodable(T)()
-{
-    static if (is(typeof({ T val = void; return val.mossdbEncode(); }()) E == ImmutableDatum))
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-/**
- * Is the input type decodable?
- */
-auto isMossDbDecodable(T)()
-{
-    /* Ensure we have a usable interface, i.e. ".mossDbDecode(scope ImmutableDatum)" */
-    static if (is(typeof({
-                T val = void;
-                ImmutableDatum inp = cast(ImmutableDatum) null;
-                static assert(is(typeof(val.mossdbDecode(inp)) == void),
-                "isMossDbEncodable(): Return type should be void");
-            })))
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-/**
- * Helper to build the correct debug string when failing to find the correct
- * encoder interface.
- */
-auto stringifyNonEncodableType(T)()
-{
-    return "" ~ T.stringof ~ " is not moss-db encodable. Implement the mossdbEncode() interface";
-}
-
-/**
- * Helper to build the correct debug string when failing to find the correct
- * decoder interface
- */
-auto stringifyNonDecodableType(T)()
-{
-    return "" ~ T.stringof ~ " is not moss-db decodable. Implement the mossdbDecode() interface";
-}
+public import moss.core.encoding;
 
 /**
  * A DbResult is returned from any get() query, but the internal value may not
@@ -111,73 +47,6 @@ struct DbResult(V)
 }
 
 /**
- * Automatically encode string to C string with nul terminator
- */
-pure public ImmutableDatum mossdbEncode(T)(in T s) if (is(T == string))
-{
-    import std.string : toStringz;
-    import core.stdc.string : strlen;
-
-    auto stringC = s.toStringz;
-    /* '+ 1' because nul terminator extends string length by 1 */
-    return cast(ImmutableDatum) stringC[0 .. strlen(stringC) + 1];
-}
-
-/**
- * Automatically encode all non floating point numericals to big endian representation
- * when they're more than one byte in size
- */
-pure public ImmutableDatum mossdbEncode(T)(in T i)
-        if (!isFloatingPoint!T && (isNumeric!T || isBoolean!T))
-{
-    import std.bitmanip : nativeToBigEndian;
-
-    /* Any multibyte value must be endian encoded */
-    static if (T.sizeof > 1)
-    {
-        return nativeToBigEndian(i).dup;
-    }
-    else
-    {
-        return [i];
-    }
-}
-
-/**
- * Automatically convert a stored nul-terminated string into a valid D string
- */
-pure void mossdbDecode(T)(out T dest, in ImmutableDatum rawBytes) if (is(T == string))
-{
-    import std.string : fromStringz;
-    import std.exception : enforce;
-
-    dest = cast(string) fromStringz(cast(char*) rawBytes.ptr);
-}
-
-/**
- * Automatically decode all non floating point numericals from big endian representation
- * when they're more than one byte in size.
- */
-pure void mossdbDecode(T)(out T dest, in ImmutableDatum rawBytes)
-        if (!isFloatingPoint!T && (isNumeric!T || isBoolean!T))
-{
-    import std.bitmanip : bigEndianToNative;
-    import std.exception : enforce;
-
-    enforce(T.sizeof == rawBytes.length, "mossdbDecode!" ~ T.stringof
-            ~ ": Decoding wrong value type");
-
-    static if (T.sizeof > 1)
-    {
-        dest = bigEndianToNative!(T, T.sizeof)(cast(Datum) rawBytes[0 .. T.sizeof]);
-    }
-    else
-    {
-        dest = cast(T) rawBytes[0];
-    }
-}
-
-/**
  * Allowing using arbitrary keys for bucket based operation and
  * have them properly encoded
  */
@@ -185,8 +54,8 @@ pragma(inline, true) auto bucket(P)(Database db, P prefix)
 {
     static assert(!is(P == Datum),
             "Database.bucket(): Use .bucketByDatum() for Datum (ubyte[]) keys");
-    static assert(isMossDbEncodable!P, stringifyNonEncodableType!P);
-    return db.bucketByDatum(cast(Datum) prefix.mossdbEncode);
+    static assert(isMossEncodable!P, stringifyNonEncodableType!P);
+    return db.bucketByDatum(cast(Datum) prefix.mossEncode);
 }
 
 /**
@@ -194,10 +63,10 @@ pragma(inline, true) auto bucket(P)(Database db, P prefix)
  */
 pragma(inline, true) void set(K, V)(IReadWritable rwDest, K key, V value)
 {
-    static assert(isMossDbEncodable!K, stringifyNonEncodableType!K);
-    static assert(isMossDbEncodable!V, stringifyNonEncodableType!V);
+    static assert(isMossEncodable!K, stringifyNonEncodableType!K);
+    static assert(isMossEncodable!V, stringifyNonEncodableType!V);
 
-    rwDest.setDatum(cast(Datum) key.mossdbEncode, cast(Datum) value.mossdbEncode);
+    rwDest.setDatum(cast(Datum) key.mossEncode, cast(Datum) value.mossEncode);
 }
 
 /**
@@ -206,16 +75,16 @@ pragma(inline, true) void set(K, V)(IReadWritable rwDest, K key, V value)
 public DbResult!V get(V, K)(IReadable rSource, K key)
 {
     V val = V.init;
-    static assert(isMossDbEncodable!K, stringifyNonEncodableType!K);
-    static assert(isMossDbDecodable!V, stringifyNonDecodableType!V);
+    static assert(isMossEncodable!K, stringifyNonEncodableType!K);
+    static assert(isMossDecodable!V, stringifyNonDecodableType!V);
 
     /* Grab the actual real value */
-    ImmutableDatum realValue = cast(ImmutableDatum) rSource.getDatum(cast(Datum) key.mossdbEncode);
+    ImmutableDatum realValue = cast(ImmutableDatum) rSource.getDatum(cast(Datum) key.mossEncode);
     if (realValue is null || realValue.length < 1)
     {
         return DbResult!V(val, false);
     }
-    val.mossdbDecode(realValue);
+    val.mossDecode(realValue);
     return DbResult!V(val, true);
 
 }
