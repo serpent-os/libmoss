@@ -1,3 +1,6 @@
 [submodule "external/external/rocksdb-binding"]
 	path = external/rocksdb-binding
 	url = https://gitlab.com/serpent-os/dlang/rocksdb-binding.git
+[submodule "external/moss-core"]
+	path = external/moss-core
+	url = https://gitlab.com/serpent-os/core/moss-core.git
