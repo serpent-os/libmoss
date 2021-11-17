@@ -25,6 +25,7 @@ module moss.format.binary.payload.index.pair;
 public import std.stdint;
 public import moss.format.binary.payload.index.entry;
 
+import moss.core.encoding;
 import moss.format.binary.reader : ReaderToken;
 import moss.format.binary.writer : WriterToken;
 
@@ -57,8 +58,7 @@ extern (C) package struct EntryPair
 
         /* Grab the value */
         const auto data = rdr.readData(entry.length);
-        auto strlength = cast(long) entry.length;
-        id = cast(string) data[0 .. strlength - 1];
+        id.mossDecode(cast(ImmutableDatum) data);
     }
 
     /**
@@ -67,17 +67,13 @@ extern (C) package struct EntryPair
     void encode(scope WriterToken wr) @trusted
     {
         import std.exception : enforce;
-        import std.string : toStringz;
 
         /* Stash length before writing entry to file */
-        auto z = toStringz(id);
         assert(id.length < uint16_t.max, "encode(): String Length too long");
         entry.length = cast(uint16_t)(id.length + 1);
-        auto len = entry.length;
 
         /* Write record + string value */
         entry.encode(wr);
-        ubyte[] emitted = (cast(ubyte*) z)[0 .. len];
-        wr.appendData(emitted);
+        wr.appendData(cast(Datum) id.mossEncode());
     }
 }
