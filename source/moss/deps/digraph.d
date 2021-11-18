@@ -240,12 +240,19 @@ public final class DirectedAcyclicalGraph(L)
      */
     void emitGraph(File output = stdout)
     {
+        import std.conv : to;
+
         output.writeln("digraph G {");
         foreach (v; vertices)
         {
+            if (v.edges.empty)
+            {
+                output.writefln("%s;", v.label.to!string);
+                continue;
+            }
             foreach (edge; v.edges)
             {
-                output.writefln("%s -> %s;", v.label, getVertex(edge).label);
+                output.writefln("%s -> %s;", v.label.to!string, getVertex(edge).label.to!string);
             }
         }
         output.writeln("}");
