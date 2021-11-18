@@ -77,6 +77,55 @@ public final class RegistryManager
             .map!((r) => RegistryItem(r.get.pkgID, r.get.plugin));
     }
 
+    /**
+     * We're asking for installation of the given specific items, likely
+     * because we were given specific candidates from an exact stone
+     * archive. 
+     */
+    RegistryItem[] computeItemInstallation(in RegistryItem[] items)
+    {
+        import moss.deps.digraph : DirectedAcyclicalGraph;
+        import std.stdio : writeln;
+
+        /* Build DAG with just our initial input items */
+        auto dag = new DirectedAcyclicalGraph!RegistryItem();
+        RegistryItem[] workItems = cast(RegistryItem[]) items;
+        workItems.each!((i) => dag.addVertex(i));
+
+        /* Keep processing all items until we've built all edges */
+        while (workItems.length > 0)
+        {
+            RegistryItem[] next;
+
+            foreach (item; workItems)
+            {
+                foreach (dep; item.dependencies)
+                {
+                    /* TODO: Check if we have this dep already in some fashion */
+                    auto providers = byProvider(dep.type, dep.target);
+                    if (providers.empty)
+                    {
+                        writeln("TODO: DISALLOW MISSING DEPENDENCIES: ", dep);
+                        continue;
+                    }
+                    /* TODO: Sort and filter to the correct dependency */
+                    auto chosenOne = providers.front;
+                    if (!dag.hasVertex(chosenOne))
+                    {
+                        next ~= chosenOne;
+                    }
+                    dag.addEdge(item, chosenOne);
+                }
+            }
+            workItems = next;
+        }
+
+        RegistryItem[] ret;
+        dag.breakCycles();
+        dag.topologicalSort((r) => { ret ~= r; }());
+        return ret;
+    }
+
 private:
 
     RegistryPlugin[] plugins;
