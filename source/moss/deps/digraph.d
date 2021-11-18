@@ -258,6 +258,27 @@ public final class DirectedAcyclicalGraph(L)
         output.writeln("}");
     }
 
+    /**
+     * Automatically break U->V->U cycle dependencies
+     */
+    void breakCycles()
+    {
+        import std.stdio : writeln;
+
+        foreach (v; vertices)
+        {
+            foreach (edge; v.edges)
+            {
+                auto lookupNode = getVertex(edge);
+                auto matches = lookupNode.edges.equalRange(cast(LabelType) v.label);
+                if (!matches.empty)
+                {
+                    lookupNode.edges.removeKey(matches);
+                }
+            }
+        }
+    }
+
 private:
 
     /**
