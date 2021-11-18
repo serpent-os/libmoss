@@ -91,6 +91,51 @@ public struct RegistryItem
         return (_flags & ItemFlags.Installed) == ItemFlags.Installed;
     }
 
+    /**
+     * Return true if both items are equal
+     */
+    bool opEquals()(auto ref const RegistryItem other) const
+    {
+        return other.pkgID == pkgID && other.plugin == plugin;
+    }
+
+    /**
+     * Compare two items
+     */
+    int opCmp(ref const RegistryItem other) const
+    {
+        if (this.plugin != other.plugin)
+        {
+            immutable auto otherID = other.plugin.stringof;
+            immutable auto thisID = this.plugin.stringof;
+            if (otherID < thisID)
+            {
+                return 1;
+            }
+            else if (otherID > thisID)
+            {
+                return -1;
+            }
+        }
+        if (this.pkgID > other.pkgID)
+        {
+            return 1;
+        }
+        else if (this.pkgID < other.pkgID)
+        {
+            return -1;
+        }
+        return 0;
+    }
+
+    /**
+     * Return the hash code
+     */
+    ulong toHash() @safe nothrow const
+    {
+        return typeid(string).getHash(&pkgID);
+    }
+
 package:
 
     ItemFlags _flags = ItemFlags.None;
