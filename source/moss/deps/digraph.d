@@ -263,8 +263,6 @@ public final class DirectedAcyclicalGraph(L)
      */
     void breakCycles()
     {
-        import std.stdio : writeln;
-
         foreach (v; vertices)
         {
             foreach (edge; v.edges)
