@@ -109,7 +109,7 @@ private struct Vertex(L)
      */
     static Vertex!(LabelType)* create(in LabelType label)
     {
-        return new Vertex!(LabelType)(label, new EdgeStorage());
+        return new Vertex!(LabelType)(cast(immutable(LabelType)) label, new EdgeStorage());
     }
 
     /**
@@ -117,7 +117,7 @@ private struct Vertex(L)
      */
     static Vertex!(LabelType) refConstruct(in LabelType label)
     {
-        return Vertex!(LabelType)(label);
+        return Vertex!(LabelType)(cast(immutable(LabelType)) label);
     }
 
     /**
@@ -208,7 +208,7 @@ public final class DirectedAcyclicalGraph(L)
         auto match = vertices.equalRange(&desc);
         enforce(!match.empty, "Cannot find node: %s".format(u));
 
-        match.front.edges.insert(v);
+        match.front.edges.insert(cast(LabelType) v);
 
     }
 
@@ -290,7 +290,7 @@ private:
 
         /* Done, yield the result */
         vertex.status = VertexStatus.Explored;
-        cb(vertex.label);
+        cb(cast(LabelType) vertex.label);
     }
 
     VertexTree vertices;
