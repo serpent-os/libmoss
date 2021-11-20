@@ -53,4 +53,16 @@ public interface RegistryPlugin
      * Return the providers for a given package ID
      */
     const(Provider)[] providers(in string pkgID) const;
+
+    /**
+     * Request fetching the package specified by pkgID happens,
+     * usually by dispatch to a fetching context.
+     */
+    void fetch(in string pkgID);
+
+    /**
+     * Request installation of the package specified by pkgID happens,
+     * usually by some dispatch.
+     */
+    void install(in string pkgID);
 }

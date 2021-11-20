@@ -99,6 +99,14 @@ package final class FauxSource : RegistryPlugin
         return [];
     }
 
+    override void fetch(in string pkgID)
+    {
+    }
+
+    override void install(in string pkgID)
+    {
+    }
+
     PackageCandidate[string] packages;
 }
 

@@ -67,6 +67,16 @@ public struct RegistryItem
         return plugin.providers(pkgID);
     }
 
+    pragma(inline, true) void fetch()
+    {
+        plugin.fetch(pkgID);
+    }
+
+    pragma(inline, true) void install()
+    {
+        plugin.install(pkgID);
+    }
+
     /**
      * Return the flags for this item
      */
