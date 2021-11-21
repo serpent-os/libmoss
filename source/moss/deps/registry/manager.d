@@ -122,7 +122,7 @@ public final class RegistryManager
 
         RegistryItem[] ret;
         dag.breakCycles();
-        dag.topologicalSort((r) => { ret ~= r; }());
+        dag.topologicalSort((r) { ret ~= r; });
         return ret;
     }
 

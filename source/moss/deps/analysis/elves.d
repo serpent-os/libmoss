@@ -95,11 +95,11 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
         case ".dynamic":
             /* Extract DT_NEEDED, shared library dependencies */
             auto dynTable = DynamicLinkingTable(section);
-            dynTable.needed.each!((r) => {
+            dynTable.needed.each!((r) {
                 auto dtNeeded = "%s(%s)".format(r, fi.header.machineISA);
                 auto d = Dependency(dtNeeded, DependencyType.SharedLibraryName);
                 analyser.bucket(fileInfo).addDependency(d);
-            }());
+            });
 
             /* Soname exposed? Lets share it. */
             /* TODO: Only expose ACTUAL libraries */
