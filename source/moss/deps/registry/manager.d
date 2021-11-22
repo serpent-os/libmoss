@@ -23,6 +23,7 @@
 module moss.deps.registry.manager;
 
 public import moss.deps.registry.plugin;
+public import moss.deps.registry.transaction;
 
 import std.algorithm : each, filter, joiner, map;
 
@@ -160,6 +161,14 @@ public final class RegistryManager
     RegistryItem[] computeItemInstallation(in RegistryItem[] items)
     {
         return computeItemDependencies(items);
+    }
+
+    /**
+     * Create a new transaction
+     */
+    Transaction transaction()
+    {
+        return new Transaction(this);
     }
 
 private:

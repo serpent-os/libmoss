@@ -23,6 +23,9 @@
 module moss.deps.registry.transaction;
 
 public import moss.deps.registry.item;
+public import moss.deps.registry.manager;
+
+import std.array : array;
 
 /**
  * A Transaction is created by the RegistryManager to track the changes needed
@@ -36,21 +39,12 @@ public final class Transaction
     @disable this();
 
     /**
-     * Construct a new Transaction object with the input base state
-     */
-    this(RegistryItem[] baseState)
-    {
-        this.baseState = baseState;
-        installPackages(baseState);
-    }
-
-    /**
      * Compute the final state. This is needed by moss to know what selections
      * form the new state to apply it.
      */
-    RegistryItem[] finalState() @safe
+    RegistryItem[] apply() @safe
     {
-        return null;
+        return finalState;
     }
 
     /**
@@ -68,9 +62,23 @@ public final class Transaction
 
     }
 
+package:
+
+    /**
+     * Construct a new Transaction object with the input base state
+     */
+    this(RegistryManager registryManager)
+    {
+        this.registryManager = registryManager;
+        this.baseState = registryManager.listInstalled().array();
+        installPackages(baseState);
+    }
+
 private:
 
     string[] added;
     string[] removed;
-    RegistryItem[] baseState;
+    const(RegistryItem)[] baseState;
+    RegistryItem[] finalState;
+    RegistryManager registryManager;
 }
