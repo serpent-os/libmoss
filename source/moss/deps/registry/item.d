@@ -23,6 +23,7 @@
 module moss.deps.registry.item;
 
 public import moss.deps.registry.plugin : RegistryPlugin;
+public import std.stdint : uint64_t;
 
 /**
  * Item flags can be combined so that we have more information on a
@@ -33,6 +34,18 @@ public enum ItemFlags
     None = 1 << 0,
     Available = 1 << 1,
     Installed = 1 << 2,
+}
+
+/**
+ * ItemInfo describes the absolute basic metadata of a package
+ */
+public struct ItemInfo
+{
+    immutable(string) name = null;
+    immutable(string) summary = null;
+    immutable(string) description = null;
+    immutable(uint64_t) releaseNumber = 0;
+    immutable(string) versionID = null;
 }
 
 /**
@@ -50,6 +63,14 @@ public struct RegistryItem
      * Origin plugin
      */
     RegistryPlugin plugin;
+
+    /**
+     * Return information on the given item
+     */
+    pragma(inline, true) @property auto info() const
+    {
+        return plugin.info(pkgID);
+    }
 
     /**
      * Return plugin specific dependencies for this item

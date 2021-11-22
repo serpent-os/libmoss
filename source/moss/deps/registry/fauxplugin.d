@@ -80,6 +80,14 @@ package final class FauxSource : RegistryPlugin
     }
 
     /**
+     * We're simple, we don't provide any information support in this plugin
+     */
+    override Nullable!ItemInfo info(in string pkgID) const
+    {
+        return Nullable!ItemInfo(ItemInfo.init);
+    }
+
+    /**
      * Currently not supporting this.
      */
     override const(RegistryItem)[] list(in ItemFlags flags) const

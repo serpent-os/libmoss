@@ -39,6 +39,11 @@ public interface RegistryPlugin
     RegistryItem[] queryProviders(in ProviderType type, in string matcher);
 
     /**
+     * Return information on the given candidate
+     */
+    Nullable!ItemInfo info(in string pkgID) const;
+
+    /**
      * Return a registry item for the given ID. Return will be isNull() if
      * the pkgID cannot be located.
      */
