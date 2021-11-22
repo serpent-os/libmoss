@@ -90,7 +90,7 @@ public final class RegistryManager
      */
     pragma(inline, true) auto listInstalled(ItemFlags flags = ItemFlags.None)
     {
-        return list((flags &= ~ItemFlags.Installed) & ItemFlags.Installed);
+        return list((flags &= ~ItemFlags.Installed) | ItemFlags.Installed);
     }
 
     /**
@@ -100,7 +100,7 @@ public final class RegistryManager
 
     pragma(inline, true) auto listAvailable(ItemFlags flags = ItemFlags.None)
     {
-        return list((flags &= ~ItemFlags.Available) & ItemFlags.Available);
+        return list((flags &= ~ItemFlags.Available) | ItemFlags.Available);
     }
 
     /**
