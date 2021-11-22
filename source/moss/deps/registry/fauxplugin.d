@@ -58,7 +58,8 @@ package final class FauxSource : RegistryPlugin
         return ret;
     }
 
-    override RegistryItem[] queryProviders(in ProviderType type, in string matcher)
+    override RegistryItem[] queryProviders(in ProviderType type, in string matcher,
+            ItemFlags flags = ItemFlags.None)
     {
         final switch (type)
         {

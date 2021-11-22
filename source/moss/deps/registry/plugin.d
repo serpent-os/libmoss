@@ -33,10 +33,11 @@ public import std.typecons : Nullable;
 public interface RegistryPlugin
 {
     /**
-     * The RegistryPlugin will be given a callback to execute if it finds any
-     * matching providers for the input string and type
+     * Return a set of providers if our flags match up (i.e. Available vs Installed)
+     * and the conditionals are met: type and (full) match string.
      */
-    RegistryItem[] queryProviders(in ProviderType type, in string matcher);
+    RegistryItem[] queryProviders(in ProviderType type, in string matcher,
+            ItemFlags flags = ItemFlags.None);
 
     /**
      * Return information on the given candidate

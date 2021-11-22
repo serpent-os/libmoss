@@ -53,17 +53,17 @@ public final class RegistryManager
     /**
      * Return all PackageCandidates by provider
      */
-    auto byProvider(in ProviderType type, const(string) provider)
+    auto byProvider(in ProviderType type, const(string) provider, ItemFlags flags = ItemFlags.None)
     {
-        return plugins.map!((s) => s.queryProviders(type, provider)).joiner;
+        return plugins.map!((s) => s.queryProviders(type, provider, flags)).joiner;
     }
 
     /**
      * Return all PackageCandidates by Name
      */
-    pragma(inline, true) auto byName(const(string) pkgName)
+    pragma(inline, true) auto byName(const(string) pkgName, ItemFlags flags = ItemFlags.None)
     {
-        return byProvider(ProviderType.PackageName, pkgName);
+        return byProvider(ProviderType.PackageName, pkgName, flags);
     }
 
     /**
