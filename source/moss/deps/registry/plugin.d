@@ -55,6 +55,12 @@ public interface RegistryPlugin
     const(Provider)[] providers(in string pkgID) const;
 
     /**
+     * List all items by filter. This ensures we don't do a slow
+     * list of repos when explicitly looking for installed packaages
+     */
+    const(RegistryItem)[] list(in ItemFlags flags) const;
+
+    /**
      * Request fetching the package specified by pkgID happens,
      * usually by dispatch to a fetching context.
      */

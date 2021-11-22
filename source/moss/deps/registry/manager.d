@@ -24,7 +24,7 @@ module moss.deps.registry.manager;
 
 public import moss.deps.registry.plugin;
 
-import std.algorithm : each, filter, map;
+import std.algorithm : each, filter, joiner, map;
 
 /**
  * Encapsulation of multiple underlying "query plugins"
@@ -54,9 +54,7 @@ public final class RegistryManager
      */
     auto byProvider(in ProviderType type, const(string) provider)
     {
-        import std.algorithm : joiner;
-
-        return plugins.map!((s) => s.queryProviders(type, provider)).joiner();
+        return plugins.map!((s) => s.queryProviders(type, provider)).joiner;
     }
 
     /**
@@ -75,6 +73,14 @@ public final class RegistryManager
         return plugins.map!((s) => s.queryID(pkgID))
             .filter!((r) => !r.isNull())
             .map!((r) => RegistryItem(r.get.pkgID, r.get.plugin));
+    }
+
+    /**
+     * List all items matching the given flags
+     */
+    pragma(inline, true) auto list(in ItemFlags flags)
+    {
+        return plugins.map!((s) => s.list(flags)).joiner;
     }
 
     /**

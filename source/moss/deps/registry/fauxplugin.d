@@ -80,6 +80,14 @@ package final class FauxSource : RegistryPlugin
     }
 
     /**
+     * Currently not supporting this.
+     */
+    override const(RegistryItem)[] list(in ItemFlags flags) const
+    {
+        return null;
+    }
+
+    /**
      * Grab dependencies for the given package
      */
     override const(Dependency)[] dependencies(in string pkgID) const
