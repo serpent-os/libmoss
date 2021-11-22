@@ -78,9 +78,28 @@ public final class RegistryManager
     /**
      * List all items matching the given flags
      */
-    pragma(inline, true) auto list(in ItemFlags flags)
+    pragma(inline, true) auto list(ItemFlags flags)
     {
         return plugins.map!((s) => s.list(flags)).joiner;
+    }
+
+    /**
+     * List only installed candidates.
+     * These are separate from the available candidates.
+     */
+    pragma(inline, true) auto listInstalled(ItemFlags flags = ItemFlags.None)
+    {
+        return list((flags &= ~ItemFlags.Installed) & ItemFlags.Installed);
+    }
+
+    /**
+     * List only *available* candidates.
+     * These are separate from the installed candidates.
+     */
+
+    pragma(inline, true) auto listAvailable(ItemFlags flags = ItemFlags.None)
+    {
+        return list((flags &= ~ItemFlags.Available) & ItemFlags.Available);
     }
 
     /**
