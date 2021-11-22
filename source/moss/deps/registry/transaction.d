@@ -22,10 +22,23 @@
 
 module moss.deps.registry.transaction;
 
+import moss.deps.dependency;
 public import moss.deps.registry.item;
 public import moss.deps.registry.manager;
+import std.exception : enforce;
 
+import std.string : format;
+import std.conv : to;
 import std.array : array;
+
+/**
+ * Maps providers locally so we can make more informed "satisfied" decisions
+ * without skipping the installed/selected candidates.
+ */
+private struct ProviderBucket
+{
+    Provider[string] mappings;
+}
 
 /**
  * A Transaction is created by the RegistryManager to track the changes needed
@@ -52,6 +65,7 @@ public final class Transaction
      */
     void installPackages(in RegistryItem[] items)
     {
+
     }
 
     /**
@@ -70,15 +84,62 @@ package:
     this(RegistryManager registryManager)
     {
         this.registryManager = registryManager;
-        this.baseState = registryManager.listInstalled().array();
-        installPackages(baseState);
+
+        /* Store current providers and packages */
+        foreach (pkg; registryManager.listInstalled())
+        {
+            foreach (provider; pkg.providers)
+            {
+                /* Make sure we don't duplicate a package name */
+                addProvider(pkg.pkgID, provider);
+                if (provider.type != ProviderType.PackageName)
+                {
+                    continue;
+                }
+                auto nameProvider = byProvider(provider.type, provider.target);
+                enforce(nameProvider.length == 1,
+                        "FATAL ERROR: Multiple packages installed with the same name: %s".format(
+                            nameProvider));
+            }
+            finalState ~= cast(RegistryItem) pkg;
+        }
     }
 
 private:
 
+    /**
+     * Cache known providers to allow transaction specific memory of
+     * our own selections.
+     */
+    void addProvider(in string pkgID, in Provider p)
+    {
+
+        auto bucketName = "%s.%s".format(p.type, p.target);
+        auto lookupNode = bucketName in providers;
+        if (lookupNode is null)
+        {
+            providers[bucketName] = ProviderBucket();
+            lookupNode = &providers[bucketName];
+        }
+        lookupNode.mappings[pkgID] = p;
+    }
+
+    auto byProvider(in ProviderType p, in string matcher)
+    {
+        auto bucketName = "%s.%s".format(p, matcher);
+        auto lookupNode = bucketName in providers;
+
+        if (lookupNode is null)
+        {
+            return null;
+        }
+
+        return lookupNode.mappings;
+    }
+
     string[] added;
     string[] removed;
-    const(RegistryItem)[] baseState;
     RegistryItem[] finalState;
     RegistryManager registryManager;
+    ProviderBucket[string] providers;
 }
