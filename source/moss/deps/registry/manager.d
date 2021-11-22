@@ -126,20 +126,33 @@ public final class RegistryManager
             {
                 foreach (dep; item.dependencies)
                 {
-                    /* TODO: Check if we have this dep already in some fashion */
-                    auto providers = byProvider(dep.type, dep.target);
-                    if (providers.empty)
+                    Nullable!RegistryItem chosenOne = Nullable!RegistryItem(RegistryItem.init);
+                    auto allProviders = byProvider(dep.type, dep.target);
+                    auto installedProviders = allProviders.filter!((p) => p.installed);
+                    auto candidates = allProviders.filter!((p) => !p.installed);
+
+                    /* Prefer the installed candidate. */
+                    if (!installedProviders.empty)
                     {
-                        writeln("TODO: DISALLOW MISSING DEPENDENCIES: ", dep);
+                        chosenOne = installedProviders.front;
+                    }
+                    else if (!candidates.empty)
+                    {
+                        /* TODO: Use better lookups */
+                        chosenOne = candidates.front;
+                    }
+
+                    if (chosenOne.isNull())
+                    {
+                        writeln("TODO: Disallow missing dependencie: ", dep);
                         continue;
                     }
-                    /* TODO: Sort and filter to the correct dependency */
-                    auto chosenOne = providers.front;
-                    if (!dag.hasVertex(chosenOne))
+
+                    if (!dag.hasVertex(chosenOne.get))
                     {
-                        next ~= chosenOne;
+                        next ~= chosenOne.get;
                     }
-                    dag.addEdge(item, chosenOne);
+                    dag.addEdge(item, chosenOne.get);
                 }
             }
             workItems = next;
