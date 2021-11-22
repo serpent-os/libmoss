@@ -41,6 +41,7 @@ public final class Transaction
     this(RegistryItem[] baseState)
     {
         this.baseState = baseState;
+        installPackages(baseState);
     }
 
     /**
@@ -50,6 +51,21 @@ public final class Transaction
     RegistryItem[] finalState() @safe
     {
         return null;
+    }
+
+    /**
+     * TODO: Make this install packages!
+     */
+    void installPackages(in RegistryItem[] items)
+    {
+    }
+
+    /**
+     * TODO: Make this remove packages!
+     */
+    void removePackages(in RegistryItem[] items)
+    {
+
     }
 
 private:
