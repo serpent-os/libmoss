@@ -78,11 +78,10 @@ public final class RegistryManager
     }
 
     /**
-     * We're asking for installation of the given specific items, likely
-     * because we were given specific candidates from an exact stone
-     * archive. 
+     * Compute the dependencies for the incoming set of items.
+     * This may be used to plan installations *and* removals.
      */
-    RegistryItem[] computeItemInstallation(in RegistryItem[] items)
+    RegistryItem[] computeItemDependencies(in RegistryItem[] items)
     {
         import moss.deps.digraph : DirectedAcyclicalGraph;
         import std.stdio : writeln;
@@ -124,6 +123,18 @@ public final class RegistryManager
         dag.breakCycles();
         dag.topologicalSort((r) { ret ~= r; });
         return ret;
+    }
+
+    /**
+     * Compute installation of the given items by calculating dependencies
+     * and factoring in the existing installation. In future this will also
+     * respect conflicts, etc.
+     *
+     * TODO: This function doesn't actually respect installed items just yet.. :)
+     */
+    RegistryItem[] computeItemInstallation(in RegistryItem[] items)
+    {
+        return computeItemDependencies(items);
     }
 
 private:
