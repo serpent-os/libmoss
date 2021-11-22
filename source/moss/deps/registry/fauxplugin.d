@@ -154,7 +154,7 @@ unittest
     auto fs = new FauxSource();
     qm.addPlugin(fs);
 
-    worldPackages.each!((p) => fs.addPackage(p));
+    worldPackages.each!((p) { fs.addPackage(p); });
 
     auto result = qm.byName("nano").array;
     enforce(result.length == 1);
@@ -182,7 +182,7 @@ unittest
     addRecurse(nano.pkgID);
 
     string[] computedOrder;
-    dg.topologicalSort((n) => { computedOrder ~= n; }());
+    dg.topologicalSort((n) { computedOrder ~= n; });
     assert(computedOrder == ["baselayout", "glibc", "ncurses", "nano"]);
 
     dg.emitGraph();

@@ -57,7 +57,7 @@ unittest
         "baselayout", "glibc", "libtinfo", "ncurses", "nano"
     ];
     string[] computedOrder;
-    g.topologicalSort((n) => { computedOrder ~= n; }());
+    g.topologicalSort((n) { computedOrder ~= n; });
     assert(computedOrder == expectedOrder, "Wrong ordering of dependencies");
 
     g.emitGraph();
