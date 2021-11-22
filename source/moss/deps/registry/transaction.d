@@ -20,10 +20,41 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.deps.registry;
+module moss.deps.registry.transaction;
 
-public import moss.deps.registry.candidate;
 public import moss.deps.registry.item;
-public import moss.deps.registry.manager;
-public import moss.deps.registry.plugin;
-public import moss.deps.registry.transaction;
+
+/**
+ * A Transaction is created by the RegistryManager to track the changes needed
+ * to go from one state to another. Stricly speaking moss only requires the
+ * knowledge of *fully applied state*, however users are interested in mutations
+ * and it helps us to ensure no name duplication across IDs.
+ */
+public final class Transaction
+{
+
+    @disable this();
+
+    /**
+     * Construct a new Transaction object with the input base state
+     */
+    this(RegistryItem[] baseState)
+    {
+        this.baseState = baseState;
+    }
+
+    /**
+     * Compute the final state. This is needed by moss to know what selections
+     * form the new state to apply it.
+     */
+    RegistryItem[] finalState() @safe
+    {
+        return null;
+    }
+
+private:
+
+    string[] added;
+    string[] removed;
+    RegistryItem[] baseState;
+}
