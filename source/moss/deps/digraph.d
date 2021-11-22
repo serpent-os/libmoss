@@ -277,6 +277,34 @@ public final class DirectedAcyclicalGraph(L)
         }
     }
 
+    /**
+     * Returns a new DAG that is a transposed version of this one.
+     */
+    DirectedAcyclicalGraph!LabelType reversed()
+    {
+        auto ret = new DirectedAcyclicalGraph!LabelType();
+
+        foreach (vertex; vertices)
+        {
+            auto u = vertex.label;
+            if (!ret.hasVertex(u))
+            {
+                ret.addVertex(u);
+            }
+            foreach (v; vertex.edges)
+            {
+                if (!ret.hasVertex(v))
+                {
+                    ret.addVertex(v);
+                }
+                /* Swap V with U */
+                ret.addEdge(v, u);
+            }
+        }
+
+        return ret;
+    }
+
 private:
 
     /**
