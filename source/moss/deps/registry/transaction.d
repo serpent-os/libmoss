@@ -30,7 +30,7 @@ import std.exception : enforce;
 import std.string : format;
 import std.conv : to;
 import std.array : array;
-import std.algorithm : each, filter, map;
+import std.algorithm : each, filter, map, canFind;
 import moss.deps.digraph;
 
 /**
@@ -109,7 +109,34 @@ public final class Transaction
      */
     void removePackages(in RegistryItem[] items)
     {
+        NRI pickInstalledOnly(in ProviderType type, in string matcher)
+        {
+            auto installed = this.byProvider(type, matcher);
+            if (installed.length < 1)
+            {
+                return NRI();
+            }
+            enforce(installed.length == 1,
+                    "removePackages(): Dafg only supports one unique provider");
+            return NRI(installed[0]);
+        }
 
+        auto dag = buildGraph(finalState, &pickInstalledOnly);
+        dag.breakCycles();
+
+        /* Transpose the graph now */
+        auto revgraph = dag.reversed();
+
+        RegistryItem[] removals;
+
+        /* Remove each subgraph resolution */
+        foreach (item; items)
+        {
+            auto subgraph = revgraph.subgraph(item);
+            subgraph.topologicalSort((r) { removals ~= r; });
+        }
+
+        finalState = finalState.filter!((i) => !removals.canFind(i)).array();
     }
 
 package:
