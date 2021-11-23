@@ -117,7 +117,7 @@ public final class Transaction
                 return NRI();
             }
             enforce(installed.length == 1,
-                    "removePackages(): Dafg only supports one unique provider");
+                    "removePackages(): DAG only supports one unique provider");
             return NRI(installed[0]);
         }
 
