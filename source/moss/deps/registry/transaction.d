@@ -266,7 +266,7 @@ private:
                     auto chosenOne = depCB(dep.type, dep.target);
                     if (chosenOne.isNull)
                     {
-                        writeln("TODO: Make missing dependency fatal: ", dep);
+                        //writeln("TODO: Make missing dependency fatal: ", dep);
                         continue;
                     }
 
