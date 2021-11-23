@@ -42,7 +42,7 @@ public interface RegistryPlugin
     /**
      * Return information on the given candidate
      */
-    Nullable!ItemInfo info(in string pkgID) const;
+    ItemInfo info(in string pkgID) const;
 
     /**
      * Return a registry item for the given ID. Return will be isNull() if

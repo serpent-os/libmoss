@@ -143,7 +143,7 @@ private:
                 }
                 auto nameProvider = byProvider(provider.type, provider.target);
                 enforce(nameProvider.length == 1,
-                        "FATAL ERROR: Multiple packages installed with the same name: %s".format(
+                        "FATAL ERROR: Multiple packages installed with the same name: %s %s".format(provider,
                             nameProvider));
             }
             finalState ~= cast(RegistryItem) pkg;
