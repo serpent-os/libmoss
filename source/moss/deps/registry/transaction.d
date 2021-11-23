@@ -30,14 +30,25 @@ import std.exception : enforce;
 import std.string : format;
 import std.conv : to;
 import std.array : array;
+import std.algorithm : each, filter, map;
+import moss.deps.digraph;
 
+/**
+ * Light version of Registryitem without the mutability issues
+ */
+private struct ProviderItem
+{
+    string pkgID;
+    RegistryPlugin plugin;
+    ItemFlags flags;
+}
 /**
  * Maps providers locally so we can make more informed "satisfied" decisions
  * without skipping the installed/selected candidates.
  */
 private struct ProviderBucket
 {
-    Provider[string] mappings;
+    ProviderItem[string] mappings;
 }
 
 /**
@@ -57,6 +68,7 @@ public final class Transaction
      */
     RegistryItem[] apply() @safe
     {
+
         return finalState;
     }
 
@@ -65,7 +77,10 @@ public final class Transaction
      */
     void installPackages(in RegistryItem[] items)
     {
+        auto deps = computeDependencies(items);
 
+        /* TODO: Work out replacements by Name etc */
+        finalState ~= deps;
     }
 
     /**
@@ -83,15 +98,24 @@ package:
      */
     this(RegistryManager registryManager)
     {
+        this(registryManager, registryManager.listInstalled().array());
+    }
+
+private:
+
+    /**
+     * Create new Transaction for the given items
+     */
+    this(RegistryManager registryManager, in RegistryItem[] items)
+    {
         this.registryManager = registryManager;
 
-        /* Store current providers and packages */
-        foreach (pkg; registryManager.listInstalled())
+        foreach (pkg; items)
         {
             foreach (provider; pkg.providers)
             {
                 /* Make sure we don't duplicate a package name */
-                addProvider(pkg.pkgID, provider);
+                addProvider(pkg, provider);
                 if (provider.type != ProviderType.PackageName)
                 {
                     continue;
@@ -105,13 +129,93 @@ package:
         }
     }
 
-private:
+    /**
+     * Return all dependencies for the incoming set.
+     *
+     * This function may pick from the given selection, the locally installed
+     * selection and finally the repo itself.
+     */
+    auto computeDependencies(in RegistryItem[] items)
+    {
+        import std.stdio : writeln;
+
+        RegistryItem[] ret;
+        auto dag = new DirectedAcyclicalGraph!RegistryItem();
+
+        /* Compute subdomain buckets */
+        auto subdomain = new Transaction(registryManager, items);
+
+        /* Add the incoming vertices */
+        RegistryItem[] workItems = cast(RegistryItem[]) items;
+        workItems.each!((i) => dag.addVertex(i));
+
+        /* Keep processing all items until we've built all edges */
+        while (workItems.length > 0)
+        {
+            RegistryItem[] next = null;
+
+            foreach (item; workItems)
+            {
+                foreach (dep; item.dependencies)
+                {
+                    Nullable!RegistryItem chosenOne = Nullable!RegistryItem(RegistryItem.init);
+
+                    /* Already selected */
+                    auto selectedProviders = byProvider(dep.type, dep.target);
+
+                    /* Scoped to the new selection */
+                    auto newProviders = subdomain.byProvider(dep.type, dep.target);
+
+                    /* Potential "new" providers */
+                    auto remoteProviders = registryManager.byProvider(dep.type,
+                            dep.target, ItemFlags.Available).filter!((i) => !i.installed);
+
+                    if (newProviders.length > 0)
+                    {
+                        /* Grab from new providers first */
+                        chosenOne = newProviders[0];
+                    }
+                    else if (selectedProviders.length > 0)
+                    {
+                        /* Grab from existing providers */
+                        chosenOne = selectedProviders[0];
+                    }
+                    else
+                    {
+                        if (remoteProviders.empty)
+                        {
+                            writeln("TODO: Make missing dependency fatal: ", dep);
+                            continue;
+                        }
+                        chosenOne = remoteProviders.front;
+                    }
+
+                    if (chosenOne.isNull)
+                    {
+                        continue;
+                    }
+
+                    if (!dag.hasVertex(chosenOne.get))
+                    {
+                        next ~= chosenOne.get;
+                    }
+                    dag.addEdge(item, chosenOne.get);
+                }
+            }
+            workItems = next;
+        }
+
+        dag.breakCycles();
+        dag.topologicalSort((r) { ret ~= r; });
+
+        return ret;
+    }
 
     /**
      * Cache known providers to allow transaction specific memory of
      * our own selections.
      */
-    void addProvider(in string pkgID, in Provider p)
+    void addProvider(in RegistryItem item, in Provider p)
     {
 
         auto bucketName = "%s.%s".format(p.type, p.target);
@@ -121,7 +225,8 @@ private:
             providers[bucketName] = ProviderBucket();
             lookupNode = &providers[bucketName];
         }
-        lookupNode.mappings[pkgID] = p;
+        lookupNode.mappings[item.pkgID] = ProviderItem(item.pkgID,
+                cast(RegistryPlugin) item.plugin, item.flags);
     }
 
     auto byProvider(in ProviderType p, in string matcher)
@@ -134,7 +239,8 @@ private:
             return null;
         }
 
-        return lookupNode.mappings;
+        return lookupNode.mappings.values.map!((m) => RegistryItem(m.pkgID,
+                m.plugin, m.flags)).array;
     }
 
     string[] added;
