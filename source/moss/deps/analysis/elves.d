@@ -23,10 +23,10 @@
 module moss.deps.analysis.elves;
 
 import elf : ELF, ELFSection, DynamicLinkingTable, ElfNote;
-import std.string : format;
-import std.string : fromStringz;
+import std.string : format, fromStringz, startsWith;
 import std.exception : enforce;
 import std.algorithm : each, canFind;
+import std.path : baseName;
 import std.stdio : File;
 
 public import moss.deps.dependency;
@@ -108,9 +108,23 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
             {
                 break;
             }
-            soname = "%s(%s)".format(soname, fi.header.machineISA);
-            auto p = Provider(soname, ProviderType.SharedLibraryName);
+            auto sonameProvider = "%s(%s)".format(soname, fi.header.machineISA);
+            auto p = Provider(sonameProvider, ProviderType.SharedLibraryName);
             analyser.bucket(fileInfo).addProvider(p);
+
+            /* Do we possibly have an Interpeter? This is a .dynamic library .. */
+            auto localName = soname.baseName;
+            if (localName.startsWith("ld-"))
+            {
+                /* Add an interpeter for the full path first */
+                auto interpProvider = "%s(%s)".format(fileInfo.path, fi.header.machineISA);
+                auto pInterp = Provider(interpProvider, ProviderType.Interpreter);
+                analyser.bucket(fileInfo).addProvider(pInterp);
+
+                /* Some linking is reliant on the full interpreter path too. */
+                auto pSoname = Provider(interpProvider, ProviderType.SharedLibraryName);
+                analyser.bucket(fileInfo).addProvider(pSoname);
+            }
             break;
         case ".note.gnu.build-id":
             auto note = ElfNote(section);
