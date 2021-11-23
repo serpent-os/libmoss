@@ -305,6 +305,32 @@ public final class DirectedAcyclicalGraph(L)
         return ret;
     }
 
+    /**
+     * Return a new graph that is a subgraph starting with only the rootVertex.
+     */
+    DirectedAcyclicalGraph!LabelType subgraph(in LabelType rootVertex)
+    {
+        auto match = getVertex(rootVertex);
+        auto dag = new DirectedAcyclicalGraph!LabelType();
+
+        void addClone(VertexDescriptor* vd)
+        {
+            if (!dag.hasVertex(vd.label))
+            {
+                dag.addVertex(vd.label);
+            }
+            foreach (edge; vd.edges)
+            {
+                addClone(getVertex(edge));
+                dag.addEdge(vd.label, edge);
+            }
+        }
+
+        addClone(match);
+
+        return dag;
+    }
+
 private:
 
     /**
