@@ -64,12 +64,33 @@ public final class Transaction
 
     /**
      * Compute the final state. This is needed by moss to know what selections
-     * form the new state to apply it.
+     * form the new state to apply it. In essence this is a second fixed DFS
+     * of whichever DFS already ran.
      */
-    RegistryItem[] apply() @safe
+    RegistryItem[] apply()
     {
+        /* Use only the subdomain to lookup dependencies */
+        auto subdomain = new Transaction(registryManager, finalState);
+        RegistryItem[] ret;
 
-        return finalState;
+        /* Force lookup to local subdomain */
+        NRI pickLocalOnly(in ProviderType type, in string matcher)
+        {
+            auto locals = subdomain.byProvider(type, matcher);
+            if (locals.length < 1)
+            {
+                return NRI();
+            }
+            /* Really should only have ONE provider in as solid DAG */
+            enforce(locals.length == 1, "Transaction.apply(): DAG supports one unique provider");
+            return NRI(locals[0]);
+        }
+
+        auto dag = buildGraph(finalState, &pickLocalOnly);
+        dag.breakCycles();
+        dag.topologicalSort((i) { ret ~= i; });
+
+        return ret;
     }
 
     /**
@@ -137,13 +158,55 @@ private:
      */
     auto computeDependencies(in RegistryItem[] items)
     {
-        import std.stdio : writeln;
-
         RegistryItem[] ret;
-        auto dag = new DirectedAcyclicalGraph!RegistryItem();
 
         /* Compute subdomain buckets */
         auto subdomain = new Transaction(registryManager, items);
+
+        NRI pickDependency(in ProviderType type, in string matcher)
+        {
+            /* Try to find within the newly selected candidates */
+            auto newProviders = subdomain.byProvider(type, matcher);
+            if (newProviders.length > 0)
+            {
+                return NRI(newProviders[0]);
+            }
+
+            /* Try to find in current selections now */
+            auto selectedProviders = byProvider(type, matcher);
+            if (selectedProviders.length > 0)
+            {
+                return NRI(selectedProviders[0]);
+            }
+
+            /* Try to find in already installed now */
+            auto avail = registryManager.byProvider(type, matcher,
+                    ItemFlags.Available).filter!((i) => !i.installed);
+            if (avail.empty)
+            {
+                return NRI(RegistryItem.init);
+            }
+
+            /* TODO: Use better logic for selecting "ideal" candidate (sort by repo pinning */
+            return NRI(avail.front);
+        }
+
+        auto dag = buildGraph(items, &pickDependency);
+        dag.breakCycles();
+        dag.topologicalSort((r) { ret ~= r; });
+
+        return ret;
+    }
+
+    /**
+     * Build the graph.
+     */
+    DirectedAcyclicalGraph!RegistryItem buildGraph(in RegistryItem[] items,
+            DependencyLookupFunc depCB)
+    {
+        import std.stdio : writeln;
+
+        auto dag = new DirectedAcyclicalGraph!RegistryItem();
 
         /* Add the incoming vertices */
         RegistryItem[] workItems = cast(RegistryItem[]) items;
@@ -158,40 +221,15 @@ private:
             {
                 foreach (dep; item.dependencies)
                 {
-                    Nullable!RegistryItem chosenOne = Nullable!RegistryItem(RegistryItem.init);
-
-                    /* Already selected */
-                    auto selectedProviders = byProvider(dep.type, dep.target);
-
-                    /* Scoped to the new selection */
-                    auto newProviders = subdomain.byProvider(dep.type, dep.target);
-
-                    /* Potential "new" providers */
-                    auto remoteProviders = registryManager.byProvider(dep.type,
-                            dep.target, ItemFlags.Available).filter!((i) => !i.installed);
-
-                    if (newProviders.length > 0)
+                    if (depCB is null)
                     {
-                        /* Grab from new providers first */
-                        chosenOne = newProviders[0];
-                    }
-                    else if (selectedProviders.length > 0)
-                    {
-                        /* Grab from existing providers */
-                        chosenOne = selectedProviders[0];
-                    }
-                    else
-                    {
-                        if (remoteProviders.empty)
-                        {
-                            writeln("TODO: Make missing dependency fatal: ", dep);
-                            continue;
-                        }
-                        chosenOne = remoteProviders.front;
+                        continue;
                     }
 
+                    auto chosenOne = depCB(dep.type, dep.target);
                     if (chosenOne.isNull)
                     {
+                        writeln("TODO: Make missing dependency fatal: ", dep);
                         continue;
                     }
 
@@ -205,10 +243,7 @@ private:
             workItems = next;
         }
 
-        dag.breakCycles();
-        dag.topologicalSort((r) { ret ~= r; });
-
-        return ret;
+        return dag;
     }
 
     /**
@@ -248,4 +283,7 @@ private:
     RegistryItem[] finalState;
     RegistryManager registryManager;
     ProviderBucket[string] providers;
+
+    alias NRI = Nullable!(RegistryItem, RegistryItem.init);
+    alias DependencyLookupFunc = NRI delegate(in ProviderType type, in string matcher);
 }
