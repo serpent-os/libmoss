@@ -133,7 +133,7 @@ pure void mossDecode(T)(out T dest, in ImmutableDatum rawBytes) if (is(T == stri
     import std.string : fromStringz;
     import std.exception : enforce;
 
-    dest = cast(string) fromStringz(cast(char*) rawBytes.ptr);
+    dest = (cast(string) fromStringz(cast(char*) rawBytes.ptr)).dup;
 }
 
 /**
