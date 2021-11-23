@@ -136,7 +136,17 @@ public final class Transaction
             subgraph.topologicalSort((r) { removals ~= r; });
         }
 
+        removed ~= removals;
+
         finalState = finalState.filter!((i) => !removals.canFind(i)).array();
+    }
+
+    /**
+     * Return the set items removed by this transaction
+     */
+    pure const(RegistryItem)[] removedItems() @safe @nogc nothrow const
+    {
+        return cast(const(RegistryItem)[]) removed;
     }
 
 package:
@@ -305,8 +315,8 @@ private:
                 m.plugin, m.flags)).array;
     }
 
-    string[] added;
-    string[] removed;
+    RegistryItem[] added;
+    RegistryItem[] removed;
     RegistryItem[] finalState;
     RegistryManager registryManager;
     ProviderBucket[string] providers;
