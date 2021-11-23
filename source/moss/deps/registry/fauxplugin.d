@@ -201,4 +201,9 @@ unittest
 
     auto unknownSymbol = qm.byProvider(ProviderType.SharedLibraryName, "libz.so.1(x86_64)");
     assert(unknownSymbol.empty);
+
+    auto revdepsGraph = dg.reversed().subgraph("ncurses");
+    string[] revdepsOrder;
+    revdepsGraph.topologicalSort((n) { revdepsOrder ~= n; });
+    assert(revdepsOrder == ["nano", "ncurses"]);
 }
