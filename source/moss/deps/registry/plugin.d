@@ -65,16 +65,4 @@ public interface RegistryPlugin
      * list of repos when explicitly looking for installed packaages
      */
     const(RegistryItem)[] list(in ItemFlags flags) const;
-
-    /**
-     * Request fetching the package specified by pkgID happens,
-     * usually by dispatch to a fetching context.
-     */
-    void fetch(in string pkgID);
-
-    /**
-     * Request installation of the package specified by pkgID happens,
-     * usually by some dispatch.
-     */
-    void install(in string pkgID);
 }
