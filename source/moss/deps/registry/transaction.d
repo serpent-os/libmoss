@@ -52,6 +52,44 @@ private struct ProviderBucket
 }
 
 /**
+ * Specifies the type of problem encountered processing dependencies
+ */
+public enum TransactionProblemType
+{
+    MissingDependency,
+}
+
+/**
+ * The TransactionProblem is used to describe packaging issues in a way that
+ * can trivially be reported to the end user.
+ */
+public struct TransactionProblem
+{
+    /**
+     * The type of problem we encountered
+     */
+    TransactionProblemType type;
+
+    /**
+     * Item that spawned the issue
+     */
+    RegistryItem item;
+
+    /**
+     * Dependency that was queried
+     */
+    Dependency dependency;
+
+    /**
+     * Return a new TransactionProblem for missing dependencies
+     */
+    static TransactionProblem missingDependency(in RegistryItem item, in Dependency dependency)
+    {
+        return TransactionProblem(TransactionProblemType.MissingDependency,
+                cast(RegistryItem) item, cast(Dependency) dependency);
+    }
+}
+/**
  * A Transaction is created by the RegistryManager to track the changes needed
  * to go from one state to another. Stricly speaking moss only requires the
  * knowledge of *fully applied state*, however users are interested in mutations
@@ -64,7 +102,7 @@ public final class Transaction
 
     /**
      * Compute the final state. This is needed by moss to know what selections
-     * form the new state to apply it. In essence this is a second fixed DFS
+     * form the new state to apply it.       In essence this is a second fixed DFS
      * of whichever DFS already ran.
      */
     RegistryItem[] apply()
@@ -144,9 +182,17 @@ public final class Transaction
     /**
      * Return the set items removed by this transaction
      */
-    pure const(RegistryItem)[] removedItems() @safe @nogc nothrow const
+    pure @property const(RegistryItem)[] removedItems() @safe @nogc nothrow const
     {
         return cast(const(RegistryItem)[]) removed;
+    }
+
+    /**
+     * Access all problems with the transaction, if any.
+     */
+    pure @property const(TransactionProblem)[] problems() @safe @nogc nothrow const
+    {
+        return cast(const(TransactionProblem)[]) _problems;
     }
 
 package:
@@ -266,7 +312,7 @@ private:
                     auto chosenOne = depCB(dep.type, dep.target);
                     if (chosenOne.isNull)
                     {
-                        //writeln("TODO: Make missing dependency fatal: ", dep);
+                        _problems ~= TransactionProblem.missingDependency(item, dep);
                         continue;
                     }
 
@@ -318,6 +364,7 @@ private:
     RegistryItem[] added;
     RegistryItem[] removed;
     RegistryItem[] finalState;
+    TransactionProblem[] _problems;
     RegistryManager registryManager;
     ProviderBucket[string] providers;
 
