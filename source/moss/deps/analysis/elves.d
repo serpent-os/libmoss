@@ -26,8 +26,9 @@ import elf : ELF, ELFSection, DynamicLinkingTable, ElfNote;
 import std.string : format, fromStringz, startsWith;
 import std.exception : enforce;
 import std.algorithm : each, canFind;
-import std.path : baseName;
-import std.stdio : File;
+import std.path : baseName, dirName, buildPath;
+import std.stdio : stderr, File;
+import std.file : exists;
 
 public import moss.deps.dependency;
 public import moss.deps.analysis.chain;
@@ -39,18 +40,9 @@ import std.stdint : uint32_t;
  */
 static private immutable ubyte[4] elfMagic = [0x7f, 0x45, 0x4c, 0x46];
 
-/**
- * This function will return "NextFunction" if the input file is a valid ELF
- * file. Otherwise, it will simply return "NextHandler".
- */
-public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileInfo)
+bool isElfFile(in string fullPath) @trusted
 {
-    if (fileInfo.type != FileType.Regular)
-    {
-        return AnalysisReturn.NextHandler;
-    }
-
-    auto fi = File(fileInfo.fullPath, "rb");
+    auto fi = File(fullPath, "rb");
     scope (exit)
     {
         fi.close();
@@ -58,7 +50,7 @@ public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileIn
     /* Need at least a 16-byte file */
     if (fi.size() < 16)
     {
-        return AnalysisReturn.NextHandler;
+        return false;
     }
 
     /* Check the magic */
@@ -66,11 +58,90 @@ public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileIn
     const auto firstBytes = fi.rawRead(elfBuffer);
     if (firstBytes != elfMagic)
     {
+        return false;
+    }
+
+    /* Legit looks like an ELF file */
+    return true;
+}
+
+/**
+ * For ld interpreter symlinks we need to ascertain that the target file exists,
+ * and is definitely an ELF file. With those facts established we're able to
+ * record a compatability Interpreter Provider. This is needed to support binaries
+ * that don't respect the distribution-set interpreter.
+ */
+static AnalysisReturn ldInterpHelper(scope Analyser analyser, in FileInfo fileInfo)
+{
+    const string based = fileInfo.fullPath.baseName;
+
+    /* Must have an ld- prefix */
+    if (!based.startsWith("ld-"))
+    {
         return AnalysisReturn.NextHandler;
     }
 
-    /* Eligible */
-    return AnalysisReturn.NextFunction;
+    /* Must be a .so.* file */
+    if (!based.canFind(".so"))
+    {
+        return AnalysisReturn.NextHandler;
+    }
+
+    /* Build the resolved path now */
+    auto symlinkTarget = fileInfo.data;
+    if (symlinkTarget[0] == '/')
+    {
+        stderr.writeln("LD Interpreter links need to be RELATIVE: ", fileInfo.fullPath);
+        return AnalysisReturn.NextHandler;
+    }
+
+    /* Resolve to something usable */
+    auto resolvedPath = fileInfo.fullPath.dirName.buildPath(fileInfo.data);
+    if (!resolvedPath.exists)
+    {
+        stderr.writeln("LD Interpeter link target does not exist: ", resolvedPath);
+        return AnalysisReturn.NextHandler;
+    }
+
+    if (!isElfFile(resolvedPath))
+    {
+        stderr.writeln("LD Interpeter link target not an ELF file: ", resolvedPath);
+        return AnalysisReturn.NextHandler;
+    }
+
+    auto fi = ELF.fromFile(resolvedPath);
+
+    auto interpProvider = "%s(%s)".format(fileInfo.path, fi.header.machineISA);
+    auto pInterp = Provider(interpProvider, ProviderType.Interpreter);
+    auto pSoname = Provider(interpProvider, ProviderType.SharedLibraryName);
+
+    analyser.bucket(fileInfo).addProvider(pInterp);
+    analyser.bucket(fileInfo).addProvider(pSoname);
+
+    return AnalysisReturn.IncludeFile;
+}
+/**
+ * This function will return "NextFunction" if the input file is a valid ELF
+ * file. Otherwise, it will simply return "NextHandler".
+ */
+public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileInfo)
+{
+    switch (fileInfo.type)
+    {
+    case FileType.Symlink:
+        return ldInterpHelper(analyser, fileInfo);
+    case FileType.Regular:
+        break;
+    default:
+        return AnalysisReturn.NextHandler;
+    }
+
+    if (isElfFile(fileInfo.fullPath))
+    {
+        return AnalysisReturn.NextFunction;
+    }
+
+    return AnalysisReturn.NextHandler;
 }
 
 /**
