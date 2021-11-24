@@ -265,13 +265,14 @@ public final class DirectedAcyclicalGraph(L)
     {
         foreach (v; vertices)
         {
-            foreach (edge; v.edges)
+            restart: foreach (edge; v.edges)
             {
                 auto lookupNode = getVertex(edge);
                 auto matches = lookupNode.edges.equalRange(cast(LabelType) v.label);
                 if (!matches.empty)
                 {
                     lookupNode.edges.removeKey(matches);
+                    goto restart;
                 }
             }
         }
