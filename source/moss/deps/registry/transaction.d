@@ -143,7 +143,8 @@ public final class Transaction
     }
 
     /**
-     * TODO: Make this remove packages!
+     * Remove packages from the local state and capture transitive reverse
+     * dependencies with multiple transposed subgraphs
      */
     void removePackages(in RegistryItem[] items)
     {
