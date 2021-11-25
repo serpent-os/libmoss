@@ -48,7 +48,7 @@ public interface RegistryPlugin
      * Return a registry item for the given ID. Return will be isNull() if
      * the pkgID cannot be located.
      */
-    Nullable!RegistryItem queryID(in string pkgID);
+    NullableRegistryItem queryID(in string pkgID);
 
     /**
      * Return the dependencies for a given package ID

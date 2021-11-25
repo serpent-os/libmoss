@@ -45,17 +45,15 @@ package final class FauxSource : RegistryPlugin
     /**
      * Return the registry item corresponding to pkgID
      */
-    override Nullable!RegistryItem queryID(in string pkgID)
+    override NullableRegistryItem queryID(in string pkgID)
     {
-        auto ret = Nullable!RegistryItem(RegistryItem.init);
-
         auto result = pkgID in packages;
         if (result !is null)
         {
-            ret = RegistryItem(result.id, this);
+            return NullableRegistryItem(RegistryItem(result.id, this));
         }
 
-        return ret;
+        return NullableRegistryItem();
     }
 
     override RegistryItem[] queryProviders(in ProviderType type, in string matcher,

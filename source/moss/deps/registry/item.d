@@ -24,6 +24,7 @@ module moss.deps.registry.item;
 
 public import moss.deps.registry.plugin : RegistryPlugin;
 public import std.stdint : uint64_t;
+public import std.typecons : Nullable;
 
 /**
  * Item flags can be combined so that we have more information on a
@@ -161,3 +162,9 @@ package:
 
     ItemFlags _flags = ItemFlags.None;
 }
+
+/**
+ * Forcibly define the return type of the API to a nullable without run
+ * time cost.
+ */
+public alias NullableRegistryItem = Nullable!(RegistryItem, RegistryItem.init);
