@@ -369,5 +369,6 @@ private:
     RegistryManager registryManager;
     ProviderBucket[string] providers;
 
-    alias DependencyLookupFunc = NullableRegistryItem delegate(in ProviderType type, in string matcher);
+    alias DependencyLookupFunc = NullableRegistryItem delegate(in ProviderType type,
+            in string matcher);
 }
