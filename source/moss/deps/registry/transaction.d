@@ -112,16 +112,16 @@ public final class Transaction
         RegistryItem[] ret;
 
         /* Force lookup to local subdomain */
-        NRI pickLocalOnly(in ProviderType type, in string matcher)
+        NullableRegistryItem pickLocalOnly(in ProviderType type, in string matcher)
         {
             auto locals = subdomain.byProvider(type, matcher);
             if (locals.length < 1)
             {
-                return NRI();
+                return NullableRegistryItem();
             }
             /* Really should only have ONE provider in as solid DAG */
             enforce(locals.length == 1, "Transaction.apply(): DAG supports one unique provider");
-            return NRI(locals[0]);
+            return NullableRegistryItem(locals[0]);
         }
 
         auto dag = buildGraph(finalState, &pickLocalOnly);
@@ -148,16 +148,16 @@ public final class Transaction
      */
     void removePackages(in RegistryItem[] items)
     {
-        NRI pickInstalledOnly(in ProviderType type, in string matcher)
+        NullableRegistryItem pickInstalledOnly(in ProviderType type, in string matcher)
         {
             auto installed = this.byProvider(type, matcher);
             if (installed.length < 1)
             {
-                return NRI();
+                return NullableRegistryItem();
             }
             enforce(installed.length == 1,
                     "removePackages(): DAG only supports one unique provider");
-            return NRI(installed[0]);
+            return NullableRegistryItem(installed[0]);
         }
 
         auto dag = buildGraph(finalState, &pickInstalledOnly);
@@ -247,20 +247,20 @@ private:
         /* Compute subdomain buckets */
         auto subdomain = new Transaction(registryManager, items);
 
-        NRI pickDependency(in ProviderType type, in string matcher)
+        NullableRegistryItem pickDependency(in ProviderType type, in string matcher)
         {
             /* Try to find within the newly selected candidates */
             auto newProviders = subdomain.byProvider(type, matcher);
             if (newProviders.length > 0)
             {
-                return NRI(newProviders[0]);
+                return NullableRegistryItem(newProviders[0]);
             }
 
             /* Try to find in current selections now */
             auto selectedProviders = byProvider(type, matcher);
             if (selectedProviders.length > 0)
             {
-                return NRI(selectedProviders[0]);
+                return NullableRegistryItem(selectedProviders[0]);
             }
 
             /* Try to find in already installed now */
@@ -268,11 +268,11 @@ private:
                     ItemFlags.Available).filter!((i) => !i.installed);
             if (avail.empty)
             {
-                return NRI(RegistryItem.init);
+                return NullableRegistryItem(RegistryItem.init);
             }
 
             /* TODO: Use better logic for selecting "ideal" candidate (sort by repo pinning */
-            return NRI(avail.front);
+            return NullableRegistryItem(avail.front);
         }
 
         auto dag = buildGraph(items, &pickDependency);
@@ -369,6 +369,5 @@ private:
     RegistryManager registryManager;
     ProviderBucket[string] providers;
 
-    alias NRI = Nullable!(RegistryItem, RegistryItem.init);
-    alias DependencyLookupFunc = NRI delegate(in ProviderType type, in string matcher);
+    alias DependencyLookupFunc = NullableRegistryItem delegate(in ProviderType type, in string matcher);
 }
