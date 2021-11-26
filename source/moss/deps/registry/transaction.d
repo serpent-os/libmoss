@@ -107,28 +107,7 @@ public final class Transaction
      */
     RegistryItem[] apply()
     {
-        /* Use only the subdomain to lookup dependencies */
-        auto subdomain = new Transaction(registryManager, finalState);
-        RegistryItem[] ret;
-
-        /* Force lookup to local subdomain */
-        NullableRegistryItem pickLocalOnly(in ProviderType type, in string matcher)
-        {
-            auto locals = subdomain.byProvider(type, matcher);
-            if (locals.length < 1)
-            {
-                return NullableRegistryItem();
-            }
-            /* Really should only have ONE provider in as solid DAG */
-            enforce(locals.length == 1, "Transaction.apply(): DAG supports one unique provider");
-            return NullableRegistryItem(locals[0]);
-        }
-
-        auto dag = buildGraph(finalState, &pickLocalOnly);
-        dag.breakCycles();
-        dag.topologicalSort((i) { ret ~= i; });
-
-        return ret;
+        return finalState;
     }
 
     /**
