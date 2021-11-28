@@ -23,17 +23,11 @@
 module moss.format.binary.payload.index;
 
 public import moss.format.binary.payload;
-public import std.typecons : Tuple;
 
 /**
  * The currently writing version for IndexPayload
  */
 const uint16_t indexPayloadVersion = 1;
-
-/**
- * Nice iterable type in foreach aggregate
- */
-alias RangedEntryPair = Tuple!(IndexEntry, "entry", string, "id");
 
 /**
  * An IndexPayload contains a set of offsets to unique files contained within
@@ -69,8 +63,8 @@ public:
      */
     pure @property bool empty() @safe @nogc nothrow
     {
-        const long pairLength = cast(long) pairs.length;
-        auto isEmpty = (pairs.length < 1 || iterationIndex > pairLength - 1);
+        const long entryLength = cast(long) entries.length;
+        auto isEmpty = (entries.length < 1 || iterationIndex > entryLength - 1);
 
         if (isEmpty)
         {
@@ -81,7 +75,7 @@ public:
     }
 
     /**
-     * Pop the front EntryPair from the list and proceed to the next one.
+     * Pop the front IndexEntry from the list and proceed to the next one.
      */
     void popFront() @safe @nogc nothrow
     {
@@ -91,13 +85,10 @@ public:
     /**
      * Return the front item of the list
      */
-    RangedEntryPair front() @trusted @nogc nothrow const
+    IndexEntry front() @trusted @nogc nothrow const
     {
-        RangedEntryPair ret;
-        const auto pair = &pairs[iterationIndex];
-        ret.entry = pair.entry;
-        ret.id = pair.id;
-        return ret;
+        const auto entry = &entries[iterationIndex];
+        return *entry;
     }
 
     /**
@@ -105,11 +96,11 @@ public:
      */
     override void encode(scope WriterToken wr) @trusted
     {
-        /* Ensure every pair is encoded via WriterToken API */
-        foreach (index; 0 .. pairs.length)
+        /* Ensure every entry is encoded via WriterToken API */
+        foreach (index; 0 .. entries.length)
         {
-            auto pair = &pairs[index];
-            pair.encode(wr);
+            auto entry = &entries[index];
+            entry.encode(wr);
         }
     }
 
@@ -123,31 +114,27 @@ public:
 
         foreach (recordIndex; 0 .. recordCount)
         {
-            pairs ~= EntryPair();
-            auto length = cast(long) pairs.length;
-            auto pair = &pairs[length - 1];
-            pair.decode(rdr);
+            entries ~= IndexEntry();
+            auto length = cast(long) entries.length;
+            auto entry = &entries[length - 1];
+            entry.decode(rdr);
         }
     }
 
     /**
-     * Add an Index by ID to the underlying pair set.
+     * Add an Index by ID to the underlying entry set.
      */
-    void addIndex(IndexEntry entry, const(string) id) @trusted
+    void addIndex(IndexEntry entry) @trusted
     {
-        pairs ~= EntryPair();
-        auto length = cast(long) pairs.length;
-        auto pair = &pairs[length - 1];
+        entries ~= entry;
+        auto length = cast(long) entries.length;
         recordCount = cast(uint32_t) length;
-        pair.entry = entry;
-        pair.id = id;
     }
 
 private:
 
-    EntryPair[] pairs;
+    IndexEntry[] entries;
     ulong iterationIndex = 0;
 }
 
 public import moss.format.binary.payload.index.entry;
-public import moss.format.binary.payload.index.pair;
