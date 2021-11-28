@@ -31,7 +31,7 @@ const uint16_t contentPayloadVersion = 1;
 
 package struct ContentEntry
 {
-    string hash;
+    ubyte[16] digest;
     string originPath;
 }
 /**
@@ -90,10 +90,10 @@ public:
     /**
      * Enqueue a file for processing/encoding
      */
-    void addFile(const(string) id, const(string) path) @trusted
+    void addFile(in ubyte[16] digest, in string path) @trusted
     {
         ContentEntry queueable;
-        queueable.hash = id;
+        queueable.digest = digest;
         queueable.originPath = path;
         encoderQueue ~= queueable;
 
