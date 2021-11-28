@@ -88,15 +88,15 @@ static AnalysisReturn ldInterpHelper(scope Analyser analyser, in FileInfo fileIn
     }
 
     /* Build the resolved path now */
-    auto symlinkTarget = fileInfo.data;
-    if (symlinkTarget[0] == '/')
+    auto symlinkSource = fileInfo.symlinkSource;
+    if (symlinkSource[0] == '/')
     {
         stderr.writeln("LD Interpreter links need to be RELATIVE: ", fileInfo.fullPath);
         return AnalysisReturn.NextHandler;
     }
 
     /* Resolve to something usable */
-    auto resolvedPath = fileInfo.fullPath.dirName.buildPath(fileInfo.data);
+    auto resolvedPath = fileInfo.fullPath.dirName.buildPath(symlinkSource);
     if (!resolvedPath.exists)
     {
         stderr.writeln("LD Interpeter link target does not exist: ", resolvedPath);
