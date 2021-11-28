@@ -28,7 +28,8 @@ import moss.core : ChunkSize;
 import core.sys.posix.sys.stat;
 
 public import moss.core : FileType;
-import xxhash : computeXXH3_hexdigest128, XXH3_128;
+import xxhash : computeXXH3_128, XXH3_128;
+import std.digest : LetterCase, Order, toHexString;
 
 /**
  * We use mmap when beyond 16kib
@@ -88,7 +89,7 @@ public struct FileInfo
             break;
         case S_IFLNK:
             _type = FileType.Symlink;
-            _data = fullPath.readLink();
+            _source = fullPath.readLink();
             break;
         case S_IFREG:
             _type = FileType.Regular;
@@ -111,15 +112,27 @@ public struct FileInfo
     }
 
     /**
-     * Return the data (symlink target or hash)
+     * Return the *source* of a symlink type file
      */
-    pure @property const(string) data() const @safe
+    pure @property auto symlinkSource() @safe @nogc nothrow const
     {
-        import std.exception : enforce;
+        return _source;
+    }
 
-        enforce(type == FileType.Regular || type == FileType.Symlink,
-                "FileInfo.data() only supported for symlinks + regular files");
-        return _data;
+    /**
+     * Return the xxh3_128 digest as bytes (regular files only)
+     */
+    pragma(inline, true) pure @property ubyte[16] digest() @safe @nogc nothrow const
+    {
+        return _digest;
+    }
+
+    /**
+     * Return the xxh3_128 digest as a string
+     */
+    pragma(inline, true) pure @property char[32] digestString() @safe @nogc nothrow const
+    {
+        return toHexString!(LetterCase.lower, Order.increasing, 16)(_digest);
     }
 
     /**
@@ -129,7 +142,7 @@ public struct FileInfo
     {
         import std.string : startsWith;
 
-        return !data.startsWith("/");
+        return !_source.startsWith("/");
     }
 
     /**
@@ -142,7 +155,7 @@ public struct FileInfo
         enforce(type == FileType.Symlink, "FileInfo.symlinkResolved() only supported for symlinks");
 
         auto dirn = path.dirName;
-        return dirn.buildPath(data.relativePath(dirn));
+        return dirn.buildPath(_source.relativePath(dirn));
     }
 
     /**
@@ -191,7 +204,7 @@ public struct FileInfo
     void computeHash(XXH3_128 helper)
     {
         /* Use mmap if the file is larger than 16kib */
-        _data = computeXXH3_hexdigest128(helper, _fullPath, ChunkSize,
+        _digest = computeXXH3_128(helper, _fullPath, ChunkSize,
                 !(statResult.st_size < MmapThreshhold)).dup;
     }
 
@@ -204,7 +217,7 @@ public struct FileInfo
         {
             if (this.type == FileType.Regular || this.type == FileType.Symlink)
             {
-                return this._data == other._data;
+                return this._source == other._source;
             }
             return this.statResult == other.statResult;
         }
@@ -220,8 +233,8 @@ public struct FileInfo
         {
             if (this.type == FileType.Regular || this.type == FileType.Symlink)
             {
-                immutable auto dA = this._data;
-                immutable auto dB = other._data;
+                immutable auto dA = this._source;
+                immutable auto dB = other._source;
                 if (dA < dB)
                 {
                     return -1;
@@ -262,7 +275,7 @@ package:
     static FileInfo regularComparator(in string hash)
     {
         auto f = FileInfo();
-        f._data = hash;
+        f._source = hash;
         f._type = FileType.Regular;
         return f;
     }
@@ -270,9 +283,10 @@ package:
 private:
 
     FileType _type = FileType.Unknown;
-    string _data = null;
+    string _source = null;
     string _path = null;
     string _fullPath = null;
     string _target = null;
     stat_t statResult;
+    ubyte[16] _digest = 0;
 }
