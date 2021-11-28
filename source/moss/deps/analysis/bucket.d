@@ -44,7 +44,7 @@ public final class AnalysisBucket
      */
     alias DependencyTree = RedBlackTree!(Dependency, "a < b", false);
     alias ProviderTree = RedBlackTree!(Provider, "a < b", false);
-    alias HashTree = RedBlackTree!(string, "a < b", false);
+    alias HashTree = RedBlackTree!(ubyte[16], "a < b", false);
     alias FileTree = RedBlackTree!(FileInfo, "a < b", true);
 
     @disable this();
@@ -67,7 +67,7 @@ public final class AnalysisBucket
             info.computeHash(hashHelper);
             synchronized (uniqueHashes)
             {
-                uniqueHashes.insert(info.data);
+                uniqueHashes.insert(info.digest);
             }
         }
 
@@ -109,7 +109,7 @@ public final class AnalysisBucket
          * for our FileInfo just yet.
          */
         return uniqueHashes[].map!((h) => files[].filter!((f) => f.type == FileType.Regular
-                && f.data == h).front);
+                && f.digest == h).front);
     }
 
     /**
