@@ -51,9 +51,6 @@ extern (C) struct LayoutEntry
 {
 align(1):
 
-    /** 8-bytes, endian aware, UNIX timestamp */
-    @AutoEndian uint64_t time = 0;
-
     /** 4-bytes, endian aware, owning user ID */
     @AutoEndian uint32_t uid = 0;
 
@@ -76,7 +73,7 @@ align(1):
     FileType type = FileType.Unknown;
 
     /** 3-byte array, reserved padding */
-    ubyte[3] padding = [0, 0, 0];
+    ubyte[11] padding = 0;
 
     /**
      * Encode the LayoutEntry to the underlying byte buffer
@@ -86,7 +83,6 @@ align(1):
         LayoutEntry cp = this;
         cp.toNetworkOrder();
 
-        wr.appendData((cast(ubyte*)&cp.time)[0 .. cp.time.sizeof]);
         wr.appendData((cast(ubyte*)&cp.uid)[0 .. cp.uid.sizeof]);
         wr.appendData((cast(ubyte*)&cp.gid)[0 .. cp.gid.sizeof]);
         wr.appendData((cast(ubyte*)&cp.mode)[0 .. cp.mode.sizeof]);
@@ -106,8 +102,7 @@ align(1):
         cp.toNetworkOrder();
 
         auto ret = cast(ImmutableDatum)(
-                (cast(ubyte*)&cp.time)[0 .. cp.time.sizeof] ~ (cast(
-                ubyte*)&cp.uid)[0 .. cp.uid.sizeof] ~ (cast(
+                (cast(ubyte*)&cp.uid)[0 .. cp.uid.sizeof] ~ (cast(
                 ubyte*)&cp.gid)[0 .. cp.gid.sizeof] ~ (cast(
                 ubyte*)&cp.mode)[0 .. cp.mode.sizeof] ~ (cast(
                 ubyte*)&cp.tag)[0 .. cp.tag.sizeof] ~ (cast(
