@@ -30,12 +30,9 @@ import moss.format.binary.writer : WriterToken;
 import std.digest : LetterCase, Order, toHexString;
 
 /**
- * An IndexEntry identifies a unique file within the file payload.
- * It records the size of the file - along with the number of times
- * the file is used within the package (deduplication statistics).
- *
- * The length refers to the *value* length of the IndexEntry, i.e. how
- * long the name is.
+ * An IndexEntry contains the offsets of a unique file within the
+ * ContentPayload along with the XXHash3 (128bit) digest for the
+ * file.
  */
 extern (C) struct IndexEntry
 {
