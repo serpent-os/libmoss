@@ -72,7 +72,7 @@ align(1):
     /** 1 byte, type of the destination file */
     FileType type = FileType.Unknown;
 
-    /** 3-byte array, reserved padding */
+    /** 11-byte array, reserved padding */
     ubyte[11] padding = 0;
 
     /**
