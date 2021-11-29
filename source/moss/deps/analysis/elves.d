@@ -22,10 +22,10 @@
 
 module moss.deps.analysis.elves;
 
-import elf : ELF, ELFSection, DynamicLinkingTable, ElfNote;
+import elf : ELF, ELF64, ELFSection, DynamicLinkingTable, ElfNote;
 import std.string : format, fromStringz, startsWith;
 import std.exception : enforce;
-import std.algorithm : each, canFind;
+import std.algorithm : each, canFind, count;
 import std.path : baseName, dirName, buildPath;
 import std.stdio : stderr, File;
 import std.file : exists;
@@ -40,7 +40,7 @@ import std.stdint : uint32_t;
  */
 static private immutable ubyte[4] elfMagic = [0x7f, 0x45, 0x4c, 0x46];
 
-bool isElfFile(in string fullPath) @trusted
+private static bool isElfFile(in string fullPath) @trusted
 {
     auto fi = File(fullPath, "rb");
     scope (exit)
@@ -66,76 +66,11 @@ bool isElfFile(in string fullPath) @trusted
 }
 
 /**
- * For ld interpreter symlinks we need to ascertain that the target file exists,
- * and is definitely an ELF file. With those facts established we're able to
- * record a compatability Interpreter Provider. This is needed to support binaries
- * that don't respect the distribution-set interpreter.
- */
-static AnalysisReturn ldInterpHelper(scope Analyser analyser, in FileInfo fileInfo)
-{
-    const string based = fileInfo.fullPath.baseName;
-
-    /* Must have an ld- prefix */
-    if (!based.startsWith("ld-"))
-    {
-        return AnalysisReturn.NextHandler;
-    }
-
-    /* Must be a .so.* file */
-    if (!based.canFind(".so"))
-    {
-        return AnalysisReturn.NextHandler;
-    }
-
-    /* Build the resolved path now */
-    auto symlinkSource = fileInfo.symlinkSource;
-    if (symlinkSource[0] == '/')
-    {
-        stderr.writeln("LD Interpreter links need to be RELATIVE: ", fileInfo.fullPath);
-        return AnalysisReturn.NextHandler;
-    }
-
-    /* Resolve to something usable */
-    auto resolvedPath = fileInfo.fullPath.dirName.buildPath(symlinkSource);
-    if (!resolvedPath.exists)
-    {
-        stderr.writeln("LD Interpeter link target does not exist: ", resolvedPath);
-        return AnalysisReturn.NextHandler;
-    }
-
-    if (!isElfFile(resolvedPath))
-    {
-        stderr.writeln("LD Interpeter link target not an ELF file: ", resolvedPath);
-        return AnalysisReturn.NextHandler;
-    }
-
-    auto fi = ELF.fromFile(resolvedPath);
-
-    auto interpProvider = "%s(%s)".format(fileInfo.path, fi.header.machineISA);
-    auto pInterp = Provider(interpProvider, ProviderType.Interpreter);
-    auto pSoname = Provider(interpProvider, ProviderType.SharedLibraryName);
-
-    analyser.bucket(fileInfo).addProvider(pInterp);
-    analyser.bucket(fileInfo).addProvider(pSoname);
-
-    return AnalysisReturn.IncludeFile;
-}
-/**
  * This function will return "NextFunction" if the input file is a valid ELF
  * file. Otherwise, it will simply return "NextHandler".
  */
 public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileInfo)
 {
-    switch (fileInfo.type)
-    {
-    case FileType.Symlink:
-        return ldInterpHelper(analyser, fileInfo);
-    case FileType.Regular:
-        break;
-    default:
-        return AnalysisReturn.NextHandler;
-    }
-
     if (isElfFile(fileInfo.fullPath))
     {
         return AnalysisReturn.NextFunction;
@@ -185,16 +120,39 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
 
             /* Do we possibly have an Interpeter? This is a .dynamic library .. */
             auto localName = soname.baseName;
-            if (localName.startsWith("ld-"))
+            if (localName.startsWith("ld-") && fileInfo.path.count('/') == 3
+                    && fileInfo.path.startsWith("/usr/lib"))
             {
-                /* Add an interpeter for the full path first */
-                auto interpProvider = "%s(%s)".format(fileInfo.path, fi.header.machineISA);
-                auto pInterp = Provider(interpProvider, ProviderType.Interpreter);
-                analyser.bucket(fileInfo).addProvider(pInterp);
+                string[] interpPaths = [];
 
-                /* Some linking is reliant on the full interpreter path too. */
-                auto pSoname = Provider(interpProvider, ProviderType.SharedLibraryName);
-                analyser.bucket(fileInfo).addProvider(pSoname);
+                /* 64-bit file */
+                if ((cast(ELF64) fi) !is null)
+                {
+                    interpPaths = [
+                        "/usr/lib64/%s(%s)".format(localName, fi.header.machineISA),
+                        "/lib64/%s(%s)".format(localName, fi.header.machineISA),
+                        "/lib/%s(%s)".format(localName, fi.header.machineISA),
+                        "%s(%s)".format(fileInfo.path, fi.header.machineISA)
+                    ];
+                }
+                else
+                {
+                    interpPaths = [
+                        "/usr/lib/%s(%s)".format(localName, fi.header.machineISA),
+                        "/lib/%s(%s)".format(localName, fi.header.machineISA),
+                        "/lib32/%s(%s)".format(localName, fi.header.machineISA),
+                        "%s(%s)".format(fileInfo.path, fi.header.machineISA)
+                    ];
+                }
+
+                /* Add interpreter + soname providers now */
+                foreach (pname; interpPaths)
+                {
+                    auto pInterp = Provider(pname, ProviderType.Interpreter);
+                    auto pSoname = Provider(pname, ProviderType.SharedLibraryName);
+                    analyser.bucket(fileInfo).addProvider(pInterp);
+                    analyser.bucket(fileInfo).addProvider(pSoname);
+                }
             }
             break;
         case ".note.gnu.build-id":
