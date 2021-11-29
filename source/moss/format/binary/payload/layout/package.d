@@ -152,7 +152,11 @@ public:
         auto set = &sets[length - 1];
 
         set.entry = entry;
-        set.sourceData = cast(ubyte[]) source.dup;
+        if (source !is null)
+        {
+            set.sourceData = cast(ubyte[]) source.dup;
+            set.entry.sourceLength = cast(uint16_t) source.length;
+        }
         set.target = fsTarget;
 
         final switch (entry.type)

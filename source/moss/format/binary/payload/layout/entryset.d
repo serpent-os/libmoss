@@ -116,7 +116,10 @@ extern (C) public struct EntrySet
         auto strings = encodeStrings();
         entry.sourceLength = cast(uint16_t) sourceData.length;
         entry.encode(wr);
-        wr.appendData(sourceData.dup());
+        if (entry.sourceLength > 0)
+        {
+            wr.appendData(sourceData.dup());
+        }
         wr.appendData(strings);
     }
 
