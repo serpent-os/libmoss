@@ -25,9 +25,12 @@ module moss.format.binary.payload.layout.entryset;
 public import std.stdint;
 public import moss.format.binary.payload.layout.entry;
 
+import moss.core : FileType;
 import moss.core.encoding;
 import moss.format.binary.reader : ReaderToken;
 import moss.format.binary.writer : WriterToken;
+import std.string : fromStringz;
+import std.digest : LetterCase, Order, toHexString;
 
 /**
  * An EntrySet is used to associate an LayoutEntry with a source and optional
@@ -39,11 +42,6 @@ extern (C) public struct EntrySet
      * The underlying LayoutEntry
      */
     LayoutEntry entry;
-
-    /**
-     * Originator source for the file, i.e. symlink or regular file source
-     */
-    string source;
 
     /**
      * Final destination path on disk
@@ -61,8 +59,7 @@ extern (C) public struct EntrySet
         /* Source is always first */
         if (entry.sourceLength > 0)
         {
-            const auto data = rdr.readData(entry.sourceLength);
-            source.mossDecode(cast(ImmutableDatum) data);
+            sourceData = rdr.readData(entry.sourceLength).dup();
         }
 
         /* And target follows */
@@ -76,13 +73,50 @@ extern (C) public struct EntrySet
     }
 
     /**
+     * Return source data for copying
+     */
+    pure @property const(ubyte[]) data() @safe @nogc nothrow const
+    {
+        return sourceData;
+    }
+
+    /**
+     * Returns the digest for the entryset
+     */
+    pure @property const(ubyte[]) digest() @safe @nogc nothrow const
+    {
+        assert(entry.type == FileType.Regular);
+        return sourceData;
+    }
+
+    /**
+     * Return digest as a string
+     */
+    pure @property auto digestString() @trusted nothrow const
+    {
+        return cast(string) toHexString!(LetterCase.lower, Order.increasing)(digest).dup;
+    }
+
+    /**
+     * Return the symlink origin
+     */
+    pure @property const(string) symlinkSource() @trusted nothrow const
+    {
+        string ret;
+        ret.mossDecode(cast(ImmutableDatum) sourceData);
+        return ret;
+    }
+
+    /**
      * Encode the EntrySet to the underlying stream
      */
     void encode(scope WriterToken wr) @trusted
     {
         /* Write record + value */
         auto strings = encodeStrings();
+        entry.sourceLength = cast(uint16_t) sourceData.length;
         entry.encode(wr);
+        wr.appendData(sourceData.dup());
         wr.appendData(strings);
     }
 
@@ -91,7 +125,7 @@ extern (C) public struct EntrySet
      */
     ImmutableDatum mossEncode()
     {
-        return cast(ImmutableDatum)((cast(ubyte[]) entry.mossEncode()) ~ encodeStrings());
+        return cast(ImmutableDatum)((cast(ubyte[]) entry.mossEncode()) ~ sourceData ~ encodeStrings());
     }
 
     /**
@@ -109,12 +143,9 @@ extern (C) public struct EntrySet
         }
 
         ImmutableDatum remainingBytes = rawBytes[LayoutEntry.sizeof .. $];
-
-        /* Source is always first */
         if (entry.sourceLength > 0)
         {
-            const auto data = remainingBytes[0 .. entry.sourceLength];
-            source.mossDecode(data);
+            sourceData = remainingBytes[0 .. entry.sourceLength].dup();
         }
 
         /* And target follows */
@@ -127,6 +158,10 @@ extern (C) public struct EntrySet
         target.mossDecode(data);
     }
 
+package:
+
+    ubyte[] sourceData;
+
 private:
 
     ubyte[] encodeStrings() @trusted
@@ -134,13 +169,6 @@ private:
         import std.exception : enforce;
 
         ubyte[] encoded = null;
-
-        if (source !is null && source.length > 0)
-        {
-            enforce(source.length < uint16_t.max, "encode(): String length too long");
-            entry.sourceLength = cast(uint16_t)(source.length + 1);
-            encoded ~= source.mossEncode();
-        }
 
         if (target !is null && target.length > 0)
         {
@@ -151,4 +179,5 @@ private:
 
         return encoded;
     }
+
 }

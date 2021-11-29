@@ -23,17 +23,13 @@
 module moss.format.binary.payload.layout;
 
 public import moss.format.binary.payload;
-import std.typecons : Tuple;
+import moss.core : FileType;
+import moss.core.encoding;
 
 /**
  * The currently writing version for LayoutPayload
  */
 const uint16_t layoutPayloadVersion = 1;
-
-/**
- * Nice iterable type in foreach aggregate
- */
-alias RangedEntrySet = Tuple!(LayoutEntry, "entry", string, "source", string, "target");
 
 /**
  * A LayoutPayload contains a series of definitions on how to apply a particular
@@ -91,14 +87,10 @@ public:
     /**
      * Return the front item of the list
      */
-    RangedEntrySet front() @trusted @nogc nothrow const
+    EntrySet front() @trusted @nogc nothrow const
     {
-        RangedEntrySet ret;
         const auto set = &sets[iterationIndex];
-        ret.entry = set.entry;
-        ret.source = set.source;
-        ret.target = set.target;
-        return ret;
+        return cast(EntrySet)*set;
     }
 
     /**
@@ -132,6 +124,16 @@ public:
     }
 
     /**
+     * Allow a passing a string as the source (i.e. symlink source)
+     */
+    void addLayout(LayoutEntry entry, string fsTarget, in string source = null)
+    {
+        assert(entry.type == FileType.Symlink);
+        auto inp = cast(string) source;
+        addLayout(entry, fsTarget, inp !is null ? inp.mossEncode() : null);
+    }
+
+    /**
      * Add a layout entry. Every entry MUST have at least a source OR target,
      * they cannot both be empty.
      *
@@ -140,7 +142,7 @@ public:
      * For directories, target must be set and source MUST be null
      * For regular files, source MUST be an ID, and target MUST be NULL.
      */
-    void addLayout(LayoutEntry entry, string source, string target = null)
+    void addLayout(LayoutEntry entry, string fsTarget, in ubyte[] source = null)
     {
         import std.exception : enforce;
         import moss.core : FileType;
@@ -150,35 +152,35 @@ public:
         auto set = &sets[length - 1];
 
         set.entry = entry;
-        set.source = source;
-        set.target = target;
+        set.sourceData = cast(ubyte[]) source.dup;
+        set.target = fsTarget;
 
         final switch (entry.type)
         {
         case FileType.Regular:
-            enforce(source !is null && target !is null,
+            enforce(source !is null && fsTarget !is null,
                     "addLayout: Regular file needs SOURCE and TARGET");
             break;
         case FileType.Symlink:
-            enforce(source !is null && target !is null,
+            enforce(source !is null && fsTarget !is null,
                     "addLayout: Symlink needs SOURCE and TARGET");
             break;
         case FileType.Directory:
-            enforce(source is null && target !is null,
+            enforce(source is null && fsTarget !is null,
                     "addLayout: Directory needs TARGET only");
             break;
         case FileType.CharacterDevice:
         case FileType.BlockDevice:
             enforce(source is null
-                    && target !is null, "addLayout: Device needs TARGET only");
+                    && fsTarget !is null, "addLayout: Device needs TARGET only");
             enforce(entry.tag != 0, "addLayout: Device tag (origin) not set");
             break;
         case FileType.Fifo:
-            enforce(source !is null && target !is null,
+            enforce(source !is null && fsTarget !is null,
                     "addLayout: FIFO needs TARGET only");
             break;
         case FileType.Socket:
-            enforce(source is null && target !is null,
+            enforce(source is null && fsTarget !is null,
                     "addLayout: Socket needs TARGET only");
             break;
         case FileType.Unknown:
