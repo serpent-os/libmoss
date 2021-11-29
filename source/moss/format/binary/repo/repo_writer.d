@@ -26,6 +26,7 @@ import moss.format.binary.reader;
 import moss.format.binary.writer;
 import moss.format.binary : mossFormatVersionNumber;
 import moss.format.binary.payload.meta;
+import moss.core : computeSHA256;
 
 /**
  * A RepoWriter is responsible for emitting a binary repository to disk.
@@ -74,7 +75,8 @@ public final class RepoWriter
         import std.exception : enforce;
         import std.stdio : writeln;
 
-        auto reader = new Reader(File(inpPath, "rb"));
+        auto fi = File(inpPath, "rb");
+        auto reader = new Reader(fi);
 
         scope (exit)
         {
@@ -89,8 +91,10 @@ public final class RepoWriter
         auto metaPayload = reader.payload!MetaPayload();
         enforce(metaPayload !is null, "RepoWriter.addPackage(): Unable to grab MetaPayload");
         metaPayload.addRecord(RecordType.String, RecordTag.PackageURI, packageURI);
-
-        /* TODO: Add hash, size, filter records, etc. */
+        auto fiSize = fi.size();
+        metaPayload.addRecord(RecordType.Uint64, RecordTag.PackageSize, fiSize);
+        auto hash = computeSHA256(inpPath, fiSize > 16 * 1024 * 1024);
+        metaPayload.addRecord(RecordType.String, RecordTag.PackageHash, hash);
         archWriter.addPayload(metaPayload);
     }
 
