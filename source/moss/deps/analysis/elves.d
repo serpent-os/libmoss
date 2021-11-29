@@ -71,7 +71,7 @@ private static bool isElfFile(in string fullPath) @trusted
  */
 public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileInfo)
 {
-    if (isElfFile(fileInfo.fullPath))
+    if (fileInfo.type == FileType.Regular && isElfFile(fileInfo.fullPath))
     {
         return AnalysisReturn.NextFunction;
     }
