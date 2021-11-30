@@ -48,6 +48,7 @@ public final class RepoWriter
         _outputDir = outputDir;
         _indexFile = _outputDir.buildPath("stone.index");
         archWriter = new Writer(File(_indexFile, "wb"), mossFormatVersionNumber);
+        archWriter.fileType = MossFileType.Repository;
         archWriter.compressionType = PayloadCompression.Zstd;
     }
 
