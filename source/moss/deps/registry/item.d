@@ -47,6 +47,8 @@ public struct ItemInfo
     immutable(string) description = null;
     immutable(uint64_t) releaseNumber = 0;
     immutable(string) versionID = null;
+    immutable(string) homepage = null;
+    immutable(string)[] licenses = null;
 }
 
 /**
