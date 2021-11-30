@@ -114,6 +114,10 @@ package final class FauxSource : RegistryPlugin
         return [];
     }
 
+    override void close()
+    {
+    }
+
     PackageCandidate[string] packages;
 }
 

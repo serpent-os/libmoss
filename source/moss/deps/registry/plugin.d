@@ -65,4 +65,9 @@ public interface RegistryPlugin
      * list of repos when explicitly looking for installed packaages
      */
     const(RegistryItem)[] list(in ItemFlags flags) const;
+
+    /**
+     * Request the plugin deallocate any resources
+     */
+    void close();
 }

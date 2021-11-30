@@ -111,6 +111,19 @@ public final class RegistryManager
         return new Transaction(this);
     }
 
+    /**
+     * Remove all plugins and invoke their close method
+     */
+    void close()
+    {
+        foreach (p; plugins)
+        {
+            p.close();
+            p.destroy();
+        }
+        plugins = null;
+    }
+
 private:
 
     RegistryPlugin[] plugins;
