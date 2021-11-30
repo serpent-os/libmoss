@@ -267,8 +267,6 @@ private:
     DirectedAcyclicalGraph!RegistryItem buildGraph(in RegistryItem[] items,
             DependencyLookupFunc depCB)
     {
-        import std.stdio : writeln;
-
         auto dag = new DirectedAcyclicalGraph!RegistryItem();
 
         /* Add the incoming vertices */
@@ -298,6 +296,7 @@ private:
 
                     if (!dag.hasVertex(chosenOne.get))
                     {
+                        dag.addVertex(chosenOne.get);
                         next ~= chosenOne.get;
                     }
                     dag.addEdge(item, chosenOne.get);
