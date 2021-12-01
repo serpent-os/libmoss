@@ -49,7 +49,7 @@ public interface FetchContext
     /**
      * Enqueue some download
      */
-    void enqueue()(auto const ref Fetchable f);
+    void enqueue(in Fetchable f);
 
     /**
      * The implementation should block until all
