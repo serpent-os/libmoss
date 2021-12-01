@@ -162,7 +162,7 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
             /* Look like a proper build id to us? NT_GNU_BUILD_ID = 3 */
             if (note.type == 3 && note.name == "GNU")
             {
-                enforce(note.descriptor.length == 20);
+                enforce(note.descriptor.length == 8 || note.descriptor.length == 20);
                 //writeln("gnu build id: ", note.descriptor.toHexString!(LetterCase.lower)());
             }
 
