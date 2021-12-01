@@ -114,6 +114,12 @@ package final class FauxSource : RegistryPlugin
         return [];
     }
 
+    /* no op */
+    override void fetchItem(FetchContext context, in string pkgID)
+    {
+
+    }
+
     override void close()
     {
     }
