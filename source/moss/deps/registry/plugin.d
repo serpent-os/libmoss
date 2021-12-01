@@ -22,6 +22,7 @@
 
 module moss.deps.registry.plugin;
 
+public import moss.deps.registry.fetchcontext;
 public import moss.deps.registry.item;
 public import moss.deps.dependency;
 public import std.typecons : Nullable;
@@ -65,6 +66,12 @@ public interface RegistryPlugin
      * list of repos when explicitly looking for installed packaages
      */
     const(RegistryItem)[] list(in ItemFlags flags) const;
+
+    /**
+     * Request that the item is fetched from its location into a storage
+     * medium.
+     */
+    void fetchItem(FetchContext context, in string pkgID);
 
     /**
      * Request the plugin deallocate any resources

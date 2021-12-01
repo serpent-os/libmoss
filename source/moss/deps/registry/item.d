@@ -22,6 +22,7 @@
 
 module moss.deps.registry.item;
 
+public import moss.deps.registry.fetchcontext : FetchContext;
 public import moss.deps.registry.plugin : RegistryPlugin;
 public import std.stdint : uint64_t;
 public import std.typecons : Nullable;
@@ -113,6 +114,14 @@ public struct RegistryItem
     pragma(inline, true) pure @property bool installed() @safe @nogc nothrow const
     {
         return (_flags & ItemFlags.Installed) == ItemFlags.Installed;
+    }
+
+    /** 
+     * Try to fetch this item
+     */
+    pragma(inline, true) void fetch(FetchContext f)
+    {
+        plugin.fetchItem(f, pkgID);
     }
 
     /**

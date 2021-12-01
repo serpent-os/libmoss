@@ -23,6 +23,7 @@
 module moss.deps.registry;
 
 public import moss.deps.registry.candidate;
+public import moss.deps.registry.fetchcontext;
 public import moss.deps.registry.item;
 public import moss.deps.registry.manager;
 public import moss.deps.registry.plugin;
