@@ -25,7 +25,7 @@
  */
 module moss.core.c;
 
-public import core.sys.posix.sys.types : mode_t, off_t, slong_t;
+public import core.sys.posix.sys.types : dev_t, mode_t, off_t, slong_t;
 public import core.sys.posix.sys.stat : stat_t;
 public import core.sys.posix.fcntl : AT_SYMLINK_NOFOLLOW, AT_FDCWD, O_RDONLY,
     O_RDWR, O_CREAT, O_CLOEXEC;
@@ -62,6 +62,16 @@ extern (C) int unlinkat(int dirfd, scope char* pathname, int flags);
  */
 extern (C) int linkat(int olddirfd, scope char* oldpath, int newdirfd,
         scope char* newpath, int flags);
+
+/**
+ * Create special file relative to directory file descriptor
+ */
+extern (C) int mknodat(int dirfd, scope char* pathname, mode_t mode, dev_t dev);
+
+/**
+ * Create a FIFO special file relative to directory file descriptor.
+ */
+extern (C) int mkfifoat(int dirfd, scope char* pathname, mode_t mode);
 
 /**
  * Copy one part of a file to another using the defined offsets and length.
