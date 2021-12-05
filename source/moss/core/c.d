@@ -215,6 +215,8 @@ private unittest
     auto inpFD = open(inputPath.toStringz, O_RDONLY | O_CLOEXEC, 0);
     auto outFD = open(outputPath.toStringz, O_RDWR | O_CREAT | O_CLOEXEC, octal!644);
 
+    assert(inpFD > 0 && outFD > 0);
+
     /* Wipe the file */
     scope (exit)
     {
