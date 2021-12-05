@@ -48,6 +48,13 @@ extern (C) int openat(int dirfd, scope char* pathname, int flags, mode_t mode);
  */
 extern (C) int unlinkat(int dirfd, scope char* pathname, int flags);
 
+/**
+ * Link file from relative location to relative target, if non absolute
+ * paths are used.
+ */
+extern (C) int linkat(int olddirfd, scope char* oldpath, int newdirfd,
+        scope char* newpath, int flags);
+
 version (X86_64)
 {
     /**
@@ -86,6 +93,11 @@ version (linux)
      * Suppress terminal automount traversal
      */
     enum AT_NO_AUTOMOUNT = 0x800;
+
+    /**
+     * (Do) follow symlinks
+     */
+    enum AT_SYMLINK_FOLLOW = 0x400;
 }
 
 @("Test nkdirat/fstatat/unlinkat")
@@ -106,6 +118,7 @@ private unittest
 
     scope (exit)
     {
+        chdir(cd);
         whence.close();
     }
 
@@ -127,4 +140,50 @@ private unittest
     /* Remove the dir */
     ret = unlinkat(whence, cast(char*) toStringz("somedir"), AT_REMOVEDIR);
     assert(ret == 0);
+}
+
+@("Test linkat()")
+private unittest
+{
+    import std.stdio : File;
+    import std.file : mkdirRecurse, rmdir;
+    import std.string : toStringz;
+
+    /* dlang make the new paths */
+    mkdirRecurse("pathA");
+    mkdirRecurse("pathB");
+
+    /* Source file creation */
+    auto f = File("pathA/origin", "w");
+    f.write("I AM THE DUPLICATOR\n");
+    f.close();
+
+    /* Open our dirfds */
+    auto pathA = open("pathA", O_DIRECTORY, 0);
+    auto pathB = open("pathB", O_DIRECTORY, 0);
+
+    scope (exit)
+    {
+        close(pathA);
+        close(pathB);
+        rmdir("pathA");
+        rmdir("pathB");
+    }
+
+    /* hardlink origin to copy */
+    assert(pathA >= 0 && pathB >= 0);
+    auto ret = linkat(pathA, cast(char*) toStringz("origin"), pathB,
+            cast(char*) toStringz("copy"), 0);
+    assert(ret == 0);
+
+    /* Ensure it has 2 refs */
+    stat_t st = {0};
+    ret = fstatat(pathB, cast(char*) toStringz("copy"), &st, AT_SYMLINK_NOFOLLOW);
+    assert(st.st_nlink == 2);
+    assert(ret == 0);
+
+    /* Relative deletes */
+    ret = unlinkat(pathA, cast(char*) toStringz("origin"), 0);
+    assert(ret == 0);
+    ret = unlinkat(pathB, cast(char*) toStringz("copy"), 0);
 }
