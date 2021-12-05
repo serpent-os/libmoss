@@ -79,7 +79,7 @@ else
 version (linux)
 {
     /**
-     * When used with open/openat, the call will fil unless the pathname
+     * When used with open/openat, the call will fail unless the pathname
      * is actually a directory.
      */
     enum O_DIRECTORY = 0x20000;
@@ -100,7 +100,7 @@ version (linux)
     enum AT_SYMLINK_FOLLOW = 0x400;
 }
 
-@("Test nkdirat/fstatat/unlinkat")
+@("Test mkdirat/fstatat/unlinkat")
 private unittest
 {
     import std.string : toStringz;
