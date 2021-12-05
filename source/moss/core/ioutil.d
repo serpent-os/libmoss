@@ -102,14 +102,19 @@ public struct IOUtil
     /**
      * Sane mkdir wrapper that allows defining the creation mode.
      */
-    static IOResult mkdir(in string path, cstdlib.mode_t mode = octal!755)
+    static IOResult mkdir(in string path, cstdlib.mode_t mode = octal!755, bool ignoreExists = false)
     {
         auto ret = cstdlib.mkdir(path.toStringz, mode);
         if (ret == 0)
         {
             return IOResult(true);
         }
-        return IOResult(CError(cstdlib.errno));
+        auto err = cstdlib.errno;
+        if (ignoreExists && err == cstdlib.EEXIST)
+        {
+            return IOResult(true);
+        }
+        return IOResult(CError(err));
     }
 }
 

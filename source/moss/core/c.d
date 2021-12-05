@@ -35,7 +35,7 @@ public import core.sys.posix.unistd : close, unlink;
 public import std.conv : octal;
 public import std.string : fromStringz, toStringz;
 public import core.stdc.string : strerror;
-public import core.stdc.errno : errno;
+public import core.stdc.errno;
 
 /**
  * Same as the signed long type.
