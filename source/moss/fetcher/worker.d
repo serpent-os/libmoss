@@ -31,12 +31,31 @@ import core.sync.mutex;
 package final class FetchWorker
 {
 
+    /**
+     * Construct a new FetchWorker and setup any associated resources.
+     */
     this()
     {
+        /* Grab a handle. */
+        handle = curl_easy_init();
+
         /* Establish locks for CURLSH usage */
         dnsLock = new shared Mutex();
         sslLock = new shared Mutex();
         conLock = new shared Mutex();
+    }
+
+    /**
+     * Close down this worker resources
+     */
+    void close()
+    {
+        if (handle is null)
+        {
+            return;
+        }
+        curl_easy_cleanup(handle);
+        handle = null;
     }
 
     /**
