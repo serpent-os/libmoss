@@ -55,6 +55,8 @@ public struct CError
  */
 public alias IOResult = SumType!(bool, CError);
 
+public alias IOFDResult = SumType!(int, CError);
+
 /**
  * Forcibly namespace all of the operations to ensure no conflicts with the stdlib.
  */
@@ -106,6 +108,29 @@ public struct IOUtil
     }
 
     /**
+     * Copy only a part of fdIn to fdOut
+     */
+    static IOResult copyFileRange(int fdIn, long inOffsets, int fdOut, long outOffsets, long len)
+    {
+        cstdlib.loff_t inOff = inOffsets;
+        cstdlib.loff_t outOff = outOffsets;
+        cstdlib.loff_t nBytes = 0;
+
+        do
+        {
+            nBytes = cstdlib.copy_file_range(fdIn, &inOff, fdOut, &outOff, len, 0);
+            if (nBytes < 0)
+            {
+                return IOResult(CError(cstdlib.errno));
+            }
+            len -= nBytes;
+        }
+        while (nBytes > 0 && len > 0);
+
+        return IOResult(true);
+    }
+
+    /**
      * Sane mkdir wrapper that allows defining the creation mode.
      */
     static IOResult mkdir(in string path, cstdlib.mode_t mode = octal!755, bool ignoreExists = false)
@@ -121,6 +146,20 @@ public struct IOUtil
             return IOResult(true);
         }
         return IOResult(CError(err));
+    }
+
+    /**
+     * Create a new write only file
+     */
+    static IOFDResult create(in string path, cstdlib.mode_t mode = octal!644)
+    {
+        auto ret = cstdlib.open(path.toStringz,
+                cstdlib.O_WRONLY | cstdlib.O_CREAT | cstdlib.O_TRUNC | cstdlib.O_CLOEXEC, mode);
+        if (ret < 0)
+        {
+            return IOFDResult(CError(cstdlib.errno));
+        }
+        return IOFDResult(ret);
     }
 }
 
