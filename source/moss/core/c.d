@@ -64,6 +64,12 @@ extern (C) int linkat(int olddirfd, scope char* oldpath, int newdirfd,
         scope char* newpath, int flags);
 
 /**
+ * Construct a symlink from oldpath to newpath, which is relative to newdirfd
+ * if newpath is not absolute.
+ */
+extern (C) int symlinkat(scope char* oldpath, int newdirfd, scope char* newpath);
+
+/**
  * Create special file relative to directory file descriptor
  */
 extern (C) int mknodat(int dirfd, scope char* pathname, mode_t mode, dev_t dev);
