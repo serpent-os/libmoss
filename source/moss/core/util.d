@@ -26,7 +26,7 @@ import core.sys.posix.unistd;
 import core.stdc.string;
 import core.stdc.errno;
 import std.exception : enforce;
-import std.string : format, toStringz;
+import std.string : format, fromStringz, toStringz;
 import std.range : chunks;
 import std.digest : makeDigest;
 import std.stdio : File;
@@ -46,8 +46,8 @@ pragma(inline, true) void hardLink(const(string) sourcePath, const(string) destP
 
     auto ret = link(sourceZ, targetZ);
     auto err = strerror(errno);
-    enforce(ret == 0, "hardLink(): Failed to link %s to %s: %s".format(sourcePath,
-            destPath, err !is null ? err[0 .. strlen(err)] : ""));
+    enforce(ret == 0, format!"hardLink(): Failed to link %s to %s: %s"(sourcePath,
+            destPath, err !is null ? fromStringz(err) : ""));
 }
 
 /**
