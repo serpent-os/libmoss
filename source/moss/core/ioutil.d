@@ -36,6 +36,9 @@ public import std.string : fromStringz, toStringz;
  */
 public struct CError
 {
+    /**
+     * Set from errno();
+     */
     int errorCode = 0;
 
     /**
@@ -47,7 +50,10 @@ public struct CError
     }
 }
 
-alias IOResult = SumType!(bool, CError);
+/**
+ * Algebraic result for all IOUtil operations
+ */
+public alias IOResult = SumType!(bool, CError);
 
 /**
  * Forcibly namespace all of the operations to ensure no conflicts with the stdlib.
