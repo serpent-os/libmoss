@@ -48,6 +48,18 @@ enum ExitStatus
 }
 
 /**
+ * Various parts of the moss codebases perform file copies, and should all
+ * use a standard chunk size of 4mib.
+ */
+public immutable auto ChunkSize = 4 * 1024 * 1024;
+
+/**
+ * For in-kernel copies we can afford a larger chunk size, and allow it to
+ * utilise the page cache as best it can.
+ */
+public immutable auto KernelChunkSize = 16 * 1024 * 1024;
+
+/**
  * Base of all our required directories
  */
 const RootTree = "os";

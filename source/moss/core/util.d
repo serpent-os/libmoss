@@ -34,12 +34,7 @@ import std.digest.sha : SHA256, toHexString;
 import std.string : toLower;
 import std.mmfile;
 import std.algorithm : each;
-
-/**
- * Various parts of the moss codebases perform file copies, and should all
- * use a standard chunk size of 4mib.
- */
-public immutable auto ChunkSize = 4 * 1024 * 1024;
+import moss.core : ChunkSize;
 
 /**
  * Attempt construction of a hardlink.
