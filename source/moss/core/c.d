@@ -27,10 +27,13 @@ module moss.core.c;
 
 public import core.sys.posix.sys.types : mode_t, off_t, slong_t;
 public import core.sys.posix.sys.stat : stat_t;
-public import core.sys.posix.fcntl : AT_SYMLINK_NOFOLLOW, AT_FDCWD;
+public import core.sys.posix.fcntl : AT_SYMLINK_NOFOLLOW, AT_FDCWD, O_RDONLY,
+    O_RDWR, O_CREAT, O_CLOEXEC;
 
-import core.sys.posix.fcntl : open;
-import core.sys.posix.unistd : close;
+public import core.sys.posix.fcntl : open;
+public import core.sys.posix.unistd : close, unlink;
+public import std.conv : octal;
+public import std.string : fromStringz, toStringz;
 
 /**
  * Same as the signed long type.
@@ -160,7 +163,6 @@ private unittest
 {
     import std.stdio : File;
     import std.file : mkdirRecurse, rmdir;
-    import std.string : toStringz;
 
     /* dlang make the new paths */
     mkdirRecurse("pathA");
@@ -199,4 +201,35 @@ private unittest
     ret = unlinkat(pathA, cast(char*) toStringz("origin"), 0);
     assert(ret == 0);
     ret = unlinkat(pathB, cast(char*) toStringz("copy"), 0);
+}
+
+@("Test copy_file_range")
+private unittest
+{
+    import moss.core : KernelChunkSize;
+    import moss.core.util : computeSHA256;
+
+    auto inputPath = "LICENSE";
+    auto outputPath = "LICENSE.COPY";
+
+    auto inpFD = open(inputPath.toStringz, O_RDONLY | O_CLOEXEC, 0);
+    auto outFD = open(outputPath.toStringz, O_RDWR | O_CREAT | O_CLOEXEC, octal!644);
+
+    /* Wipe the file */
+    scope (exit)
+    {
+        unlink(outputPath.toStringz);
+    }
+
+    loff_t nBytesCopied = 0;
+
+    /* Perform the in-kernel copy */
+    do
+    {
+        nBytesCopied = copy_file_range(inpFD, null, outFD, null, KernelChunkSize, 0);
+        assert(nBytesCopied >= 0);
+    }
+    while (nBytesCopied > 0);
+
+    assert(computeSHA256(inputPath) == computeSHA256(outputPath));
 }
