@@ -13,4 +13,5 @@
 			"path": "external/moss-core"
 		}
 	},
+	"libs": ["libcurl"]
 }
