@@ -60,7 +60,15 @@ public struct IOUtil
     static IOResult copyFile(in string fromPath, in string toPath, mode_t mode = octal!644)
     {
         auto fdin = open(fromPath.toStringz, O_RDONLY | O_CLOEXEC, 0);
+        if (fdin <= 0)
+        {
+            return IOResult(CError(errno));
+        }
         auto fdout = open(toPath.toStringz, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, mode);
+        if (fdout <= 0)
+        {
+            return IOResult(CError(errno));
+        }
 
         scope (exit)
         {
