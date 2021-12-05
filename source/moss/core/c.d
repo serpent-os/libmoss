@@ -25,12 +25,17 @@
  */
 module moss.core.c;
 
-public import core.sys.posix.sys.types : mode_t;
+public import core.sys.posix.sys.types : mode_t, off_t, slong_t;
 public import core.sys.posix.sys.stat : stat_t;
 public import core.sys.posix.fcntl : AT_SYMLINK_NOFOLLOW, AT_FDCWD;
 
 import core.sys.posix.fcntl : open;
 import core.sys.posix.unistd : close;
+
+/**
+ * Same as the signed long type.
+ */
+alias loff_t = slong_t;
 
 /**
  * Create a directory relative to dirfd if pathname is not absolute
@@ -54,6 +59,14 @@ extern (C) int unlinkat(int dirfd, scope char* pathname, int flags);
  */
 extern (C) int linkat(int olddirfd, scope char* oldpath, int newdirfd,
         scope char* newpath, int flags);
+
+/**
+ * Copy one part of a file to another using the defined offsets and length.
+ * Allows filesystem acceleration where supported, otherwise will act much
+ * the same as splice()
+ */
+extern (C) loff_t copy_file_range(int fd_in, loff_t* off_in, int fd_out,
+        loff_t* off_out, size_t len, uint flags);
 
 version (X86_64)
 {
