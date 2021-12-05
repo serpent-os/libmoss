@@ -26,10 +26,10 @@
 module moss.core.ioutil;
 
 import moss.core : KernelChunkSize;
-import moss.core.c;
+import cstdlib = moss.core.c;
 import std.sumtype;
-import core.stdc.errno;
-import core.stdc.string : strerror;
+public import std.conv : octal;
+public import std.string : fromStringz, toStringz;
 
 /**
  * Encapsulates errors from C functions
@@ -43,7 +43,7 @@ public struct CError
      */
     @property const(char[]) toString() const
     {
-        return fromStringz(strerror(errorCode));
+        return fromStringz(cstdlib.strerror(errorCode));
     }
 }
 
@@ -57,23 +57,24 @@ public struct IOUtil
     /**
      * Copy the file fromPath into new file toPath, with optional mode (octal)
      */
-    static IOResult copyFile(in string fromPath, in string toPath, mode_t mode = octal!644)
+    static IOResult copyFile(in string fromPath, in string toPath, cstdlib.mode_t mode = octal!644)
     {
-        auto fdin = open(fromPath.toStringz, O_RDONLY | O_CLOEXEC, 0);
+        auto fdin = cstdlib.open(fromPath.toStringz, cstdlib.O_RDONLY | cstdlib.O_CLOEXEC, 0);
         if (fdin <= 0)
         {
-            return IOResult(CError(errno));
+            return IOResult(CError(cstdlib.errno));
         }
-        auto fdout = open(toPath.toStringz, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, mode);
+        auto fdout = cstdlib.open(toPath.toStringz,
+                cstdlib.O_WRONLY | cstdlib.O_CREAT | cstdlib.O_TRUNC | cstdlib.O_CLOEXEC, mode);
         if (fdout <= 0)
         {
-            return IOResult(CError(errno));
+            return IOResult(CError(cstdlib.errno));
         }
 
         scope (exit)
         {
-            close(fdin);
-            close(fdout);
+            cstdlib.close(fdin);
+            cstdlib.close(fdout);
         }
 
         return copyFile(fdin, fdout);
@@ -84,18 +85,31 @@ public struct IOUtil
      */
     static IOResult copyFile(int fdIn, int fdOut)
     {
-        loff_t nBytes = 0;
+        cstdlib.loff_t nBytes = 0;
         do
         {
-            nBytes = copy_file_range(fdIn, null, fdOut, null, KernelChunkSize, 0);
+            nBytes = cstdlib.copy_file_range(fdIn, null, fdOut, null, KernelChunkSize, 0);
             if (nBytes < 0)
             {
-                return IOResult(CError(errno));
+                return IOResult(CError(cstdlib.errno));
             }
         }
         while (nBytes > 0);
 
         return IOResult(true);
+    }
+
+    /**
+     * Sane mkdir wrapper that allows defining the creation mode.
+     */
+    static IOResult mkdir(in string path, cstdlib.mode_t mode = octal!755)
+    {
+        auto ret = cstdlib.mkdir(path.toStringz, mode);
+        if (ret == 0)
+        {
+            return IOResult(true);
+        }
+        return IOResult(CError(cstdlib.errno));
     }
 }
 
@@ -104,7 +118,7 @@ private unittest
     auto res = IOUtil.copyFile("LICENSE", "LICENSE.test");
     scope (exit)
     {
-        unlink("LICENSE.test".toStringz);
+        cstdlib.unlink("LICENSE.test".toStringz);
     }
     res.match!((err) => assert(0, err.toString), (ok) {});
 }
