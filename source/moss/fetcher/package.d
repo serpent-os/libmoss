@@ -23,9 +23,10 @@
 module moss.fetcher;
 
 import etc.c.curl;
-import moss.core.fetchcontext;
 import moss.fetcher.queue;
 import moss.fetcher.worker;
+
+public import moss.core.fetchcontext;
 
 /**
  * A fairly simple implementation of the FetchContext. Downloads added to
