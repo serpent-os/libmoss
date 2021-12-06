@@ -25,6 +25,7 @@ module moss.fetcher;
 import etc.c.curl;
 import moss.fetcher.queue;
 import moss.fetcher.worker;
+import std.parallelism : totalCPUs;
 
 public import moss.core.fetchcontext;
 
@@ -45,8 +46,14 @@ public final class Fetcher : FetchContext
     /**
      * Construct a new Fetcher with the given number of worker thread
      */
-    this(uint nWorkers = 1)
+    this(uint nWorkers = totalCPUs() - 1)
     {
+        /* Ensure we always have at LEAST 1 worker */
+        if (nWorkers < 1)
+        {
+            nWorkers = 1;
+        }
+
         this.nWorkers = nWorkers;
         shmem = curl_share_init();
         queue = new FetchQueue();
