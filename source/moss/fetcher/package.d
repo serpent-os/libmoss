@@ -49,6 +49,7 @@ public final class Fetcher : FetchContext
     {
         this.nWorkers = nWorkers;
         shmem = curl_share_init();
+        queue = new FetchQueue();
     }
 
     /**
@@ -56,7 +57,7 @@ public final class Fetcher : FetchContext
      */
     override void enqueue(in Fetchable f)
     {
-
+        queue.enqueue(f);
     }
 
     /**
@@ -85,4 +86,5 @@ private:
 
     CURLSH* shmem = null;
     uint nWorkers = 0;
+    FetchQueue queue = null;
 }
