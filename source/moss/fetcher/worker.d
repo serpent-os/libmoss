@@ -150,7 +150,8 @@ private:
     /**
      * Handle writing
      */
-    static size_t mossFetchWorkerWrite(void* ptr, size_t size, size_t nMemb, void* userdata)
+    extern (C) static size_t mossFetchWorkerWrite(void* ptr, size_t size,
+            size_t nMemb, void* userdata)
     {
         return 0;
     }
