@@ -145,6 +145,12 @@ private:
         enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set WRITEFUNCTION");
         ret = curl_easy_setopt(handle, CurlOption.writedata, this);
         enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set WRITEDATA");
+
+        /* Setup progress callback */
+        ret = curl_easy_setopt(handle, CurlOption.progressfunction, &mossFetchWorkerProgress);
+        enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set PROGRESSFUNCTION");
+        ret = curl_easy_setopt(handle, CurlOption.progressdata, this);
+        enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set PROGRESSDATA");
     }
 
     /**
@@ -154,6 +160,19 @@ private:
             size_t nMemb, void* userdata)
     {
         return 0;
+    }
+
+    /**
+     * Handle the progress callback
+     */
+    extern (C) static void mossFetchWorkerProgress(void* userptr,
+            double dlTotal, double dlNow, double ulTotal, double ulNow)
+    {
+        auto worker = cast(FetchWorker) userptr;
+        enforce(worker !is null, "CURL IS BROKEN");
+
+        /* TODO: Report this. */
+        immutable auto percentDone = dlNow / dlTotal * 100.0;
     }
 
     /**
