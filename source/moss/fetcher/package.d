@@ -21,3 +21,27 @@
  */
 
 module moss.fetcher;
+
+import moss.core.fetchcontext;
+import moss.fetcher.queue;
+import moss.fetcher.worker;
+
+/**
+ * A fairly simple implementation of the FetchContext. Downloads added to
+ * this fetcher are subject to sorting by *expected size* and grouped by
+ * their URI.
+ *
+ * The largest pending downloads will typically download on the main thread
+ * while the remaining threads will gobble up all the small jobs, hopefully
+ * leading to better distribution.
+ *
+ * In a lame attempt at optimisation we support connection reuse as well as
+ * sharing the shmem cache between curl handles (CURLSH)
+ */
+public final class Fetcher : FetchContext
+{
+    this(ulong nWorkers = 1)
+    {
+
+    }
+}
