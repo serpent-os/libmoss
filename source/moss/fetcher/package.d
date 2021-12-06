@@ -58,6 +58,7 @@ public final class Fetcher : FetchContext
         this.nWorkers = nWorkers;
         shmem = curl_share_init();
         enforce(shmem !is null, "Fetcher(): curl_share_init() failure");
+        setupShare();
 
         queue = new FetchQueue();
 
@@ -110,6 +111,19 @@ public final class Fetcher : FetchContext
     }
 
 private:
+
+    /**
+     * Setup the sharing aspects
+     */
+    void setupShare()
+    {
+        CURLcode ret;
+
+        /* We want to share DNS, SSL session and connection pool */
+        ret = curl_share_setopt(shmem, CurlShOption.share,
+                CurlLockData.dns | CurlLockData.ssl_session | CurlLockData.connect);
+        enforce(ret == 0, "Fetcher.setupShare(): Failed to set CURLSH options");
+    }
 
     CURLSH* shmem = null;
     uint nWorkers = 0;
