@@ -30,6 +30,7 @@ import std.parallelism : task, totalCPUs, TaskPool;
 import std.typecons : Nullable;
 import std.range : iota;
 import std.algorithm : each, map;
+import core.sync.mutex;
 
 public import moss.core.fetchcontext;
 
@@ -63,6 +64,11 @@ public final class Fetcher : FetchContext
         {
             nWorkers = 1;
         }
+
+        /* Establish locks for CURLSH usage */
+        dnsLock = new shared Mutex();
+        sslLock = new shared Mutex();
+        conLock = new shared Mutex();
 
         this.nWorkers = nWorkers;
         shmem = curl_share_init();
@@ -185,26 +191,85 @@ private:
     /**
      * Curl requested we lock something
      */
-    extern (C) static void mossFetcherLockFunc(void* handle, int data,
-            CurlLockData lockType, void* userptr)
+    extern (C) static void mossFetcherLockFunc(void* handle, CurlLockData data,
+            CurlLockAccess lockType, void* userptr)
     {
         auto fetcher = cast(Fetcher) userptr;
-        enforce(fetcher !is null && data >= 0 && data < fetcher.workers.length, "CURL IS BROKEN");
-        fetcher.workers[data].lock(lockType);
+        fetcher.lockMutex(data);
     }
 
     /**
      * Curl requested we unlock something
      */
-    extern (C) static void mossFetcherUnlockFunc(void* handle, int data,
-            CurlLockData lockType, void* userptr)
+    extern (C) static void mossFetcherUnlockFunc(void* handle,
+            CurlLockData data, CurlLockAccess lockType, void* userptr)
     {
         auto fetcher = cast(Fetcher) userptr;
-        enforce(fetcher !is null && data >= 0 && data < fetcher.workers.length, "CURL IS BROKEN");
-        fetcher.workers[data].unlock(lockType);
+        fetcher.unlockMutex(data);
     }
 
-    CURLSH* shmem = null;
+    /**
+     * Lock a specific mutex for CURL sharing
+     */
+    void lockMutex(CurlLockData lockData) @safe @nogc nothrow
+    {
+        switch (lockData)
+        {
+        case CurlLockData.dns:
+            dnsLock.lock_nothrow();
+            break;
+        case CurlLockData.ssl_session:
+            sslLock.lock_nothrow();
+            break;
+        case CurlLockData.connect:
+            conLock.lock_nothrow();
+            break;
+        default:
+            break;
+        }
+    }
+
+    /**
+     * Unlock a specific mutex for CURL sharing
+     */
+    void unlockMutex(CurlLockData lockData) @safe @nogc nothrow
+    {
+        switch (lockData)
+        {
+        case CurlLockData.dns:
+            dnsLock.unlock_nothrow();
+            break;
+        case CurlLockData.ssl_session:
+            sslLock.unlock_nothrow();
+            break;
+        case CurlLockData.connect:
+            conLock.unlock_nothrow();
+            break;
+        default:
+            break;
+        }
+    }
+
+    /**
+     * Shared data for CURL handles
+     */
+    CURLSH* shmem;
+
+    /**
+     * Lock for sharing DNS
+     */
+    shared Mutex dnsLock;
+
+    /**
+     * Lock for sharing SSL session
+     */
+    shared Mutex sslLock;
+
+    /**
+     * Lock for sharing connections
+     */
+    shared Mutex conLock;
+
     uint nWorkers = 0;
     FetchQueue queue = null;
     FetchWorker[] workers;
@@ -213,5 +278,6 @@ private:
 private unittest
 {
     auto f = new Fetcher();
+    f.fetch();
     f.close();
 }

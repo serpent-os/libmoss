@@ -23,7 +23,6 @@
 module moss.fetcher.worker;
 
 import etc.c.curl;
-import core.sync.mutex;
 import std.exception : enforce;
 import moss.fetcher : Fetcher;
 import moss.core.fetchcontext : Fetchable;
@@ -65,11 +64,6 @@ package final class FetchWorker
         enforce(handle !is null, "FetchWorker(): curl_easy_init() failure");
 
         setupHandle();
-
-        /* Establish locks for CURLSH usage */
-        dnsLock = new shared Mutex();
-        sslLock = new shared Mutex();
-        conLock = new shared Mutex();
     }
 
     /**
@@ -83,48 +77,6 @@ package final class FetchWorker
         }
         curl_easy_cleanup(handle);
         handle = null;
-    }
-
-    /**
-     * Lock a specific mutex for CURL sharing
-     */
-    void lock(CurlLockData lockData) @safe @nogc nothrow
-    {
-        switch (lockData)
-        {
-        case CurlLockData.dns:
-            dnsLock.lock_nothrow();
-            break;
-        case CurlLockData.ssl_session:
-            sslLock.lock_nothrow();
-            break;
-        case CurlLockData.connect:
-            conLock.lock_nothrow();
-            break;
-        default:
-            break;
-        }
-    }
-
-    /**
-     * Unlock a specific mutex for CURL sharing
-     */
-    void unlock(CurlLockData lockData) @safe @nogc nothrow
-    {
-        switch (lockData)
-        {
-        case CurlLockData.dns:
-            dnsLock.unlock_nothrow();
-            break;
-        case CurlLockData.ssl_session:
-            sslLock.unlock_nothrow();
-            break;
-        case CurlLockData.connect:
-            conLock.unlock_nothrow();
-            break;
-        default:
-            break;
-        }
     }
 
     /**
@@ -205,24 +157,9 @@ private:
     CURL* handle;
 
     /**
-     * Shared data for CURL handles
+     * CURLSH handle
      */
     CURLSH* shmem;
-
-    /**
-     * Lock for sharing DNS
-     */
-    shared Mutex dnsLock;
-
-    /**
-     * Lock for sharing SSL session
-     */
-    shared Mutex sslLock;
-
-    /**
-     * Lock for sharing connections
-     */
-    shared Mutex conLock;
 
     /**
      * By default prefer small items
