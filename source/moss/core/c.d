@@ -235,6 +235,8 @@ private unittest
     auto outFD = open(outputPath.toStringz, O_RDWR | O_CREAT | O_CLOEXEC, octal!644);
 
     assert(inpFD > 0 && outFD > 0);
+    stat_t st = {0};
+    assert(fstat(inpFD, &st) == 0);
 
     /* Wipe the file */
     scope (exit)
@@ -243,14 +245,16 @@ private unittest
     }
 
     loff_t nBytesCopied = 0;
+    loff_t length = st.st_size;
 
     /* Perform the in-kernel copy */
     do
     {
         nBytesCopied = copy_file_range(inpFD, null, outFD, null, KernelChunkSize, 0);
         assert(nBytesCopied >= 0);
+        length -= nBytesCopied;
     }
-    while (nBytesCopied > 0);
+    while (length > 0 && nBytesCopied > 0);
 
     assert(computeSHA256(inputPath) == computeSHA256(outputPath));
 }

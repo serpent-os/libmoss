@@ -127,7 +127,7 @@ public struct IOUtil
             }
             len -= nBytes;
         }
-        while (nBytes > 0 && len > 0);
+        while (len > 0 && nBytes);
 
         return IOResult(true);
     }
