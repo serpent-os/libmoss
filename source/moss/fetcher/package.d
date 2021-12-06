@@ -40,8 +40,32 @@ import moss.fetcher.worker;
  */
 public final class Fetcher : FetchContext
 {
-    this(ulong nWorkers = 1)
+    /**
+     * Construct a new Fetcher with the given number of worker thread
+     */
+    this(uint nWorkers = 1)
+    {
+        this.nWorkers = nWorkers;
+    }
+
+    /**
+     * Enqueue a fetchable for future processing
+     */
+    override void enqueue(in Fetchable f)
     {
 
     }
+
+    /**
+     * For every download currently enqueued, process them all and
+     * return from this function when done.
+     */
+    override void fetch()
+    {
+
+    }
+
+private:
+
+    uint nWorkers = 0;
 }
