@@ -151,6 +151,10 @@ private:
         enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set PROGRESSFUNCTION");
         ret = curl_easy_setopt(handle, CurlOption.progressdata, this);
         enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set PROGRESSDATA");
+
+        /* Enable progress reporting */
+        ret = curl_easy_setopt(handle, CurlOption.noprogress, 0);
+        enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set NOPROGRESS");
     }
 
     /**
