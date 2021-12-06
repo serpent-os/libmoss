@@ -50,6 +50,11 @@ public final class Fetcher : FetchContext
         this.nWorkers = nWorkers;
         shmem = curl_share_init();
         queue = new FetchQueue();
+
+        foreach (i; 0 .. nWorkers)
+        {
+            workers[i] = new FetchWorker();
+        }
     }
 
     /**
@@ -78,6 +83,16 @@ public final class Fetcher : FetchContext
         {
             return;
         }
+
+        /* Destroy our workers */
+        foreach (ref worker; workers)
+        {
+            worker.close();
+            worker.destroy();
+        }
+        workers = null;
+
+        /* Destroy curl share */
         curl_share_cleanup(shmem);
         shmem = null;
     }
@@ -87,4 +102,5 @@ private:
     CURLSH* shmem = null;
     uint nWorkers = 0;
     FetchQueue queue = null;
+    FetchWorker[] workers;
 }
