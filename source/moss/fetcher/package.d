@@ -27,8 +27,15 @@ import moss.fetcher.queue;
 import moss.fetcher.worker;
 import std.exception : enforce;
 import std.parallelism : totalCPUs;
+import std.typecons : Nullable;
 
 public import moss.core.fetchcontext;
+
+/**
+ * Internally we handle work allocation so must know if the work is no
+ * longer available.
+ */
+package alias NullableFetchable = Nullable!(Fetchable, Fetchable.init);
 
 /**
  * A fairly simple implementation of the FetchContext. Downloads added to
@@ -108,6 +115,26 @@ public final class Fetcher : FetchContext
         /* Destroy curl share */
         curl_share_cleanup(shmem);
         shmem = null;
+    }
+
+package:
+
+    /**
+     * Allocate work for a worker according to their own work preference.
+     * If no more work is available, the returned type will return true
+     * in isNull
+     */
+    NullableFetchable allocateWork(WorkerPreference preference)
+    {
+        synchronized (queue)
+        {
+            if (queue.empty)
+            {
+                return NullableFetchable();
+            }
+            return NullableFetchable(preference == WorkerPreference.LargeItems
+                    ? queue.popLargest : queue.popSmallest);
+        }
     }
 
 private:

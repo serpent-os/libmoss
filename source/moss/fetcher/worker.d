@@ -25,6 +25,8 @@ module moss.fetcher.worker;
 import etc.c.curl;
 import core.sync.mutex;
 import std.exception : enforce;
+import moss.fetcher : Fetcher;
+import moss.core.fetchcontext : Fetchable;
 
 /**
  * The worker preference defines our policy in fetching items from the
@@ -124,6 +126,21 @@ package final class FetchWorker
             break;
         default:
             break;
+        }
+    }
+
+    /**
+     * Run using the current fetch queue
+     */
+    void run(scope Fetcher fetcher)
+    {
+        while (true)
+        {
+            auto fetchable = fetcher.allocateWork(preference);
+            if (fetchable.isNull)
+            {
+                break;
+            }
         }
     }
 
