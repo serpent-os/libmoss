@@ -56,10 +56,8 @@ package final class FetchWorker
     /**
      * Construct a new FetchWorker and setup any associated resources.
      */
-    this(CURLSH* shmem, WorkerPreference preference = WorkerPreference.SmallItems)
+    this(WorkerPreference preference = WorkerPreference.SmallItems)
     {
-        assert(shmem !is null);
-        this.shmem = shmem;
         this.preference = preference;
 
         /* Grab a handle. */
@@ -144,6 +142,15 @@ package final class FetchWorker
         }
     }
 
+    @property void share(CURLSH* share)
+    {
+        shmem = share;
+
+        /* Setup share */
+        auto ret = curl_easy_setopt(handle, CurlOption.share, shmem);
+        enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set SHARE");
+    }
+
 private:
 
     /**
@@ -152,10 +159,6 @@ private:
     void setupHandle()
     {
         CURLcode ret;
-
-        /* Setup share */
-        ret = curl_easy_setopt(handle, CurlOption.share, shmem);
-        enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set SHARE");
 
         /* Setup write callback */
         ret = curl_easy_setopt(handle, CurlOption.writefunction, &mossFetchWorkerWrite);

@@ -67,7 +67,6 @@ public final class Fetcher : FetchContext
         this.nWorkers = nWorkers;
         shmem = curl_share_init();
         enforce(shmem !is null, "Fetcher(): curl_share_init() failure");
-        setupShare();
 
         queue = new FetchQueue();
 
@@ -75,7 +74,14 @@ public final class Fetcher : FetchContext
         foreach (i; 0 .. nWorkers)
         {
             auto pref = i == 0 ? WorkerPreference.LargeItems : WorkerPreference.SmallItems;
-            workers[i] = new FetchWorker(shmem, pref);
+            workers ~= new FetchWorker(pref);
+        }
+
+        /* Bind sharing now */
+        setupShare();
+        foreach (worker; workers)
+        {
+            worker.share = shmem;
         }
     }
 
@@ -154,20 +160,26 @@ private:
      */
     void setupShare()
     {
-        CURLcode ret;
+        CURLSHcode ret;
 
         /* We want to share DNS, SSL session and connection pool */
-        ret = curl_share_setopt(shmem, CurlShOption.share,
-                CurlLockData.dns | CurlLockData.ssl_session | CurlLockData.connect);
-        enforce(ret == 0, "Fetcher.setupShare(): Failed to set CURLSH options");
+        static auto wanted = [
+            CurlLockData.dns, CurlLockData.ssl_session, CurlLockData.connect
+        ];
+
+        foreach (w; wanted)
+        {
+            ret = curl_share_setopt(shmem, CurlShOption.share, w);
+            enforce(ret == 0, "Fetcher.setupShare(): Failed to set CURLSH option");
+        }
 
         /* Set up locking behaviour */
+        ret = curl_share_setopt(shmem, CurlShOption.userdata, this);
+        enforce(ret == 0, "Fetcher.setupShare(): Failed to set lock userdata");
         ret = curl_share_setopt(shmem, CurlShOption.lockfunc, &mossFetcherLockFunc);
         enforce(ret == 0, "Fetcher.setupShare(): Failed to set lock function");
         ret = curl_share_setopt(shmem, CurlShOption.unlockfunc, &mossFetcherUnlockFunc);
         enforce(ret == 0, "Fetcher.setupShare(): Failed to set unlock function");
-        ret = curl_share_setopt(shmem, CurlShOption.userdata, this);
-        enforce(ret == 0, "Fetcher.setupShare(): Failed to set lock userdata");
     }
 
     /**
@@ -201,4 +213,5 @@ private:
 private unittest
 {
     auto f = new Fetcher();
+    f.close();
 }
