@@ -225,7 +225,6 @@ private unittest
 @("Test copy_file_range")
 private unittest
 {
-    import moss.core : KernelChunkSize;
     import moss.core.util : computeSHA256;
 
     auto inputPath = "LICENSE";
@@ -250,7 +249,7 @@ private unittest
     /* Perform the in-kernel copy */
     do
     {
-        nBytesCopied = copy_file_range(inpFD, null, outFD, null, KernelChunkSize, 0);
+        nBytesCopied = copy_file_range(inpFD, null, outFD, null, length, 0);
         assert(nBytesCopied >= 0);
         length -= nBytesCopied;
     }

@@ -25,7 +25,6 @@
  */
 module moss.core.ioutil;
 
-import moss.core : KernelChunkSize;
 import cstdlib = moss.core.c;
 import std.sumtype;
 public import std.conv : octal;
