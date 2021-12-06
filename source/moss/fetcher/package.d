@@ -62,7 +62,7 @@ public final class Fetcher : FetchContext
         foreach (i; 0 .. nWorkers)
         {
             auto pref = i == 0 ? WorkerPreference.LargeItems : WorkerPreference.SmallItems;
-            workers[i] = new FetchWorker(pref);
+            workers[i] = new FetchWorker(shmem, pref);
         }
     }
 

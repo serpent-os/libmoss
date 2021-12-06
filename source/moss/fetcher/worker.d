@@ -48,11 +48,15 @@ package enum WorkerPreference
 package final class FetchWorker
 {
 
+    @disable this();
+
     /**
      * Construct a new FetchWorker and setup any associated resources.
      */
-    this(WorkerPreference preference = WorkerPreference.SmallItems)
+    this(CURLSH* shmem, WorkerPreference preference = WorkerPreference.SmallItems)
     {
+        assert(shmem !is null);
+        this.shmem = shmem;
         this.preference = preference;
 
         /* Grab a handle. */
@@ -121,7 +125,15 @@ package final class FetchWorker
 
 private:
 
+    /**
+     * Reusable handle
+     */
     CURL* handle;
+
+    /**
+     * Shared data for CURL handles
+     */
+    CURLSH* shmem;
 
     /**
      * Lock for sharing DNS
