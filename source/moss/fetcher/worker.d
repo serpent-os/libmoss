@@ -24,6 +24,7 @@ module moss.fetcher.worker;
 
 import etc.c.curl;
 import core.sync.mutex;
+import std.exception : enforce;
 
 /**
  * The worker preference defines our policy in fetching items from the
@@ -61,6 +62,7 @@ package final class FetchWorker
 
         /* Grab a handle. */
         handle = curl_easy_init();
+        enforce(handle !is null, "FetchWorker(): curl_easy_init() failure");
 
         /* Establish locks for CURLSH usage */
         dnsLock = new shared Mutex();

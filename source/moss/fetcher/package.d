@@ -25,6 +25,7 @@ module moss.fetcher;
 import etc.c.curl;
 import moss.fetcher.queue;
 import moss.fetcher.worker;
+import std.exception : enforce;
 import std.parallelism : totalCPUs;
 
 public import moss.core.fetchcontext;
@@ -56,6 +57,8 @@ public final class Fetcher : FetchContext
 
         this.nWorkers = nWorkers;
         shmem = curl_share_init();
+        enforce(shmem !is null, "Fetcher(): curl_share_init() failure");
+
         queue = new FetchQueue();
 
         /* Create N workers, worker 0 preferring large items first */
