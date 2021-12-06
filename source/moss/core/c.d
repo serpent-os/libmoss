@@ -26,7 +26,7 @@
 module moss.core.c;
 
 public import core.sys.posix.sys.types : dev_t, mode_t, off_t, slong_t;
-public import core.sys.posix.sys.stat : stat_t;
+public import core.sys.posix.sys.stat : stat_t, fstat;
 public import core.sys.posix.fcntl : AT_SYMLINK_NOFOLLOW, AT_FDCWD, O_RDONLY,
     O_RDWR, O_WRONLY, O_CREAT, O_CLOEXEC, O_TRUNC;
 

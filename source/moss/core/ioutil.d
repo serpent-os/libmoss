@@ -90,21 +90,23 @@ public struct IOUtil
 
     /**
      * Directly copy from the input file descriptor to the output file descriptor
+     * If the length isn't provided, it will be discovered using fstat()
      */
-    static IOResult copyFile(int fdIn, int fdOut)
+    static IOResult copyFile(int fdIn, int fdOut, long len = 0)
     {
-        cstdlib.loff_t nBytes = 0;
-        do
+        /* Acquire the length using fstat() */
+        if (len < 1)
         {
-            nBytes = cstdlib.copy_file_range(fdIn, null, fdOut, null, KernelChunkSize, 0);
-            if (nBytes < 0)
+            cstdlib.stat_t st = {0};
+            auto ret = cstdlib.fstat(fdIn, &st);
+            if (ret < 0)
             {
                 return IOResult(CError(cstdlib.errno));
             }
+            len = st.st_size;
         }
-        while (nBytes > 0);
 
-        return IOResult(true);
+        return copyFileRange(fdIn, 0, fdOut, 0, len);
     }
 
     /**
