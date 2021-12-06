@@ -47,6 +47,7 @@ public final class Fetcher : FetchContext
     this(uint nWorkers = 1)
     {
         this.nWorkers = nWorkers;
+        shmem = curl_share_init();
     }
 
     /**
