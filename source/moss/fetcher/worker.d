@@ -66,7 +66,7 @@ package final class FetchWorker
         switch (lockData)
         {
         case CurlLockData.dns:
-            conLock.lock_nothrow();
+            dnsLock.lock_nothrow();
             break;
         case CurlLockData.ssl_session:
             sslLock.lock_nothrow();
@@ -87,7 +87,7 @@ package final class FetchWorker
         switch (lockData)
         {
         case CurlLockData.dns:
-            conLock.unlock_nothrow();
+            dnsLock.unlock_nothrow();
             break;
         case CurlLockData.ssl_session:
             sslLock.unlock_nothrow();
