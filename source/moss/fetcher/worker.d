@@ -62,7 +62,6 @@ package final class FetchWorker
         /* Grab a handle. */
         handle = curl_easy_init();
         enforce(handle !is null, "FetchWorker(): curl_easy_init() failure");
-
         setupHandle();
     }
 
@@ -84,6 +83,8 @@ package final class FetchWorker
      */
     void run(scope Fetcher fetcher)
     {
+        import std.string : toStringz;
+
         while (true)
         {
             auto fetchable = fetcher.allocateWork(preference);
@@ -91,6 +92,14 @@ package final class FetchWorker
             {
                 break;
             }
+
+            auto job = fetchable.get;
+            import std.stdio : writeln;
+
+            writeln(job);
+            writeln(handle);
+            curl_easy_setopt(handle, CurlOption.url, job.sourceURI.toStringz);
+            curl_easy_perform(handle);
         }
     }
 
@@ -149,6 +158,9 @@ private:
 
         /* TODO: Report this. */
         immutable auto percentDone = dlNow / dlTotal * 100.0;
+        import std.stdio : writef;
+
+        writef("\r%.2f", percentDone);
     }
 
     /**

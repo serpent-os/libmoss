@@ -65,10 +65,10 @@ public final class Fetcher : FetchContext
             nWorkers = 1;
         }
 
-        /* Establish locks for CURLSH usage */
-        dnsLock = new shared Mutex();
-        sslLock = new shared Mutex();
-        conLock = new shared Mutex();
+        foreach (i; 0 .. cast(int) CurlLockData.last)
+        {
+            locks[i] = new Mutex();
+        }
 
         this.nWorkers = nWorkers;
         shmem = curl_share_init();
@@ -105,14 +105,15 @@ public final class Fetcher : FetchContext
      */
     override void fetch()
     {
+        import std.array : array;
+
         auto tp = new TaskPool(nWorkers);
         auto tasks = iota(0, nWorkers).map!((w) {
             auto t = task(() => workers[w].run(this));
             tp.put(t);
             return t;
-        });
+        }).array();
         /* Will ensure that we're at least starting one on main thread */
-        tasks.each!((t) => t.spinForce());
         tp.finish(true);
     }
 
@@ -195,7 +196,7 @@ private:
             CurlLockAccess lockType, void* userptr)
     {
         auto fetcher = cast(Fetcher) userptr;
-        fetcher.lockMutex(data);
+        fetcher.locks[data].lock();
     }
 
     /**
@@ -205,49 +206,7 @@ private:
             CurlLockData data, CurlLockAccess lockType, void* userptr)
     {
         auto fetcher = cast(Fetcher) userptr;
-        fetcher.unlockMutex(data);
-    }
-
-    /**
-     * Lock a specific mutex for CURL sharing
-     */
-    void lockMutex(CurlLockData lockData) @safe @nogc nothrow
-    {
-        switch (lockData)
-        {
-        case CurlLockData.dns:
-            dnsLock.lock_nothrow();
-            break;
-        case CurlLockData.ssl_session:
-            sslLock.lock_nothrow();
-            break;
-        case CurlLockData.connect:
-            conLock.lock_nothrow();
-            break;
-        default:
-            break;
-        }
-    }
-
-    /**
-     * Unlock a specific mutex for CURL sharing
-     */
-    void unlockMutex(CurlLockData lockData) @safe @nogc nothrow
-    {
-        switch (lockData)
-        {
-        case CurlLockData.dns:
-            dnsLock.unlock_nothrow();
-            break;
-        case CurlLockData.ssl_session:
-            sslLock.unlock_nothrow();
-            break;
-        case CurlLockData.connect:
-            conLock.unlock_nothrow();
-            break;
-        default:
-            break;
-        }
+        fetcher.locks[data].unlock();
     }
 
     /**
@@ -255,29 +214,16 @@ private:
      */
     CURLSH* shmem;
 
-    /**
-     * Lock for sharing DNS
-     */
-    shared Mutex dnsLock;
-
-    /**
-     * Lock for sharing SSL session
-     */
-    shared Mutex sslLock;
-
-    /**
-     * Lock for sharing connections
-     */
-    shared Mutex conLock;
-
     uint nWorkers = 0;
     FetchQueue queue = null;
     FetchWorker[] workers;
+
+    __gshared Mutex[CurlLockData.last] locks;
 }
 
 private unittest
 {
-    auto f = new Fetcher();
+    auto f = new Fetcher(4);
     f.fetch();
     f.close();
 }
