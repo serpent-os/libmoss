@@ -163,7 +163,7 @@ private:
     extern (C) static size_t mossFetchWorkerWrite(void* ptr, size_t size,
             size_t nMemb, void* userdata)
     {
-        return 0;
+        return nMemb;
     }
 
     /**
