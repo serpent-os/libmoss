@@ -22,6 +22,7 @@
 
 module moss.fetcher;
 
+import etc.c.curl;
 import moss.core.fetchcontext;
 import moss.fetcher.queue;
 import moss.fetcher.worker;
@@ -65,7 +66,21 @@ public final class Fetcher : FetchContext
 
     }
 
+    /**
+     * Close this fetcher and any associated resources
+     */
+    void close()
+    {
+        if (shmem is null)
+        {
+            return;
+        }
+        curl_share_cleanup(shmem);
+        shmem = null;
+    }
+
 private:
 
+    CURLSH* shmem = null;
     uint nWorkers = 0;
 }
