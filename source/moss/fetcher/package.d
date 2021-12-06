@@ -197,3 +197,8 @@ private:
     FetchQueue queue = null;
     FetchWorker[] workers;
 }
+
+private unittest
+{
+    auto f = new Fetcher();
+}
