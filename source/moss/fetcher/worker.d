@@ -64,6 +64,8 @@ package final class FetchWorker
         handle = curl_easy_init();
         enforce(handle !is null, "FetchWorker(): curl_easy_init() failure");
 
+        setupHandle();
+
         /* Establish locks for CURLSH usage */
         dnsLock = new shared Mutex();
         sslLock = new shared Mutex();
@@ -126,6 +128,32 @@ package final class FetchWorker
     }
 
 private:
+
+    /**
+     * Set the baseline handle options
+     */
+    void setupHandle()
+    {
+        CURLcode ret;
+
+        /* Setup share */
+        ret = curl_easy_setopt(handle, CurlOption.share, shmem);
+        enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set SHARE");
+
+        /* Setup write callback */
+        ret = curl_easy_setopt(handle, CurlOption.writefunction, &mossFetchWorkerWrite);
+        enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set WRITEFUNCTION");
+        ret = curl_easy_setopt(handle, CurlOption.writedata, this);
+        enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set WRITEDATA");
+    }
+
+    /**
+     * Handle writing
+     */
+    static size_t mossFetchWorkerWrite(void* ptr, size_t size, size_t nMemb, void* userdata)
+    {
+        return 0;
+    }
 
     /**
      * Reusable handle
