@@ -26,8 +26,10 @@ import etc.c.curl;
 import moss.fetcher.queue;
 import moss.fetcher.worker;
 import std.exception : enforce;
-import std.parallelism : totalCPUs;
+import std.parallelism : task, totalCPUs, TaskPool;
 import std.typecons : Nullable;
+import std.range : iota;
+import std.algorithm : each, map;
 
 public import moss.core.fetchcontext;
 
@@ -91,7 +93,15 @@ public final class Fetcher : FetchContext
      */
     override void fetch()
     {
-
+        auto tp = new TaskPool(nWorkers);
+        auto tasks = iota(0, nWorkers).map!((w) {
+            auto t = task(() => workers[w].run(this));
+            tp.put(t);
+            return t;
+        });
+        /* Will ensure that we're at least starting one on main thread */
+        tasks.each!((t) => t.spinForce());
+        tp.finish(true);
     }
 
     /**
