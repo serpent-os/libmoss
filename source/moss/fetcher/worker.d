@@ -26,6 +26,23 @@ import etc.c.curl;
 import core.sync.mutex;
 
 /**
+ * The worker preference defines our policy in fetching items from the
+ * FetcherQueue, i.e small or big
+ */
+package enum WorkerPreference
+{
+    /**
+     * This worker prefers small items
+     */
+    SmallItems = 0,
+
+    /**
+     * This worker prefers large items
+     */
+    LargeItems,
+}
+
+/**
  * A FetchWorker is created per thread and maintains its own CURL handles
  */
 package final class FetchWorker
@@ -34,8 +51,10 @@ package final class FetchWorker
     /**
      * Construct a new FetchWorker and setup any associated resources.
      */
-    this()
+    this(WorkerPreference preference = WorkerPreference.SmallItems)
     {
+        this.preference = preference;
+
         /* Grab a handle. */
         handle = curl_easy_init();
 
@@ -118,4 +137,9 @@ private:
      * Lock for sharing connections
      */
     shared Mutex conLock;
+
+    /**
+     * By default prefer small items
+     */
+    WorkerPreference preference = WorkerPreference.SmallItems;
 }

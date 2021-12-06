@@ -51,9 +51,11 @@ public final class Fetcher : FetchContext
         shmem = curl_share_init();
         queue = new FetchQueue();
 
+        /* Create N workers, worker 0 preferring large items first */
         foreach (i; 0 .. nWorkers)
         {
-            workers[i] = new FetchWorker();
+            auto pref = i == 0 ? WorkerPreference.LargeItems : WorkerPreference.SmallItems;
+            workers[i] = new FetchWorker(pref);
         }
     }
 
