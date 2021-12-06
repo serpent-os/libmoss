@@ -123,6 +123,36 @@ private:
         ret = curl_share_setopt(shmem, CurlShOption.share,
                 CurlLockData.dns | CurlLockData.ssl_session | CurlLockData.connect);
         enforce(ret == 0, "Fetcher.setupShare(): Failed to set CURLSH options");
+
+        /* Set up locking behaviour */
+        ret = curl_share_setopt(shmem, CurlShOption.lockfunc, &mossFetcherLockFunc);
+        enforce(ret == 0, "Fetcher.setupShare(): Failed to set lock function");
+        ret = curl_share_setopt(shmem, CurlShOption.unlockfunc, &mossFetcherUnlockFunc);
+        enforce(ret == 0, "Fetcher.setupShare(): Failed to set unlock function");
+        ret = curl_share_setopt(shmem, CurlShOption.userdata, this);
+        enforce(ret == 0, "Fetcher.setupShare(): Failed to set lock userdata");
+    }
+
+    /**
+     * Curl requested we lock something
+     */
+    extern (C) static void mossFetcherLockFunc(void* handle, int data,
+            CurlLockData lockType, void* userptr)
+    {
+        auto fetcher = cast(Fetcher) userptr;
+        enforce(fetcher !is null && data >= 0 && data < fetcher.workers.length, "CURL IS BROKEN");
+        fetcher.workers[data].lock(lockType);
+    }
+
+    /**
+     * Curl requested we unlock something
+     */
+    extern (C) static void mossFetcherUnlockFunc(void* handle, int data,
+            CurlLockData lockType, void* userptr)
+    {
+        auto fetcher = cast(Fetcher) userptr;
+        enforce(fetcher !is null && data >= 0 && data < fetcher.workers.length, "CURL IS BROKEN");
+        fetcher.workers[data].unlock(lockType);
     }
 
     CURLSH* shmem = null;
