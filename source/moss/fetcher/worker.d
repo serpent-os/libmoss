@@ -24,9 +24,9 @@ module moss.fetcher.worker;
 
 import etc.c.curl;
 import std.exception : enforce;
-import moss.fetcher : FetchResult, FetchError, FetchErrorDomain;
 import moss.fetcher.controller : FetchController;
 import moss.core.fetchcontext : Fetchable;
+import moss.fetcher.result;
 import std.string : toStringz;
 import std.sumtype;
 
