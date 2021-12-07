@@ -224,6 +224,8 @@ private:
 private unittest
 {
     auto f = new Fetcher(4);
+    f.enqueue(Fetchable("file://README.md", "README.md.new", 20));
+    f.enqueue(Fetchable("file://LICENSE", "LICENSE.new", 0));
     f.fetch();
     f.close();
 }
