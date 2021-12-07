@@ -83,5 +83,6 @@ public struct FetchError
 
 /**
  * Algebraic return type for simple coding
+ * Contains a status code *or* an error
  */
-public alias FetchResult = SumType!(bool, FetchError);
+public alias FetchResult = SumType!(long, FetchError);

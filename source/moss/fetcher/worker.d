@@ -96,7 +96,7 @@ package final class FetchWorker
 
             auto job = fetchable.get;
             auto ret = process(job);
-            ret.match!((bool ok) {}, (err) => assert(0, err.toString));
+            ret.match!((long code) {}, (err) => assert(0, err.toString));
         }
     }
 
@@ -135,8 +135,11 @@ private:
             return FetchResult(FetchError(ret, FetchErrorDomain.CurlEasy, fetchable.sourceURI));
         }
 
+        long statusCode = 0;
+        curl_easy_getinfo(handle, CurlInfo.response_code, &statusCode);
+
         /* All went well? */
-        return FetchResult(true);
+        return FetchResult(statusCode);
     }
 
     /**
