@@ -171,16 +171,17 @@ private:
         foreach (w; wanted)
         {
             ret = curl_share_setopt(shmem, CurlShOption.share, w);
-            enforce(ret == 0, "FetchController.setupShare(): Failed to set CURLSH option");
+            enforce(ret == CurlError.ok,
+                    "FetchController.setupShare(): Failed to set CURLSH option");
         }
 
         /* Set up locking behaviour */
         ret = curl_share_setopt(shmem, CurlShOption.userdata, this);
-        enforce(ret == 0, "FetchController.setupShare(): Failed to set lock userdata");
+        enforce(ret == CurlError.ok, "FetchController.setupShare(): Failed to set lock userdata");
         ret = curl_share_setopt(shmem, CurlShOption.lockfunc, &mossFetchControllerLockFunc);
-        enforce(ret == 0, "FetchController.setupShare(): Failed to set lock function");
+        enforce(ret == CurlError.ok, "FetchController.setupShare(): Failed to set lock function");
         ret = curl_share_setopt(shmem, CurlShOption.unlockfunc, &mossFetchControllerUnlockFunc);
-        enforce(ret == 0, "FetchController.setupShare(): Failed to set unlock function");
+        enforce(ret == CurlError.ok, "FetchController.setupShare(): Failed to set unlock function");
     }
 
     /**

@@ -109,7 +109,7 @@ package final class FetchWorker
 
         /* Setup share */
         auto ret = curl_easy_setopt(handle, CurlOption.share, shmem);
-        enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set SHARE");
+        enforce(ret == CurlError.ok, "FetchWorker.setupHandle(): Failed to set SHARE");
     }
 
 private:
@@ -123,14 +123,14 @@ private:
 
         /* Set up the URL */
         ret = curl_easy_setopt(handle, CurlOption.url, fetchable.sourceURI.toStringz);
-        if (ret != 0)
+        if (ret != CurlError.ok)
         {
             return FetchResult(FetchError(ret, FetchErrorDomain.CurlEasy, fetchable.sourceURI));
         }
 
         /* try to download now */
         ret = curl_easy_perform(handle);
-        if (ret != 0)
+        if (ret != CurlError.ok)
         {
             return FetchResult(FetchError(ret, FetchErrorDomain.CurlEasy, fetchable.sourceURI));
         }
@@ -151,19 +151,19 @@ private:
 
         /* Setup write callback */
         ret = curl_easy_setopt(handle, CurlOption.writefunction, &mossFetchWorkerWrite);
-        enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set WRITEFUNCTION");
+        enforce(ret == CurlError.ok, "FetchWorker.setupHandle(): Failed to set WRITEFUNCTION");
         ret = curl_easy_setopt(handle, CurlOption.writedata, this);
-        enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set WRITEDATA");
+        enforce(ret == CurlError.ok, "FetchWorker.setupHandle(): Failed to set WRITEDATA");
 
         /* Setup progress callback */
         ret = curl_easy_setopt(handle, CurlOption.progressfunction, &mossFetchWorkerProgress);
-        enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set PROGRESSFUNCTION");
+        enforce(ret == CurlError.ok, "FetchWorker.setupHandle(): Failed to set PROGRESSFUNCTION");
         ret = curl_easy_setopt(handle, CurlOption.progressdata, this);
-        enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set PROGRESSDATA");
+        enforce(ret == CurlError.ok, "FetchWorker.setupHandle(): Failed to set PROGRESSDATA");
 
         /* Enable progress reporting */
         ret = curl_easy_setopt(handle, CurlOption.noprogress, 0);
-        enforce(ret == 0, "FetchWorker.setupHandle(): Failed to set NOPROGRESS");
+        enforce(ret == CurlError.ok, "FetchWorker.setupHandle(): Failed to set NOPROGRESS");
     }
 
     /**
