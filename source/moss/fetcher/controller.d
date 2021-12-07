@@ -108,6 +108,7 @@ public final class FetchController : FetchContext
         /* Allow them to work now */
         foreach (ref worker; workers)
         {
+            worker.share = shmem;
             worker.allowWork();
         }
 
@@ -125,9 +126,9 @@ public final class FetchController : FetchContext
                     livingWorkers--;
                 }
             }, (WorkReport report) {
-                report.result.match!((long code) {}, (FetchError err) {
-                    writeln("onoes: ", err.toString);
-                });
+                report.result.match!((long code) {
+                    writeln("got :", report.origin.sourceURI, " - ", code);
+                }, (FetchError err) { writeln("onoes: ", err.toString); });
             });
         }
 
@@ -163,15 +164,12 @@ package:
      */
     NullableFetchable allocateWork(WorkerPreference preference)
     {
-        synchronized (queue)
+        if (queue.empty)
         {
-            if (queue.empty)
-            {
-                return NullableFetchable();
-            }
-            return NullableFetchable(preference == WorkerPreference.LargeItems
-                    ? queue.popLargest : queue.popSmallest);
+            return NullableFetchable();
         }
+        return NullableFetchable(preference == WorkerPreference.LargeItems
+                ? queue.popLargest : queue.popSmallest);
     }
 
 private:
@@ -238,8 +236,21 @@ private:
 private unittest
 {
     auto f = new FetchController(4);
-    f.enqueue(Fetchable("file://README.md", "README.md.new", 20));
-    f.enqueue(Fetchable("file://LICENSE", "LICENSE.new", 0));
+    auto jobs = [
+        Fetchable("https://dev.serpentos.com/protosnek/x86_64/binutils-2.37-1-1-x86_64.stone",
+                "binutils"),
+        Fetchable("https://dev.serpentos.com/protosnek/x86_64/curl-7.79.1-1-1-x86_64.stone",
+                "curl"),
+        Fetchable("https://dev.serpentos.com/protosnek/x86_64/gcc-32bit-11.2.0-1-1-x86_64.stone", "gcc-32bit"),
+        Fetchable("https://dev.serpentos.com/protosnek/x86_64/file-5.4-1-1-x86_64.stone", "file"),
+        Fetchable("https://dev.serpentos.com/protosnek/x86_64/libarchive-3.5.2-1-1-x86_64.stone", "libarchive"),
+        Fetchable("https://dev.serpentos.com/protosnek/x86_64/make-4.3-1-1-x86_64.stone",
+                "make"),
+    ];
+    foreach (j; jobs)
+    {
+        f.enqueue(j);
+    }
     f.fetch();
     f.close();
 }
