@@ -24,12 +24,12 @@ module moss.fetcher.worker;
 
 import etc.c.curl;
 import std.exception : enforce;
-import moss.fetcher : Fetcher;
+import moss.fetcher.controller : FetchController;
 import moss.core.fetchcontext : Fetchable;
 
 /**
  * The worker preference defines our policy in fetching items from the
- * FetcherQueue, i.e small or big
+ * FetchQueue, i.e small or big
  */
 package enum WorkerPreference
 {
@@ -81,7 +81,7 @@ package final class FetchWorker
     /**
      * Run using the current fetch queue
      */
-    void run(scope Fetcher fetcher)
+    void run(scope FetchController fetcher)
     {
         import std.string : toStringz;
 
