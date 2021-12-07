@@ -26,6 +26,7 @@ import etc.c.curl;
 import moss.fetcher : NullableFetchable;
 import moss.fetcher.queue;
 import moss.fetcher.worker;
+import moss.fetcher.result;
 import std.concurrency : register, thisTid, receive, send;
 import moss.fetcher.messaging;
 import std.exception : enforce;
@@ -110,6 +111,8 @@ public final class FetchController : FetchContext
             worker.allowWork();
         }
 
+        import std.stdio : writeln;
+
         /* While workers live, let them get null responses */
         while (livingWorkers > 0)
         {
@@ -121,6 +124,10 @@ public final class FetchController : FetchContext
                 {
                     livingWorkers--;
                 }
+            }, (WorkReport report) {
+                report.result.match!((long code) {}, (FetchError err) {
+                    writeln("onoes: ", err.toString);
+                });
             });
         }
 

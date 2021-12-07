@@ -143,8 +143,9 @@ private:
                 break;
             }
 
-            /* Process the job. TODO: Return completion status.. */
+            /* Process the job and send completion status.. */
             auto result = process(job.get);
+            send(mainThread, WorkReport(job.get, result));
         }
 
         /* Block for shutdown + join */

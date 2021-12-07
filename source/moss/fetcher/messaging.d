@@ -23,7 +23,9 @@
 module moss.fetcher.messaging;
 
 import std.concurrency : Tid;
+import moss.core.fetchcontext;
 import moss.fetcher.worker : WorkerPreference;
+import moss.fetcher.result;
 
 /**
  * Acknowledgement startup completed
@@ -61,4 +63,14 @@ package struct AllocateFetchableControl
  */
 package struct AllowWorkControl
 {
+}
+
+/**
+ * WorkReport contains the fetchable that spawned the FetchResult as
+ * well as the result itself.
+ */
+package struct WorkReport
+{
+    Fetchable origin;
+    FetchResult result;
 }
