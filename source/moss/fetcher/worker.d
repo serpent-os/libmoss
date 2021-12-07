@@ -98,8 +98,11 @@ package final class FetchWorker
 
             writeln(job);
             writeln(handle);
-            curl_easy_setopt(handle, CurlOption.url, job.sourceURI.toStringz);
-            curl_easy_perform(handle);
+            auto code = curl_easy_setopt(handle, CurlOption.url, job.sourceURI.toStringz);
+            enforce(code != 0, "FetchWorker.run(): Failed to set URI");
+
+            code = curl_easy_perform(handle);
+            enforce(code != 0, "FetchWorker.run(): Failed to download");
         }
     }
 
