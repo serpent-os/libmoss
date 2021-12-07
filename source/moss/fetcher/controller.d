@@ -23,22 +23,16 @@
 module moss.fetcher.controller;
 
 import etc.c.curl;
+import moss.fetcher : NullableFetchable;
 import moss.fetcher.queue;
 import moss.fetcher.worker;
 import std.exception : enforce;
 import std.parallelism : task, totalCPUs, TaskPool;
-import std.typecons : Nullable;
 import std.range : iota;
 import std.algorithm : each, map;
 import core.sync.mutex;
 
 public import moss.core.fetchcontext;
-
-/**
- * Internally we handle work allocation so must know if the work is no
- * longer available.
- */
-package alias NullableFetchable = Nullable!(Fetchable, Fetchable.init);
 
 /**
  * A fairly simple implementation of the FetchContext. Downloads added to

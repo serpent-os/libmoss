@@ -30,6 +30,15 @@ import std.string : fromStringz;
 import core.sys.posix.string : strerror;
 import std.string : format;
 
+public import moss.core.fetchcontext : Fetchable;
+public import std.typecons : Nullable;
+
+/**
+ * Internally we handle work allocation so must know if the work is no
+ * longer available.
+ */
+package alias NullableFetchable = Nullable!(Fetchable, Fetchable.init);
+
 /**
  * moss-fetcher may have errors from 3 primary domains so we specify them
  * for ease of handling
