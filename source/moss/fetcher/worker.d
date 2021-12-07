@@ -24,8 +24,11 @@ module moss.fetcher.worker;
 
 import etc.c.curl;
 import std.exception : enforce;
+import moss.fetcher : FetchResult, FetchError, FetchErrorDomain;
 import moss.fetcher.controller : FetchController;
 import moss.core.fetchcontext : Fetchable;
+import std.string : toStringz;
+import std.sumtype;
 
 /**
  * The worker preference defines our policy in fetching items from the
@@ -83,8 +86,6 @@ package final class FetchWorker
      */
     void run(scope FetchController fetcher)
     {
-        import std.string : toStringz;
-
         while (true)
         {
             auto fetchable = fetcher.allocateWork(preference);
@@ -94,18 +95,14 @@ package final class FetchWorker
             }
 
             auto job = fetchable.get;
-            import std.stdio : writeln;
-
-            writeln(job);
-            writeln(handle);
-            auto code = curl_easy_setopt(handle, CurlOption.url, job.sourceURI.toStringz);
-            enforce(code != 0, "FetchWorker.run(): Failed to set URI");
-
-            code = curl_easy_perform(handle);
-            enforce(code != 0, "FetchWorker.run(): Failed to download");
+            auto ret = process(job);
+            ret.match!((bool ok) {}, (err) => assert(0, err.toString));
         }
     }
 
+    /**
+     * Set the CURLSH share property
+     */
     @property void share(CURLSH* share)
     {
         shmem = share;
@@ -116,6 +113,31 @@ package final class FetchWorker
     }
 
 private:
+
+    /**
+     * Process a single fetchable
+     */
+    FetchResult process(in Fetchable fetchable)
+    {
+        CURLcode ret;
+
+        /* Set up the URL */
+        ret = curl_easy_setopt(handle, CurlOption.url, fetchable.sourceURI.toStringz);
+        if (ret != 0)
+        {
+            return FetchResult(FetchError(ret, FetchErrorDomain.CurlEasy, fetchable.sourceURI));
+        }
+
+        /* try to download now */
+        ret = curl_easy_perform(handle);
+        if (ret != 0)
+        {
+            return FetchResult(FetchError(ret, FetchErrorDomain.CurlEasy, fetchable.sourceURI));
+        }
+
+        /* All went well? */
+        return FetchResult(true);
+    }
 
     /**
      * Set the baseline handle options
