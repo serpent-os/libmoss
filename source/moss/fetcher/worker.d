@@ -26,9 +26,14 @@ import etc.c.curl;
 import std.exception : enforce;
 import moss.fetcher.controller : FetchController;
 import moss.core.fetchcontext : Fetchable;
+import moss.fetcher : NullableFetchable;
+import moss.fetcher.messaging;
 import moss.fetcher.result;
 import std.string : toStringz;
 import std.sumtype;
+import core.thread.osthread;
+
+import std.concurrency : locate, Tid, thisTid, receiveOnly, receive, send;
 
 /**
  * The worker preference defines our policy in fetching items from the
@@ -50,7 +55,7 @@ package enum WorkerPreference
 /**
  * A FetchWorker is created per thread and maintains its own CURL handles
  */
-package final class FetchWorker
+package final class FetchWorker : Thread
 {
 
     @disable this();
@@ -60,12 +65,27 @@ package final class FetchWorker
      */
     this(WorkerPreference preference = WorkerPreference.SmallItems)
     {
+        super(&processLoop);
         this.preference = preference;
 
         /* Grab a handle. */
         handle = curl_easy_init();
         enforce(handle !is null, "FetchWorker(): curl_easy_init() failure");
         setupHandle();
+    }
+
+    /**
+     * Ensure we get a full startup.
+     */
+    void startFully()
+    {
+        start();
+        receiveOnly!StartupAck;
+    }
+
+    void allowWork()
+    {
+        send(ourTid, AllowWorkControl());
     }
 
     /**
@@ -77,27 +97,12 @@ package final class FetchWorker
         {
             return;
         }
+        send(ourTid, ShutdownControl());
+        receiveOnly!ShutdownAck;
+        join();
+
         curl_easy_cleanup(handle);
         handle = null;
-    }
-
-    /**
-     * Run using the current fetch queue
-     */
-    void run(scope FetchController fetcher)
-    {
-        while (true)
-        {
-            auto fetchable = fetcher.allocateWork(preference);
-            if (fetchable.isNull)
-            {
-                break;
-            }
-
-            auto job = fetchable.get;
-            auto ret = process(job);
-            ret.match!((long code) {}, (err) => assert(0, err.toString));
-        }
     }
 
     /**
@@ -113,6 +118,39 @@ package final class FetchWorker
     }
 
 private:
+
+    /**
+     * Main thread body
+     */
+    void processLoop()
+    {
+        auto mainThread = locate("fetchController");
+        ourTid = thisTid();
+
+        /* startupFully() now complete, we're known to be running */
+        send(mainThread, StartupAck());
+
+        receiveOnly!AllowWorkControl;
+
+        /* Main loop here */
+        while (true)
+        {
+            send(mainThread, AllocateFetchableControl(ourTid, preference));
+            auto job = receiveOnly!NullableFetchable;
+            /* No job. Get outta here */
+            if (job.isNull)
+            {
+                break;
+            }
+
+            /* Process the job. TODO: Return completion status.. */
+            auto result = process(job.get);
+        }
+
+        /* Block for shutdown + join */
+        receiveOnly!ShutdownControl;
+        send(mainThread, ShutdownAck());
+    }
 
     /**
      * Process a single fetchable
@@ -205,4 +243,6 @@ private:
      * By default prefer small items
      */
     WorkerPreference preference = WorkerPreference.SmallItems;
+
+    Tid ourTid;
 }

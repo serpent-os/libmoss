@@ -26,6 +26,8 @@ import etc.c.curl;
 import moss.fetcher : NullableFetchable;
 import moss.fetcher.queue;
 import moss.fetcher.worker;
+import std.concurrency : register, thisTid, receive, send;
+import moss.fetcher.messaging;
 import std.exception : enforce;
 import std.parallelism : task, totalCPUs, TaskPool;
 import std.range : iota;
@@ -70,19 +72,10 @@ public final class FetchController : FetchContext
 
         queue = new FetchQueue();
 
-        /* Create N workers, worker 0 preferring large items first */
-        foreach (i; 0 .. nWorkers)
-        {
-            auto pref = i == 0 ? WorkerPreference.LargeItems : WorkerPreference.SmallItems;
-            workers ~= new FetchWorker(pref);
-        }
-
         /* Bind sharing now */
         setupShare();
-        foreach (worker; workers)
-        {
-            worker.share = shmem;
-        }
+
+        register("fetchController", thisTid());
     }
 
     /**
@@ -99,16 +92,44 @@ public final class FetchController : FetchContext
      */
     override void fetch()
     {
-        import std.array : array;
+        FetchWorker[] workers;
+        ulong livingWorkers = nWorkers;
 
-        auto tp = new TaskPool(nWorkers);
-        auto tasks = iota(0, nWorkers).map!((w) {
-            auto t = task(() => workers[w].run(this));
-            tp.put(t);
-            return t;
-        }).array();
-        /* Will ensure that we're at least starting one on main thread */
-        tp.finish(true);
+        /* Create N workers, worker 0 preferring large items first */
+        foreach (i; 0 .. nWorkers)
+        {
+            auto pref = i == 0 ? WorkerPreference.LargeItems : WorkerPreference.SmallItems;
+            auto worker = new FetchWorker(pref);
+            worker.startFully();
+            workers ~= worker;
+        }
+
+        /* Allow them to work now */
+        foreach (ref worker; workers)
+        {
+            worker.allowWork();
+        }
+
+        /* While workers live, let them get null responses */
+        while (livingWorkers > 0)
+        {
+            receive((AllocateFetchableControl msg) {
+
+                auto work = allocateWork(msg.preference);
+                send(msg.origin, work);
+                if (work.isNull)
+                {
+                    livingWorkers--;
+                }
+            });
+        }
+
+        /* Free the workers again */
+        foreach (ref worker; workers)
+        {
+            worker.close();
+            worker.destroy();
+        }
     }
 
     /**
@@ -120,14 +141,6 @@ public final class FetchController : FetchContext
         {
             return;
         }
-
-        /* Destroy our workers */
-        foreach (ref worker; workers)
-        {
-            worker.close();
-            worker.destroy();
-        }
-        workers = null;
 
         /* Destroy curl share */
         curl_share_cleanup(shmem);
@@ -209,9 +222,8 @@ private:
      */
     CURLSH* shmem;
 
-    uint nWorkers = 0;
+    uint nWorkers = 1;
     FetchQueue queue = null;
-    FetchWorker[] workers;
 
     __gshared Mutex[CurlLockData.last] locks;
 }
