@@ -32,11 +32,16 @@ import moss.fetcher.result;
 import std.string : toStringz;
 import std.sumtype;
 import core.thread.osthread;
-
+import std.datetime;
 import cstdlib = moss.core.c;
 import moss.core.ioutil;
 
 import std.concurrency : locate, Tid, thisTid, receiveOnly, receive, send;
+
+/**
+ * We permit a message every 10 ms (100hz)
+ */
+static const auto throttleDuration = 10.msecs;
 
 /**
  * The worker preference defines our policy in fetching items from the
@@ -71,6 +76,7 @@ package final class FetchWorker : Thread
         super(&processLoop);
         this.workerIndex = workerIndex;
         this.preference = preference;
+        throttleMarker = Clock.currTime();
 
         /* Grab a handle. */
         handle = curl_easy_init();
@@ -165,6 +171,7 @@ private:
     {
         CURLcode ret;
         CError foundError;
+        throttleMarker = Clock.currTime();
 
         final switch (fetchable.type)
         {
@@ -242,8 +249,16 @@ private:
     /**
      * Report progress back to the main thread
      */
-    void reportProgress(double dlTotal, double dlNow)
+    void reportProgress(double dlTotal, double dlNow, bool forceUpdate = false)
     {
+        /* Throttle the updates */
+        auto timenow = Clock.currTime();
+        SysTime timeold = throttleMarker + throttleDuration;
+        if (timenow < timeold && !forceUpdate)
+        {
+            return;
+        }
+        throttleMarker = timenow;
         auto msg = ProgressReport(currentWork, workerIndex, dlTotal, dlNow);
         send(mainThread, msg);
     }
@@ -267,13 +282,13 @@ private:
     /**
      * Handle the progress callback
      */
-    extern (C) static void mossFetchWorkerProgress(void* userptr,
+    extern (C) static size_t mossFetchWorkerProgress(void* userptr,
             double dlTotal, double dlNow, double ulTotal, double ulNow)
     {
         auto worker = cast(FetchWorker) userptr;
         enforce(worker !is null, "CURL IS BROKEN");
-
         worker.reportProgress(dlTotal, dlNow);
+        return 0;
     }
 
     /**
@@ -315,4 +330,9 @@ private:
      * Which worker are we?
      */
     uint workerIndex = 0;
+
+    /**
+     * Allow throttling progress reports
+     */
+    SysTime throttleMarker;
 }
