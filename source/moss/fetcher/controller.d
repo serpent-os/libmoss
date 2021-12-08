@@ -262,9 +262,39 @@ private unittest
 
     class Monitor
     {
+        uint curRow = 0;
+
+        this()
+        {
+            /* Reserve for 4 renderables */
+            foreach (i; 0 .. 4)
+            {
+                writef("\n");
+            }
+            /* Move back up to the start */
+            writef!"\033[%dA"(4);
+        }
+
+        void moveCursor(uint newCursor)
+        {
+            if (newCursor > curRow)
+            {
+                /* move down */
+                writef!"\033[%dB"(newCursor - curRow);
+            }
+            else if (newCursor < curRow)
+            {
+                /* move up */
+                writef!"\033[%dA"(curRow - newCursor);
+            }
+            curRow = newCursor;
+        }
+
         void progress(uint workerIndex, Fetchable f, double dlTotal, double dlCurrent)
         {
             import std.path : baseName;
+
+            moveCursor(workerIndex);
 
             writef("\033[1K\r%d: %s %.2f%%", workerIndex, f.sourceURI.baseName,
                     dlCurrent / dlTotal * 100.0);
@@ -290,6 +320,7 @@ private unittest
     }
 
     f.fetch();
+    m.moveCursor(4);
     writef("\n");
     f.close();
 }
