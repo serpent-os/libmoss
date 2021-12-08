@@ -33,6 +33,9 @@ import std.string : toStringz;
 import std.sumtype;
 import core.thread.osthread;
 
+import cstdlib = moss.core.c;
+import moss.core.ioutil;
+
 import std.concurrency : locate, Tid, thisTid, receiveOnly, receive, send;
 
 /**
@@ -159,6 +162,26 @@ private:
     FetchResult process(in Fetchable fetchable)
     {
         CURLcode ret;
+        CError foundError;
+
+        outputFD = IOUtil.create(fetchable.destinationPath).match!((int fd) => fd, (err) {
+            foundError = err;
+            return -1;
+        });
+
+        /* Make sure we can continue now */
+        if (outputFD < 0)
+        {
+            return FetchResult(FetchError(foundError.errorCode,
+                    FetchErrorDomain.CStdlib, fetchable.sourceURI));
+        }
+
+        /* Ensure we close the file again */
+        scope (exit)
+        {
+            cstdlib.close(outputFD);
+            outputFD = -1;
+        }
 
         /* Set up the URL */
         ret = curl_easy_setopt(handle, CurlOption.url, fetchable.sourceURI.toStringz);
@@ -209,9 +232,16 @@ private:
      * Handle writing
      */
     extern (C) static size_t mossFetchWorkerWrite(void* ptr, size_t size,
-            size_t nMemb, void* userdata)
+            size_t nMemb, void* userptr)
     {
-        return nMemb;
+        auto worker = cast(FetchWorker) userptr;
+        enforce(worker !is null, "CURL IS BROKEN");
+        enforce(worker.outputFD >= 0, "FetchWorker: Invalid file descriptor");
+
+        /* Write the file now */
+        import core.sys.posix.unistd : write;
+
+        return write(worker.outputFD, ptr, nMemb);
     }
 
     /**
@@ -246,4 +276,9 @@ private:
     WorkerPreference preference = WorkerPreference.SmallItems;
 
     Tid ourTid;
+
+    /**
+     * Storage
+     */
+    int outputFD = -1;
 }
