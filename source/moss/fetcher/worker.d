@@ -66,9 +66,10 @@ package final class FetchWorker : Thread
     /**
      * Construct a new FetchWorker and setup any associated resources.
      */
-    this(WorkerPreference preference = WorkerPreference.SmallItems)
+    this(uint workerIndex, WorkerPreference preference = WorkerPreference.SmallItems)
     {
         super(&processLoop);
+        this.workerIndex = workerIndex;
         this.preference = preference;
 
         /* Grab a handle. */
@@ -127,7 +128,7 @@ private:
      */
     void processLoop()
     {
-        auto mainThread = locate("fetchController");
+        mainThread = locate("fetchController");
         ourTid = thisTid();
 
         /* startupFully() now complete, we're known to be running */
@@ -239,6 +240,15 @@ private:
     }
 
     /**
+     * Report progress back to the main thread
+     */
+    void reportProgress(double dlTotal, double dlNow)
+    {
+        auto msg = ProgressReport(currentWork, workerIndex, dlTotal, dlNow);
+        send(mainThread, msg);
+    }
+
+    /**
      * Handle writing
      */
     extern (C) static size_t mossFetchWorkerWrite(void* ptr, size_t size,
@@ -263,11 +273,7 @@ private:
         auto worker = cast(FetchWorker) userptr;
         enforce(worker !is null, "CURL IS BROKEN");
 
-        /* TODO: Report this. */
-        immutable auto percentDone = dlNow / dlTotal * 100.0;
-        import std.stdio : writef;
-
-        writef("\r%.2f", percentDone);
+        worker.reportProgress(dlTotal, dlNow);
     }
 
     /**
@@ -285,10 +291,28 @@ private:
      */
     WorkerPreference preference = WorkerPreference.SmallItems;
 
+    /**
+     * Our thread ID
+     */
     Tid ourTid;
+
+    /**
+     * Controller
+     */
+    Tid mainThread;
+
+    /**
+     * Current fetchable that we're working on
+     */
+    Fetchable currentWork;
 
     /**
      * Storage
      */
     int outputFD = -1;
+
+    /**
+     * Which worker are we?
+     */
+    uint workerIndex = 0;
 }

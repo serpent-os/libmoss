@@ -100,7 +100,7 @@ public final class FetchController : FetchContext
         foreach (i; 0 .. nWorkers)
         {
             auto pref = i == 0 ? WorkerPreference.LargeItems : WorkerPreference.SmallItems;
-            auto worker = new FetchWorker(pref);
+            auto worker = new FetchWorker(i, pref);
             worker.startFully();
             workers ~= worker;
         }
@@ -112,7 +112,7 @@ public final class FetchController : FetchContext
             worker.allowWork();
         }
 
-        import std.stdio : writeln;
+        import std.stdio : writeln, writef;
 
         /* While workers live, let them get null responses */
         while (livingWorkers > 0)
@@ -125,6 +125,9 @@ public final class FetchController : FetchContext
                 {
                     livingWorkers--;
                 }
+            }, (ProgressReport report) {
+                double pct = report.downloadCurrent / report.downloadTotal * 100.0;
+                writef("\r%d: %.2f", report.workerIndex, pct);
             }, (WorkReport report) {
                 report.result.match!((long code) {
                     writeln("got :", report.origin.sourceURI, " - ", code);

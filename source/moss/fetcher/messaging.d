@@ -74,3 +74,30 @@ package struct WorkReport
     Fetchable origin;
     FetchResult result;
 }
+
+/**
+ * Worker sends progress reports (throttled) to allow knowing where we're at
+ * with the downloads..
+ */
+package struct ProgressReport
+{
+    /**
+     * The current work package
+     */
+    Fetchable origin;
+
+    /**
+     * Worker index, to permit 0-N progressbars
+     */
+    uint workerIndex = 0;
+
+    /**
+     * Total to download
+     */
+    double downloadTotal = 0.0;
+
+    /**
+     * How much we've downloaded so far
+     */
+    double downloadCurrent = 0.0;
+}
