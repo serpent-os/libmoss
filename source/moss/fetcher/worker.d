@@ -218,6 +218,11 @@ private:
         long statusCode = 0;
         curl_easy_getinfo(handle, CurlInfo.response_code, &statusCode);
 
+        /* Force the total to 100 now */
+        double dltotal = 0;
+        curl_easy_getinfo(handle, CurlInfo.size_download, &dltotal);
+        reportProgress(dltotal, dltotal, true);
+
         /* All went well? */
         return FetchResult(statusCode);
     }
