@@ -251,6 +251,22 @@ private unittest
     {
         f.enqueue(j);
     }
+
+    scope (exit)
+    {
+        /* Cleanup */
+        foreach (j; jobs)
+        {
+            import std.file : remove, exists;
+
+            if (!j.destinationPath.exists)
+            {
+                continue;
+            }
+            j.destinationPath.remove();
+        }
+    }
+
     f.fetch();
     f.close();
 }
