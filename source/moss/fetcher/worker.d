@@ -25,7 +25,7 @@ module moss.fetcher.worker;
 import etc.c.curl;
 import std.exception : enforce;
 import moss.fetcher.controller : FetchController;
-import moss.core.fetchcontext : Fetchable;
+import moss.core.fetchcontext : Fetchable, FetchType;
 import moss.fetcher : NullableFetchable;
 import moss.fetcher.messaging;
 import moss.fetcher.result;
@@ -147,8 +147,9 @@ private:
             }
 
             /* Process the job and send completion status.. */
-            auto result = process(job.get);
-            send(mainThread, WorkReport(job.get, result));
+            auto fetchable = job.get;
+            auto result = process(fetchable);
+            send(mainThread, WorkReport(fetchable, result));
         }
 
         /* Block for shutdown + join */
@@ -159,15 +160,24 @@ private:
     /**
      * Process a single fetchable
      */
-    FetchResult process(in Fetchable fetchable)
+    FetchResult process(ref Fetchable fetchable)
     {
         CURLcode ret;
         CError foundError;
 
-        outputFD = IOUtil.create(fetchable.destinationPath).match!((int fd) => fd, (err) {
-            foundError = err;
-            return -1;
-        });
+        final switch (fetchable.type)
+        {
+        case FetchType.RegularFile:
+            outputFD = IOUtil.create(fetchable.destinationPath)
+                .match!((int fd) => fd, (err) { foundError = err; return -1; });
+            break;
+        case FetchType.TemporaryFile:
+            outputFD = IOUtil.createTemporary(fetchable.destinationPath).match!((TemporaryFile t) {
+                fetchable.destinationPath = t.realPath;
+                return t.fd;
+            }, (err) { foundError = err; return -1; });
+            break;
+        }
 
         /* Make sure we can continue now */
         if (outputFD < 0)
