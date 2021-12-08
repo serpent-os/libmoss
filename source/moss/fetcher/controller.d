@@ -126,12 +126,12 @@ public final class FetchController : FetchContext
                     livingWorkers--;
                 }
             }, (ProgressReport report) {
-                double pct = report.downloadCurrent / report.downloadTotal * 100.0;
-                writef("\r%d: %.2f", report.workerIndex, pct);
+                onProgress.emit(report.workerIndex, report.origin,
+                    report.downloadTotal, report.downloadCurrent);
             }, (WorkReport report) {
-                report.result.match!((long code) {
-                    writeln("got :", report.origin.sourceURI, " - ", code);
-                }, (FetchError err) { writeln("onoes: ", err.toString); });
+                report.result.match!((long code) {}, (FetchError err) {
+                    writeln("onoes: ", err.toString);
+                });
             });
         }
 
@@ -238,6 +238,8 @@ private:
 
 private unittest
 {
+    import std.stdio : writef, stdout;
+
     auto f = new FetchController(4);
     auto jobs = [
         Fetchable("https://dev.serpentos.com/protosnek/x86_64/binutils-2.37-1-1-x86_64.stone",
@@ -258,6 +260,20 @@ private unittest
         f.enqueue(j);
     }
 
+    class Monitor
+    {
+        void progress(uint workerIndex, Fetchable f, double dlTotal, double dlCurrent)
+        {
+            import std.path : baseName;
+
+            writef("\033[1K\r%d: %s %.2f%%", workerIndex, f.sourceURI.baseName,
+                    dlCurrent / dlTotal * 100.0);
+            stdout.flush();
+        }
+    }
+
+    auto m = new Monitor();
+    f.onProgress.connect(&m.progress);
     scope (exit)
     {
         /* Cleanup */
@@ -274,5 +290,6 @@ private unittest
     }
 
     f.fetch();
+    writef("\n");
     f.close();
 }

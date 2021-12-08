@@ -155,6 +155,7 @@ private:
 
             /* Process the job and send completion status.. */
             auto fetchable = job.get;
+            currentWork = fetchable;
             auto result = process(fetchable);
             send(mainThread, WorkReport(fetchable, result));
         }
