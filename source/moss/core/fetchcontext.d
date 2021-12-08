@@ -24,6 +24,20 @@ module moss.core.fetchcontext;
 
 public import std.stdint : uint64_t;
 
+public enum FetchType
+{
+    /**
+     * Just a regular download
+     */
+    RegularFile = 0,
+
+    /**
+     * Specifically need a temporary file. Use mkstemp() format for the
+     * destination path and remember to read it back again
+     */
+    TemporaryFile,
+}
+
 /**
  * A Fetchable simply describes something we need to download.
  */
@@ -44,6 +58,11 @@ public struct Fetchable
      * downloads by domain + size.
      */
     uint64_t expectedSize = uint64_t.max;
+
+    /**
+     * Regular download or needing tmpfs?
+     */
+    FetchType type = FetchType.RegularFile;
 }
 
 /**
