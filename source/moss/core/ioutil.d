@@ -50,11 +50,35 @@ public struct CError
 }
 
 /**
- * Algebraic result for all IOUtil operations
+ * A successful temporary file has an open file descriptor and a path
+ */
+public struct TemporaryFile
+{
+    /**
+     * File descriptor, already open
+     */
+    int fd = -1;
+
+    /**
+     * Real path (for reading, etc.)
+     */
+    string realPath = null;
+}
+
+/**
+ * Algebraic result for most IOUtil operations
  */
 public alias IOResult = SumType!(bool, CError);
 
+/**
+ * Returns a file descriptor
+ */
 public alias IOFDResult = SumType!(int, CError);
+
+/**
+ * Returns a temporary file result
+ */
+public alias IOTempResult = SumType!(TemporaryFile, CError);
 
 /**
  * Forcibly namespace all of the operations to ensure no conflicts with the stdlib.
@@ -162,8 +186,33 @@ public struct IOUtil
         }
         return IOFDResult(ret);
     }
+
+    /**
+     * Create a new temporary file. Upon success we will return the resolved filename
+     * and the open file descriptor. This can be associated with `File.fdopen` call.
+     * The user should ensure they respect the tmpfs mount point (i.e. `/tmp`) and
+     * consult `mkstemp()` documentation for XXXXXX usage.
+     */
+    static IOTempResult createTemporary(in string pattern)
+    {
+        /* Dup into NUL terminated buffer to get the real path back */
+        auto copyBuffer = new char[pattern.length + 1];
+        copyBuffer[0 .. pattern.length] = pattern;
+        copyBuffer[pattern.length] = '\0';
+
+        /* Try to open the tmpfile now */
+        auto ret = cstdlib.mkstemp(copyBuffer.ptr);
+        if (ret < 0)
+        {
+            return IOTempResult(CError(cstdlib.errno));
+        }
+
+        /* Return open file descriptor + the resolved name */
+        return IOTempResult(TemporaryFile(ret, cast(string) copyBuffer.fromStringz));
+    }
 }
 
+@("Ensure copyFile works as expected")
 private unittest
 {
     auto res = IOUtil.copyFile("LICENSE", "LICENSE.test");
@@ -172,4 +221,27 @@ private unittest
         cstdlib.unlink("LICENSE.test".toStringz);
     }
     res.match!((err) => assert(0, err.toString), (ok) {});
+}
+
+@("Ensure tmpfile wrappage works as expected")
+private unittest
+{
+    import std.stdio : File;
+    import std.file : read;
+
+    auto res = IOUtil.createTemporary("/tmp/somefileXXXXXX");
+    TemporaryFile tmp = res.match!((err) => assert(0, err.toString), (t) => t);
+    scope (exit)
+    {
+        cstdlib.unlink(tmp.realPath.toStringz);
+    }
+
+    const auto theWrittenWord = "This is a temporary file, we're reading + writing it";
+    File fi;
+    fi.fdopen(tmp.fd, "wb");
+    fi.write(theWrittenWord);
+    fi.close();
+
+    auto contents = cast(string) read(tmp.realPath);
+    assert(contents == theWrittenWord);
 }
