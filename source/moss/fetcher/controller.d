@@ -238,14 +238,17 @@ private unittest
     auto f = new FetchController(4);
     auto jobs = [
         Fetchable("https://dev.serpentos.com/protosnek/x86_64/binutils-2.37-1-1-x86_64.stone",
-                "binutils"),
+                "binutils-2.37-1-1-x86_64.stone"),
         Fetchable("https://dev.serpentos.com/protosnek/x86_64/curl-7.79.1-1-1-x86_64.stone",
-                "curl"),
-        Fetchable("https://dev.serpentos.com/protosnek/x86_64/gcc-32bit-11.2.0-1-1-x86_64.stone", "gcc-32bit"),
-        Fetchable("https://dev.serpentos.com/protosnek/x86_64/file-5.4-1-1-x86_64.stone", "file"),
-        Fetchable("https://dev.serpentos.com/protosnek/x86_64/libarchive-3.5.2-1-1-x86_64.stone", "libarchive"),
+                "curl-7.79.1-1-1-x86_64.stone"),
+        Fetchable("https://dev.serpentos.com/protosnek/x86_64/gcc-32bit-11.2.0-1-1-x86_64.stone",
+                "gcc-32bit-11.2.0-1-1-x86_64.stone"),
+        Fetchable("https://dev.serpentos.com/protosnek/x86_64/file-5.4-1-1-x86_64.stone",
+                "file-5.4-1-1-x86_64.stone"),
+        Fetchable("https://dev.serpentos.com/protosnek/x86_64/libarchive-3.5.2-1-1-x86_64.stone",
+                "libarchive-3.5.2-1-1-x86_64.stone"),
         Fetchable("https://dev.serpentos.com/protosnek/x86_64/make-4.3-1-1-x86_64.stone",
-                "make"),
+                "make-4.3-1-1-x86_64.stone"),
     ];
     foreach (j; jobs)
     {
