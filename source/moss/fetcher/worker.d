@@ -39,9 +39,9 @@ import moss.core.ioutil;
 import std.concurrency : locate, Tid, thisTid, receiveOnly, receive, send;
 
 /**
- * We permit a message every 10 ms (100hz)
+ * We permit a message every 50 ms (20hz)
  */
-static const auto throttleDuration = 10.msecs;
+static const auto throttleDuration = 50.msecs;
 
 /**
  * The worker preference defines our policy in fetching items from the
