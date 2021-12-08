@@ -173,7 +173,7 @@ private:
         if (outputFD < 0)
         {
             return FetchResult(FetchError(foundError.errorCode,
-                    FetchErrorDomain.CStdlib, fetchable.sourceURI));
+                    FetchErrorDomain.CStdlib, fetchable.destinationPath));
         }
 
         /* Ensure we close the file again */
