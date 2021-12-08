@@ -23,6 +23,7 @@
 module moss.core.fetchcontext;
 
 public import std.stdint : uint64_t;
+public import std.signals;
 
 public enum FetchType
 {
@@ -71,7 +72,7 @@ public struct Fetchable
  * they can enqueue their own fetchables without having to know the internal
  * details.
  */
-public interface FetchContext
+public abstract class FetchContext
 {
     /**
      * Enqueue some download
@@ -84,4 +85,12 @@ public interface FetchContext
      * cleared.
      */
     void fetch();
+
+    /**
+     * Thread Index (0-N)
+     * Fetchable (work unit)
+     * Download Total
+     * Download Current
+     */
+    mixin Signal!(uint, Fetchable, double, double) onProgress;
 }
