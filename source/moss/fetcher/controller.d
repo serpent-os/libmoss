@@ -266,6 +266,7 @@ private unittest
 
         this()
         {
+            writef!"\033[1m%s\033[0m\n\n"("Downloading");
             /* Reserve for 4 renderables */
             foreach (i; 0 .. 4)
             {
@@ -293,11 +294,39 @@ private unittest
         void progress(uint workerIndex, Fetchable f, double dlTotal, double dlCurrent)
         {
             import std.path : baseName;
+            import std.math : floor;
 
             moveCursor(workerIndex);
 
-            writef("\033[1K\r%d: %s %.2f%%", workerIndex, f.sourceURI.baseName,
-                    dlCurrent / dlTotal * 100.0);
+            //writef("\033[1K\r%d: %s %.2f%%", workerIndex, f.sourceURI.baseName,
+            //        dlCurrent / dlTotal * 100.0);
+            const auto numSegments = 10;
+            auto renderFraction = dlCurrent / dlTotal;
+            const double renderableSegments = renderFraction * cast(double) numSegments;
+            int emptySegments = numSegments - (cast(int) renderableSegments);
+
+            string pbar = "";
+            const auto flooredSegments = floor(renderableSegments);
+            foreach (i; 0 .. flooredSegments)
+            {
+                pbar ~= "⬜";
+            }
+
+            foreach (i; renderableSegments .. numSegments)
+            {
+                if (i == renderableSegments && flooredSegments < renderableSegments)
+                {
+                    pbar ~= "🔲";
+                }
+                else
+                {
+                    pbar ~= "⬛";
+                }
+            }
+
+            writef("\033[1k\r %s %s \033[2m%.2f%%\033[0m", pbar,
+                    f.sourceURI.baseName, renderFraction * 100.0);
+
             stdout.flush();
         }
     }
