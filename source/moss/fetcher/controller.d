@@ -260,6 +260,18 @@ private unittest
         f.enqueue(j);
     }
 
+    void hideCursor()
+    {
+        writef("\033[?25l");
+        stdout.flush();
+    }
+
+    void showCursor()
+    {
+        writef("\033[?25h");
+        stdout.flush();
+    }
+
     class Monitor
     {
         uint curRow = 0;
@@ -348,6 +360,11 @@ private unittest
         }
     }
 
+    hideCursor();
+    scope (exit)
+    {
+        showCursor();
+    }
     f.fetch();
     m.moveCursor(4);
     writef("\n");
