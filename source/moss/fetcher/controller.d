@@ -239,9 +239,14 @@ private:
 private unittest
 {
     import std.stdio : writef, stdout;
+    import std.string : startsWith;
 
     auto f = new FetchController(4);
     auto jobs = [
+        Fetchable("https://dev.serpentos.com/protosnek/x86_64/glibc-2.34-1-1-x86_64.stone",
+                "glibc-2.34-1-1-x86_64.stone"),
+        Fetchable("https://dev.serpentos.com/protosnek/x86_64/glibc-32bit-2.34-1-1-x86_64.stone",
+                "glibc-32bit-2.34-1-1-x86_64.stone"),
         Fetchable("https://dev.serpentos.com/protosnek/x86_64/binutils-2.37-1-1-x86_64.stone",
                 "binutils-2.37-1-1-x86_64.stone"),
         Fetchable("https://dev.serpentos.com/protosnek/x86_64/curl-7.79.1-1-1-x86_64.stone",
@@ -257,6 +262,19 @@ private unittest
     ];
     foreach (j; jobs)
     {
+        if (j.destinationPath.startsWith("glibc-32bit"))
+        {
+            j.expectedSize = 200;
+        }
+        else if (j.destinationPath.startsWith("glibc"))
+        {
+            j.expectedSize = 250;
+        }
+        else
+        {
+            j.expectedSize = 0;
+        }
+
         f.enqueue(j);
     }
 
@@ -342,7 +360,7 @@ private unittest
                 }
             }
 
-            writef("\033[1k\r %s %s \033[2m%.2f%%\033[0m", pbar,
+            writef("\033[1k\r %s %s \033[2m%.2f%%\033[0m          ", pbar,
                     f.sourceURI.baseName, renderFraction * 100.0);
 
             stdout.flush();
