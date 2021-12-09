@@ -40,6 +40,8 @@ import std.stdint : uint32_t;
  */
 static private immutable ubyte[4] elfMagic = [0x7f, 0x45, 0x4c, 0x46];
 
+public const AttributeBuildID = "BuildID";
+
 private static bool isElfFile(in string fullPath) @trusted
 {
     auto fi = File(fullPath, "rb");
@@ -163,7 +165,8 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
             if (note.type == 3 && note.name == "GNU")
             {
                 enforce(note.descriptor.length == 8 || note.descriptor.length == 20);
-                //writeln("gnu build id: ", note.descriptor.toHexString!(LetterCase.lower)());
+                analyser.setAttribute(fileInfo, AttributeBuildID,
+                        note.descriptor.toHexString!(LetterCase.lower)());
             }
 
             break;

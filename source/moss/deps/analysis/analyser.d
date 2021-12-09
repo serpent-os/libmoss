@@ -28,9 +28,19 @@ public import moss.deps.analysis.chain;
 import std.exception : enforce;
 import std.string : format;
 import std.container.rbtree;
-
+import std.typecons : Nullable;
 import std.parallelism : taskPool, totalCPUs, parallel;
 import xxhash : XXH3_128;
+
+/**
+ * We may set custom attributes per file. These are stored in a mapping
+ * internally with the store keyed by name
+ */
+package struct AttributeStore(T)
+{
+    /* filepath -> value */
+    T[string] attributes;
+}
 
 /**
  * The Analyser is used to query sets of files for inclusion status as well
@@ -55,6 +65,46 @@ public final class Analyser
         {
             hashHelpers ~= new XXH3_128();
         }
+    }
+
+    /**
+     * Set a global file attribute
+     */
+    void setAttribute(T)(in FileInfo fi, in string attributeName, in T value)
+    {
+        synchronized (this)
+        {
+            void* store = attributeName in attributes;
+            if (store is null)
+            {
+                auto tstore = new AttributeStore!T();
+                store = cast(void*) tstore;
+                attributes[attributeName] = store;
+            }
+            auto attrStore = cast(AttributeStore!T*) store;
+            enforce(attrStore !is null);
+            attrStore.attributes[fi.path] = value;
+        }
+
+    }
+
+    /**
+     * Return an attribute if it has been set
+     */
+    Nullable!(T, T.init) getAttribute(T)(in FileInfo fi, in string attributeName)
+    {
+        void** store = attributeName in attributes;
+        if (store is null)
+        {
+            return Nullable!(T, T.init)(T.init);
+        }
+        auto attrStore = cast(AttributeStore!T*)*store;
+        auto lookup = fi.path in attrStore.attributes;
+        if (lookup is null)
+        {
+            return Nullable!(T, T.init)(T.init);
+        }
+        return Nullable!(T, T.init)(*lookup);
     }
 
     /**
@@ -231,6 +281,8 @@ private:
     uint numCPUs = 0;
     XXH3_128[] hashHelpers;
     void* _userdata = null;
+
+    void*[string] attributes;
 }
 
 unittest
