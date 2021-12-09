@@ -81,6 +81,14 @@ private static bool isElfFile(in string fullPath) @trusted
  */
 public AnalysisReturn acceptElfFiles(scope Analyser analyser, ref FileInfo fileInfo)
 {
+    import std.string : endsWith;
+    import std.algorithm : canFind;
+
+    if (fileInfo.path.endsWith(".debug") && fileInfo.path.canFind("/debug/"))
+    {
+        return AnalysisReturn.NextHandler;
+    }
+
     if (fileInfo.type == FileType.Regular && isElfFile(fileInfo.fullPath))
     {
         return AnalysisReturn.NextFunction;
