@@ -58,6 +58,24 @@ public final class Analyser
     }
 
     /**
+     * Return the userdata as an accessible property
+     */
+    pure @property T userdata(T)()
+    {
+        auto ret = cast(T) _userdata;
+        enforce(ret !is null, "Analyser.userdata(): cast to " ~ T.stringof ~ " failed");
+        return ret;
+    }
+
+    /**
+     * Set the userdata
+     */
+    pure @property void userdata(T)(T v) @nogc nothrow
+    {
+        _userdata = cast(void*) v;
+    }
+
+    /**
      * Add a processing chain
      */
     void addChain(AnalysisChain chain)
@@ -212,6 +230,7 @@ private:
     FileInfo[] currentFiles;
     uint numCPUs = 0;
     XXH3_128[] hashHelpers;
+    void* _userdata = null;
 }
 
 unittest
