@@ -93,18 +93,22 @@ public final class Analyser
      */
     Nullable!(T, T.init) getAttribute(T)(in FileInfo fi, in string attributeName)
     {
-        void** store = attributeName in attributes;
-        if (store is null)
+        synchronized (this)
         {
-            return Nullable!(T, T.init)(T.init);
+
+            void** store = attributeName in attributes;
+            if (store is null)
+            {
+                return Nullable!(T, T.init)(T.init);
+            }
+            auto attrStore = cast(AttributeStore!T*)*store;
+            auto lookup = fi.path in attrStore.attributes;
+            if (lookup is null)
+            {
+                return Nullable!(T, T.init)(T.init);
+            }
+            return Nullable!(T, T.init)(*lookup);
         }
-        auto attrStore = cast(AttributeStore!T*)*store;
-        auto lookup = fi.path in attrStore.attributes;
-        if (lookup is null)
-        {
-            return Nullable!(T, T.init)(T.init);
-        }
-        return Nullable!(T, T.init)(*lookup);
     }
 
     /**
