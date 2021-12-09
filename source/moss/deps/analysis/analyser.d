@@ -68,50 +68,6 @@ public final class Analyser
     }
 
     /**
-     * Set a global file attribute
-     */
-    void setAttribute(T)(in FileInfo fi, in string attributeName, in T value)
-    {
-        synchronized (this)
-        {
-            void* store = attributeName in attributes;
-            if (store is null)
-            {
-                auto tstore = new AttributeStore!T();
-                store = cast(void*) tstore;
-                attributes[attributeName] = store;
-            }
-            auto attrStore = cast(AttributeStore!T*) store;
-            enforce(attrStore !is null);
-            attrStore.attributes[fi.path] = value;
-        }
-
-    }
-
-    /**
-     * Return an attribute if it has been set
-     */
-    Nullable!(T, T.init) getAttribute(T)(in FileInfo fi, in string attributeName)
-    {
-        synchronized (this)
-        {
-
-            void** store = attributeName in attributes;
-            if (store is null)
-            {
-                return Nullable!(T, T.init)(T.init);
-            }
-            auto attrStore = cast(AttributeStore!T*)*store;
-            auto lookup = fi.path in attrStore.attributes;
-            if (lookup is null)
-            {
-                return Nullable!(T, T.init)(T.init);
-            }
-            return Nullable!(T, T.init)(*lookup);
-        }
-    }
-
-    /**
      * Return the userdata as an accessible property
      */
     pragma(inline, true) pure @property T userdata(T)()
@@ -285,13 +241,11 @@ private:
     uint numCPUs = 0;
     XXH3_128[] hashHelpers;
     void* _userdata = null;
-
-    void*[string] attributes;
 }
 
 unittest
 {
-    static AnalysisReturn acceptLicense(scope Analyser analyser, in FileInfo fi)
+    static AnalysisReturn acceptLicense(scope Analyser analyser, ref FileInfo fi)
     {
         if (fi.path == "LICENSE")
         {
@@ -303,7 +257,7 @@ unittest
         return AnalysisReturn.NextHandler;
     }
 
-    static AnalysisReturn acceptAll(scope Analyser analyser, in FileInfo fi)
+    static AnalysisReturn acceptAll(scope Analyser analyser, ref FileInfo fi)
     {
         return AnalysisReturn.IncludeFile;
     }

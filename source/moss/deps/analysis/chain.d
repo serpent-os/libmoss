@@ -55,7 +55,7 @@ enum AnalysisReturn
  * An analysis function may use the incoming FileInfo to discover further
  * details about it.
  */
-alias AnalysisFunc = AnalysisReturn function(scope Analyser analyser, in FileInfo fi);
+alias AnalysisFunc = AnalysisReturn function(scope Analyser analyser, ref FileInfo fi);
 
 /**
  * An AnalysisChain is simply a named set of handlers which control the flow
@@ -82,7 +82,7 @@ public struct AnalysisChain
 /**
  * End a chain by dropping a file
  */
-public pure AnalysisReturn dropFile(scope Analyser analyser, in FileInfo fileInfo)
+public pure AnalysisReturn dropFile(scope Analyser analyser, ref FileInfo fileInfo)
 {
     return AnalysisReturn.IgnoreFile;
 }
@@ -90,7 +90,7 @@ public pure AnalysisReturn dropFile(scope Analyser analyser, in FileInfo fileInf
 /**
  * End a chain with including a file
  */
-public pure AnalysisReturn includeFile(scope Analyser analyser, in FileInfo fileInfo)
+public pure AnalysisReturn includeFile(scope Analyser analyser, ref FileInfo fileInfo)
 {
     return AnalysisReturn.IncludeFile;
 }

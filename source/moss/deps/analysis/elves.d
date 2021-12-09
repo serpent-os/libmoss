@@ -79,7 +79,7 @@ private static bool isElfFile(in string fullPath) @trusted
  * This function will return "NextFunction" if the input file is a valid ELF
  * file. Otherwise, it will simply return "NextHandler".
  */
-public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileInfo)
+public AnalysisReturn acceptElfFiles(scope Analyser analyser, ref FileInfo fileInfo)
 {
     if (fileInfo.type == FileType.Regular && isElfFile(fileInfo.fullPath))
     {
@@ -93,12 +93,12 @@ public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileIn
  * Assuming the input is a valid ELF file, i.e. from using acceptElfFiles, we
  * can scan the binary for any dependencies (DT_NEEDED) and provided SONAME.
  */
-public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo)
+public AnalysisReturn scanElfFiles(scope Analyser analyser, ref FileInfo fileInfo)
 {
     auto fi = ELF.fromFile(fileInfo.fullPath);
 
     bool has64 = ((cast(ELF64) fi) !is null);
-    analyser.setAttribute(fileInfo, AttributeBitSize, has64 ? 64 : 32);
+    fileInfo.bitSize = has64 ? 64 : 32;
 
     foreach (section; fi.sections)
     {
@@ -177,8 +177,7 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
             if (note.type == 3 && note.name == "GNU")
             {
                 enforce(note.descriptor.length == 8 || note.descriptor.length == 20);
-                analyser.setAttribute(fileInfo, AttributeBuildID,
-                        note.descriptor.toHexString!(LetterCase.lower)());
+                fileInfo.buildID = note.descriptor.toHexString!(LetterCase.lower)();
             }
 
             break;
