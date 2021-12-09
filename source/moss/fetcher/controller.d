@@ -278,7 +278,7 @@ private unittest
 
         this()
         {
-            writef!"\033[1m%s\033[0m\n\n"("Downloading");
+            writef!"\n \033[4m%s\033[0m\n\n"("Downloading");
             /* Reserve for 4 renderables */
             foreach (i; 0 .. 4)
             {
@@ -310,10 +310,16 @@ private unittest
 
             moveCursor(workerIndex);
 
-            //writef("\033[1K\r%d: %s %.2f%%", workerIndex, f.sourceURI.baseName,
-            //        dlCurrent / dlTotal * 100.0);
             const auto numSegments = 10;
-            auto renderFraction = dlCurrent / dlTotal;
+            double renderFraction;
+            if (dlTotal < dlCurrent || dlTotal == 0)
+            {
+                renderFraction = 0.0;
+            }
+            else
+            {
+                renderFraction = dlCurrent / dlTotal;
+            }
             const double renderableSegments = renderFraction * cast(double) numSegments;
             int emptySegments = numSegments - (cast(int) renderableSegments);
 
