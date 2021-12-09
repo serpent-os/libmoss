@@ -199,6 +199,38 @@ public struct FileInfo
     }
 
     /**
+     * Return the bitsize
+     */
+    pure @property ushort bitSize() @safe @nogc nothrow const
+    {
+        return _bitSize;
+    }
+
+    /**
+     * Update the bitsize
+     */
+    pure @property void bitSize(ushort bitSize) @safe @nogc nothrow
+    {
+        _bitSize = bitSize;
+    }
+
+    /**
+     * Return buildID for a regular file
+     */
+    pure @property string buildID() @safe @nogc nothrow const
+    {
+        return _buildID;
+    }
+
+    /**
+     * Update buildID for a regular file
+     */
+    pure @property void buildID(in string buildID) @safe @nogc nothrow
+    {
+        _buildID = buildID;
+    }
+
+    /**
      * Compute hash sum for this file
      */
     void computeHash(XXH3_128 helper)
@@ -289,4 +321,6 @@ private:
     string _target = null;
     stat_t statResult;
     ubyte[16] _digest = 0;
+    ushort _bitSize = 0;
+    string _buildID = null;
 }
