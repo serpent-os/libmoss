@@ -40,7 +40,15 @@ import std.stdint : uint32_t;
  */
 static private immutable ubyte[4] elfMagic = [0x7f, 0x45, 0x4c, 0x46];
 
+/**
+ * Store BuildID as string
+ */
 public const AttributeBuildID = "BuildID";
+
+/**
+ * Store bitsize (32 or 64)
+ */
+public const AttributeBitSize = "BitSize";
 
 private static bool isElfFile(in string fullPath) @trusted
 {
@@ -88,6 +96,10 @@ public AnalysisReturn acceptElfFiles(scope Analyser analyser, in FileInfo fileIn
 public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo)
 {
     auto fi = ELF.fromFile(fileInfo.fullPath);
+
+    bool has64 = ((cast(ELF64) fi) !is null);
+    analyser.setAttribute(fileInfo, AttributeBitSize, has64 ? 64 : 32);
+
     foreach (section; fi.sections)
     {
         switch (section.name)
@@ -128,7 +140,7 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, in FileInfo fileInfo
                 string[] interpPaths = [];
 
                 /* 64-bit file */
-                if ((cast(ELF64) fi) !is null)
+                if (has64)
                 {
                     interpPaths = [
                         "/usr/lib64/%s(%s)".format(localName, fi.header.machineISA),
