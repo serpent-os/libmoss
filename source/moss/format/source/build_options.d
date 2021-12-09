@@ -85,6 +85,12 @@ struct BuildOptions
     @YamlSchema("samplepgo") bool samplepgo = false;
 
     /**
+     * Whether to strip ELF files to eliminate unneeded code and reduce file
+     * size
+     */
+    @YamlSchema("strip") bool strip = true;
+
+    /**
      * A set of tuning selections to apply. Constructed at runtime through
      * parsing
      */
