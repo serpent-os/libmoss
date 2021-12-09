@@ -60,7 +60,7 @@ public final class Analyser
     /**
      * Return the userdata as an accessible property
      */
-    pure @property T userdata(T)()
+    pragma(inline, true) pure @property T userdata(T)()
     {
         auto ret = cast(T) _userdata;
         enforce(ret !is null, "Analyser.userdata(): cast to " ~ T.stringof ~ " failed");
