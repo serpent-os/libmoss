@@ -22,7 +22,7 @@
 
 module moss.deps.registry.item;
 
-public import moss.deps.registry.fetchcontext : FetchContext;
+public import moss.core.fetchcontext;
 public import moss.deps.registry.plugin : RegistryPlugin;
 public import std.stdint : uint64_t;
 public import std.typecons : Nullable;

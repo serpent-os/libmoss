@@ -22,7 +22,7 @@
 
 module moss.deps.registry.plugin;
 
-public import moss.deps.registry.fetchcontext;
+public import moss.core.fetchcontext;
 public import moss.deps.registry.item;
 public import moss.deps.dependency;
 public import std.typecons : Nullable;
