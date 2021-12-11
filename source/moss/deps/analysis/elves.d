@@ -196,6 +196,15 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, ref FileInfo fileInf
     return AnalysisReturn.NextFunction;
 }
 
+/**
+ * Specialist handler which will always restat the input file in case it changed
+ */
+public AnalysisReturn includeElfFiles(scope Analyser analyser, ref FileInfo fileInfo)
+{
+    fileInfo.update();
+    return AnalysisReturn.IncludeFile;
+}
+
 unittest
 {
     import std.file : thisExePath;
@@ -205,7 +214,7 @@ unittest
 
     auto fi = FileInfo(ourname, ourname);
     auto rule = AnalysisChain("elves", [
-            &acceptElfFiles, &scanElfFiles, &includeFile
+            &acceptElfFiles, &scanElfFiles, &includeElfFiles
             ]);
     fi.target = "main";
     auto an = new Analyser();
