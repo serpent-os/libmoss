@@ -26,6 +26,8 @@ import std.path;
 import std.file;
 import moss.core : ChunkSize;
 import core.sys.posix.sys.stat;
+import std.string : toStringz, format;
+import std.exception : enforce;
 
 public import moss.core : FileType;
 import xxhash : computeXXH3_128, XXH3_128;
@@ -48,9 +50,6 @@ public struct FileInfo
      */
     this(const(string) relativePath, const(string) fullPath)
     {
-        import std.string : toStringz, format;
-        import std.exception : enforce;
-
         auto z = fullPath.toStringz;
         stat_t tStat = {0};
         auto ret = lstat(z, &tStat);
@@ -101,6 +100,19 @@ public struct FileInfo
             _type = FileType.Unknown;
             break;
         }
+    }
+
+    /**
+     * Restat the file due to underlying changes
+     */
+    public void update()
+    {
+        auto z = fullPath.toStringz;
+        stat_t tStat = {0};
+        auto ret = lstat(z, &tStat);
+        enforce(ret == 0, "FileInfo.update(): unable to stat() %s".format(fullPath));
+
+        statResult = tStat;
     }
 
     /**
