@@ -129,8 +129,10 @@ public final class FetchController : FetchContext
                 onProgress.emit(report.workerIndex, report.origin,
                     report.downloadTotal, report.downloadCurrent);
             }, (WorkReport report) {
-                report.result.match!((long code) {}, (FetchError err) {
-                    writeln("onoes: ", err.toString);
+                report.result.match!((long code) {
+                    onComplete.emit(report.origin, code);
+                }, (FetchError err) {
+                    onFail.emit(report.origin, err.toString());
                 });
             });
         }
@@ -259,7 +261,7 @@ private unittest
 
     auto f = new FetchController(4);
     bool gotmake = false;
-    void helper(in Fetchable f)
+    void helper(immutable(Fetchable) f, long code)
     {
         gotmake = true;
     }
@@ -315,6 +317,16 @@ private unittest
     class Monitor
     {
         uint curRow = 0;
+
+        void onComplete(in Fetchable f, long code)
+        {
+
+        }
+
+        void onFail(in Fetchable f, string errorMsg)
+        {
+            assert(errorMsg);
+        }
 
         this()
         {
@@ -391,6 +403,8 @@ private unittest
 
     auto m = new Monitor();
     f.onProgress.connect(&m.progress);
+    f.onComplete.connect(&m.onComplete);
+    f.onFail.connect(&m.onFail);
     scope (exit)
     {
         /* Cleanup */
@@ -411,7 +425,10 @@ private unittest
     {
         showCursor();
     }
-    f.fetch();
+    while (!f.empty())
+    {
+        f.fetch();
+    }
     m.moveCursor(4);
     writef("\n");
     assert(gotmake == true);

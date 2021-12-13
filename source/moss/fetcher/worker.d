@@ -185,8 +185,9 @@ private:
             /* Invoke closure within our thread */
             if (fetchable.onComplete !is null)
             {
-                result.match!((long code) { fetchable.onComplete(fetchable); }, (FetchError err) {
-                });
+                result.match!((long code) {
+                    fetchable.onComplete(cast(immutable(Fetchable)) fetchable, code);
+                }, (FetchError err) {});
             }
             send(mainThread, WorkReport(fetchable, result));
         }
