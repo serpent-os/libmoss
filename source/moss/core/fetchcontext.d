@@ -99,6 +99,17 @@ public abstract class FetchContext
     void fetch();
 
     /**
+     * Return true if the context is now empty. This allows
+     * a constant loop approach to using the FetchContext.
+     */
+    bool empty();
+
+    /**
+     * Clear all pending downloads that aren't already in progress
+     */
+    void clear();
+
+    /**
      * Thread Index (0-N)
      * Fetchable (work unit)
      * Download Total
