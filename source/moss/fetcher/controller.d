@@ -144,6 +144,22 @@ public final class FetchController : FetchContext
     }
 
     /**
+     * True if the queue is empty
+     */
+    pure override bool empty()
+    {
+        return queue.empty;
+    }
+
+    /**
+     * Clear the queue
+     */
+    override void clear()
+    {
+        queue.clear();
+    }
+
+    /**
      * Close this fetcher and any associated resources
      */
     void close()
@@ -242,6 +258,12 @@ private unittest
     import std.string : startsWith;
 
     auto f = new FetchController(4);
+    bool gotmake = false;
+    void helper(in Fetchable f)
+    {
+        gotmake = true;
+    }
+
     auto jobs = [
         Fetchable("https://dev.serpentos.com/protosnek/x86_64/glibc-2.34-1-1-x86_64.stone",
                 "glibc-2.34-1-1-x86_64.stone"),
@@ -258,7 +280,7 @@ private unittest
         Fetchable("https://dev.serpentos.com/protosnek/x86_64/libarchive-3.5.2-1-1-x86_64.stone",
                 "libarchive-3.5.2-1-1-x86_64.stone"),
         Fetchable("https://dev.serpentos.com/protosnek/x86_64/make-4.3-1-1-x86_64.stone",
-                "make-4.3-1-1-x86_64.stone"),
+                "make-4.3-1-1-x86_64.stone", 0, FetchType.RegularFile, &helper),
     ];
     foreach (j; jobs)
     {
@@ -392,5 +414,6 @@ private unittest
     f.fetch();
     m.moveCursor(4);
     writef("\n");
+    assert(gotmake == true);
     f.close();
 }

@@ -84,6 +84,14 @@ package final class FetchQueue
         return tree.empty;
     }
 
+    /**
+     * Clear the queue
+     */
+    void clear()
+    {
+        tree.clear();
+    }
+
 private:
 
     /* Sort by size, group by origin */

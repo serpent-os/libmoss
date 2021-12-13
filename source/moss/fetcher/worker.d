@@ -25,7 +25,7 @@ module moss.fetcher.worker;
 import etc.c.curl;
 import std.exception : enforce;
 import moss.fetcher.controller : FetchController;
-import moss.core.fetchcontext : Fetchable, FetchType;
+import moss.core.fetchcontext : Fetchable, FetchableClosure, FetchType;
 import moss.fetcher : NullableFetchable;
 import moss.fetcher.messaging;
 import moss.fetcher.result;
@@ -35,6 +35,7 @@ import core.thread.osthread;
 import std.datetime;
 import cstdlib = moss.core.c;
 import moss.core.ioutil;
+import std.stdint : uint64_t;
 
 import std.concurrency : locate, Tid, thisTid, receiveOnly, receive, send;
 
@@ -42,6 +43,29 @@ import std.concurrency : locate, Tid, thisTid, receiveOnly, receive, send;
  * We permit a message every 100 ms (10hz)
  */
 static const auto throttleDuration = 100.msecs;
+
+/**
+ * Provided because we need to emit a usable Fetchable struct but we can't
+ * permit unshared aliasing.
+ */
+private struct FetchCopy
+{
+    string sourceURI;
+    string destinationPath;
+    uint64_t expectedSize;
+    FetchType type;
+    FetchableClosure onComplete;
+
+    static pure FetchCopy fromFetchable(in Fetchable f) @safe @nogc nothrow
+    {
+        return FetchCopy(f.sourceURI, f.destinationPath, f.expectedSize, f.type, f.onComplete);
+    }
+
+    pure Fetchable toFetchable() @safe @nogc nothrow
+    {
+        return Fetchable(sourceURI, destinationPath, expectedSize, type, onComplete);
+    }
+}
 
 /**
  * The worker preference defines our policy in fetching items from the
@@ -155,8 +179,15 @@ private:
 
             /* Process the job and send completion status.. */
             auto fetchable = job.get;
-            currentWork = fetchable;
+            currentWork = FetchCopy.fromFetchable(fetchable);
             auto result = process(fetchable);
+
+            /* Invoke closure within our thread */
+            if (fetchable.onComplete !is null)
+            {
+                result.match!((long code) { fetchable.onComplete(fetchable); }, (FetchError err) {
+                });
+            }
             send(mainThread, WorkReport(fetchable, result));
         }
 
@@ -265,7 +296,7 @@ private:
             return;
         }
         throttleMarker = timenow;
-        auto msg = ProgressReport(currentWork, workerIndex, dlTotal, dlNow);
+        auto msg = ProgressReport(currentWork.toFetchable(), workerIndex, dlTotal, dlNow);
         send(mainThread, msg);
     }
 
@@ -325,7 +356,7 @@ private:
     /**
      * Current fetchable that we're working on
      */
-    Fetchable currentWork;
+    FetchCopy currentWork;
 
     /**
      * Storage
