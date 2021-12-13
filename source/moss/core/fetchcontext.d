@@ -126,5 +126,5 @@ public abstract class FetchContext
      * A given fetchable failed to download
      * Implementations may choose to enqueue the download again
      */
-    mixin Signal!(Fetchable, long) onFail;
+    mixin Signal!(Fetchable, string) onFail;
 }
