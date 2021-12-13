@@ -40,6 +40,13 @@ public enum FetchType
 }
 
 /**
+ * The Fetchable's closure is run on the corresponding thread when a fetch
+ * has completed. This permits some level of thread architecture reuse for
+ * various tasks (check hashsums, etc.)
+ */
+alias FetchableClosure = void delegate(in Fetchable fetch);
+
+/**
  * A Fetchable simply describes something we need to download.
  */
 public struct Fetchable
@@ -64,6 +71,11 @@ public struct Fetchable
      * Regular download or needing tmpfs?
      */
     FetchType type = FetchType.RegularFile;
+
+    /**
+     * Run this hook when completed.
+     */
+    FetchableClosure onComplete = null;
 }
 
 /**
@@ -93,4 +105,9 @@ public abstract class FetchContext
      * Download Current
      */
     mixin Signal!(uint, Fetchable, double, double) onProgress;
+
+    /**
+     * A given fetchable has now completed
+     */
+    mixin Signal!(Fetchable) onComplete;
 }
