@@ -44,7 +44,7 @@ public enum FetchType
  * has completed. This permits some level of thread architecture reuse for
  * various tasks (check hashsums, etc.)
  */
-alias FetchableClosure = void delegate(immutable(Fetchable) fetch);
+alias FetchableClosure = void delegate(immutable(Fetchable) fetch, long statusCode);
 
 /**
  * A Fetchable simply describes something we need to download.
@@ -120,11 +120,11 @@ public abstract class FetchContext
     /**
      * A given fetchable has now completed
      */
-    mixin Signal!(Fetchable) onComplete;
+    mixin Signal!(Fetchable, long) onComplete;
 
     /**
      * A given fetchable failed to download
      * Implementations may choose to enqueue the download again
      */
-    mixin Signal!(Fetchable) onFail;
+    mixin Signal!(Fetchable, long) onFail;
 }
