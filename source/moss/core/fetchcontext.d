@@ -110,4 +110,10 @@ public abstract class FetchContext
      * A given fetchable has now completed
      */
     mixin Signal!(Fetchable) onComplete;
+
+    /**
+     * A given fetchable failed to download
+     * Implementations may choose to enqueue the download again
+     */
+    mixin Signal!(Fetchable) onFail;
 }
