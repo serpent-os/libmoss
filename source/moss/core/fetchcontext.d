@@ -44,7 +44,7 @@ public enum FetchType
  * has completed. This permits some level of thread architecture reuse for
  * various tasks (check hashsums, etc.)
  */
-alias FetchableClosure = void delegate(in Fetchable fetch);
+alias FetchableClosure = void delegate(immutable(Fetchable) fetch);
 
 /**
  * A Fetchable simply describes something we need to download.
@@ -75,7 +75,7 @@ public struct Fetchable
     /**
      * Run this hook when completed.
      */
-    FetchableClosure onComplete = null;
+    immutable(FetchableClosure) onComplete = null;
 }
 
 /**
