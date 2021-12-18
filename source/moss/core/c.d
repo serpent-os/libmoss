@@ -28,7 +28,7 @@ module moss.core.c;
 public import core.sys.posix.sys.types : dev_t, mode_t, off_t, slong_t;
 public import core.sys.posix.sys.stat : stat_t, fstat;
 public import core.sys.posix.fcntl : AT_SYMLINK_NOFOLLOW, AT_FDCWD, O_RDONLY,
-    O_RDWR, O_WRONLY, O_CREAT, O_CLOEXEC, O_TRUNC;
+    O_RDWR, O_WRONLY, O_CREAT, O_TRUNC;
 
 public import core.stdc.stdio : SEEK_SET;
 public import core.sys.posix.fcntl : mkdir, open;
@@ -231,8 +231,8 @@ private unittest
     auto inputPath = "LICENSE";
     auto outputPath = "LICENSE.COPY";
 
-    auto inpFD = open(inputPath.toStringz, O_RDONLY | O_CLOEXEC, 0);
-    auto outFD = open(outputPath.toStringz, O_RDWR | O_CREAT | O_CLOEXEC, octal!644);
+    auto inpFD = open(inputPath.toStringz, O_RDONLY, 0);
+    auto outFD = open(outputPath.toStringz, O_RDWR | O_CREAT, octal!644);
 
     assert(inpFD > 0 && outFD > 0);
     stat_t st = {0};
@@ -241,6 +241,8 @@ private unittest
     /* Wipe the file */
     scope (exit)
     {
+        close(inpFD);
+        close(outFD);
         unlink(outputPath.toStringz);
     }
 

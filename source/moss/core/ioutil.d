@@ -90,13 +90,13 @@ public struct IOUtil
      */
     static IOResult copyFile(in string fromPath, in string toPath, cstdlib.mode_t mode = octal!644)
     {
-        auto fdin = cstdlib.open(fromPath.toStringz, cstdlib.O_RDONLY | cstdlib.O_CLOEXEC, 0);
+        auto fdin = cstdlib.open(fromPath.toStringz, cstdlib.O_RDONLY, 0);
         if (fdin <= 0)
         {
             return IOResult(CError(cstdlib.errno));
         }
         auto fdout = cstdlib.open(toPath.toStringz,
-                cstdlib.O_WRONLY | cstdlib.O_CREAT | cstdlib.O_TRUNC | cstdlib.O_CLOEXEC, mode);
+                cstdlib.O_WRONLY | cstdlib.O_CREAT | cstdlib.O_TRUNC, mode);
         if (fdout <= 0)
         {
             return IOResult(CError(cstdlib.errno));
@@ -179,7 +179,7 @@ public struct IOUtil
     static IOFDResult create(in string path, cstdlib.mode_t mode = octal!644)
     {
         auto ret = cstdlib.open(path.toStringz,
-                cstdlib.O_WRONLY | cstdlib.O_CREAT | cstdlib.O_TRUNC | cstdlib.O_CLOEXEC, mode);
+                cstdlib.O_WRONLY | cstdlib.O_CREAT | cstdlib.O_TRUNC, mode);
         if (ret < 0)
         {
             return IOFDResult(CError(cstdlib.errno));
