@@ -1,0 +1,3 @@
+[submodule "external/dyaml"]
+	path = external/dyaml
+	url = https://github.com/dlang-community/D-YAML.git
