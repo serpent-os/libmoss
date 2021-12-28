@@ -25,6 +25,16 @@ import std.path : buildPath;
 import std.exception : enforce;
 
 /**
+ * configSuffix is set per file (snippet)
+ */
+public static immutable(string) configSuffix = ".conf";
+
+/**
+ * configDir is added to domain to compute configuration directories
+ */
+public static immutable(string) configDir = ".d";
+
+/**
  * Required directories that form the basis of a Configuration
  */
 package enum Directories : string
