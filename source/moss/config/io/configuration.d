@@ -21,6 +21,16 @@
  */
 
 module moss.config.io.configuration;
+import std.path : buildPath;
+
+/**
+ * Required directories that form the basis of a Configuration
+ */
+package enum Directories : string
+{
+    Vendor = buildPath("usr", "share", "moss"),
+    Admin = buildPath("etc", "moss")
+}
 
 /**
  * The Configuration is merged from multiple snippet sources which can be
