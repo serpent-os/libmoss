@@ -23,6 +23,36 @@
 module moss.config.io.configuration;
 import std.path : buildPath;
 import std.exception : enforce;
+import std.string : format;
+
+private enum ConfigType
+{
+    /**
+     * Expect a file
+     */
+    File = 1 << 0,
+
+    /**
+     * Expect a directory
+     */
+    Directory = 1 << 1,
+
+    /**
+     * Expect a vendor config
+     */
+    Vendor = 1 << 2,
+
+    /**
+     * Expect as admin type
+     */
+    Admin = 1 << 3,
+}
+
+private struct SearchPath
+{
+    string path;
+    ConfigType type;
+}
 
 /**
  * configSuffix is set per file (snippet)
@@ -57,6 +87,19 @@ public final class Configuration
     this(in string domain)
     {
         this.domain = domain;
+        paths = [
+            /* Vendor possible paths */
+            SearchPath(format!"%s/%s%s"(cast(string) Directories.Vendor, domain,
+                    configSuffix), ConfigType.File | ConfigType.Vendor),
+            SearchPath(format!"%s/%s%s"(cast(string) Directories.Vendor, domain,
+                    configDir), ConfigType.Directory | ConfigType.Vendor),
+
+            /* Admin possible paths */
+            SearchPath(format!"%s/%s%s"(cast(string) Directories.Admin, domain,
+                    configSuffix), ConfigType.File | ConfigType.Vendor),
+            SearchPath(format!"%s/%s%s"(cast(string) Directories.Admin,
+                    domain, configDir), ConfigType.Directory | ConfigType.Admin),
+        ];
     }
 
     /**
@@ -78,5 +121,14 @@ private:
         _domain = d;
     }
 
+    SearchPath[] paths;
     string _domain = null;
+}
+
+private unittest
+{
+    import std.stdio : writeln;
+
+    auto n = new Configuration("repos");
+    writeln(n.paths);
 }
