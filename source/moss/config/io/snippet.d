@@ -20,7 +20,4 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.config.io;
-
-public import moss.config.io.section;
-public import moss.config.io.snippet;
+module moss.config.io.snippet;
