@@ -22,6 +22,7 @@
 
 module moss.config.io.configuration;
 import std.path : buildPath;
+import std.exception : enforce;
 
 /**
  * Required directories that form the basis of a Configuration
@@ -38,5 +39,34 @@ package enum Directories : string
  */
 public final class Configuration
 {
+    @disable this();
 
+    /**
+     * Construct a new Configuration with the given domain
+     */
+    this(in string domain)
+    {
+        this.domain = domain;
+    }
+
+    /**
+     * Return the domain for this configuration (i.e. "repos")
+     */
+    pragma(inline, true) pure @property const(string) domain() @safe @nogc nothrow
+    {
+        return _domain;
+    }
+
+private:
+
+    /**
+     * Set the domain
+     */
+    @property void domain(in string d) @safe
+    {
+        enforce(d !is null);
+        _domain = d;
+    }
+
+    string _domain = null;
 }
