@@ -21,3 +21,11 @@
  */
 
 module moss.config.io.section;
+
+/**
+ * Storage for individual sections within a Snippet.
+ */
+public final class Section
+{
+
+}

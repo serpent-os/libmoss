@@ -21,3 +21,12 @@
  */
 
 module moss.config.io.snippet;
+
+/**
+ * A Snippet is a partial or complete file providing some level of merged
+ * runtime configuration.
+ */
+public final class Snippet
+{
+
+}
