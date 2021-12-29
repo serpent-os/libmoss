@@ -62,7 +62,7 @@ public static immutable(string) configSuffix = ".conf";
 /**
  * configDir is added to domain to compute configuration directories
  */
-public static immutable(string) configDir = ".d";
+public static immutable(string) configDir = ".conf.d";
 
 /**
  * Required directories that form the basis of a Configuration
