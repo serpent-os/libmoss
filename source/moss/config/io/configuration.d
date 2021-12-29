@@ -117,7 +117,7 @@ private:
      */
     @property void domain(in string d) @safe
     {
-        enforce(d !is null);
+        enforce(d !is null, "Configuration.domain(): Non empty string required");
         _domain = d;
     }
 
