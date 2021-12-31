@@ -22,7 +22,7 @@
 
 module moss.config.io.snippet;
 
-import std.traits : isArray, OriginalType;
+import std.traits : isArray, OriginalType, FieldNameTuple;
 import dyaml;
 import std.exception : enforce;
 
@@ -121,6 +121,19 @@ private:
     void parseStruct(ref Node rootNode, out ElemType elem)
     {
         elem = ElemType.init;
+
+        /* Iterate all usable fields */
+        static foreach (type, name; FieldNameTuple!ElemType)
+        {
+            {
+                if (rootNode.containsKey(name))
+                {
+                    Node val = rootNode[name];
+                    /* TODO: Properly handle types and whatnot. */
+                    mixin("elem." ~ name ~ " = val.as!(typeof(elem." ~ name ~ "));");
+                }
+            }
+        }
     }
 
     ConfType _config;
