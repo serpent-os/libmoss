@@ -41,7 +41,7 @@ public final class Snippet(C)
     /**
      * Expose the configuration as something to be openly abused.
      */
-    pure @property ref inout(ConfType) config() @safe @nogc nothrow inout
+    pragma(inline, true) pure @property ref inout(ConfType) config() @safe @nogc nothrow inout
     {
         return _config;
     }
