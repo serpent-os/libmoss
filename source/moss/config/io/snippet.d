@@ -22,9 +22,11 @@
 
 module moss.config.io.snippet;
 
-import std.traits : isArray, OriginalType, FieldNameTuple;
+import std.traits : isArray, OriginalType, FieldNameTuple, getUDAs;
 import dyaml;
 import std.exception : enforce;
+import std.range : empty;
+import moss.config.io.schema;
 
 /**
  * A Snippet is a partial or complete file providing some level of merged
@@ -134,9 +136,29 @@ private:
                     static assert(!isArray!localType, "parseStruct: Unsupported array: " ~ name);
                 }
 
-                if (rootNode.containsKey(name))
+                /* Grab schema UDA */
+                mixin(
+                        "enum udas = getUDAs!(__traits(getMember, ElemType, \""
+                        ~ name ~ "\"), YamlSchema);");
+                YamlSchema schema = YamlSchema.init;
+                static if (udas.length > 0)
                 {
-                    Node val = rootNode[name];
+                    schema = udas[0];
+                }
+
+                /* Schema may have a different name */
+                auto lookupKey = schema.name.empty ? name : schema.name;
+
+                /* Key is mandatory */
+                if (schema.required)
+                {
+                    enforce(rootNode.containsKey(lookupKey));
+                }
+
+                /* Can we use it? */
+                if (rootNode.containsKey(lookupKey))
+                {
+                    Node val = rootNode[lookupKey];
                     /* TODO: Properly handle types and whatnot. */
                     mixin("elem." ~ name ~ " = val.as!localType;");
                 }
