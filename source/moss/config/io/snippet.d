@@ -150,6 +150,7 @@ private unittest
     {
         string id;
         string description;
+        string url;
     }
 
     auto c = new Snippet!(Repo[])();
