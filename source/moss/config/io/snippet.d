@@ -61,6 +61,7 @@ public final class Snippet(C)
 
                 /* Build from value. i.e the struct we can read */
                 ElemType builder;
+                builder.id = key;
 
                 _config ~= builder;
             }
@@ -86,10 +87,29 @@ private:
     static if (arrayConfig)
     {
         alias ElemType = typeof(*ConfType.init.ptr);
+        static assert(hasIdentifierField!ElemType,
+                "Snippet!" ~ ElemType.stringof ~ ": struct requires an ID field");
+
     }
     else
     {
         alias ElemType = ConfType;
+    }
+
+    /**
+     * Return true if the ElemType has an id field, required for any list mapping
+     */
+    static auto hasIdentifierField(F)()
+    {
+        F j = F.init;
+        static if (is(typeof(j.id) == string))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     static assert(is(ElemType == struct), "Snippet can only be used with structs");
@@ -106,6 +126,7 @@ private unittest
 
     static struct Repo
     {
+        string id;
         string description;
     }
 
