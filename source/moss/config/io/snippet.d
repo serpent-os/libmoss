@@ -30,8 +30,6 @@ import std.traits : isArray;
  */
 public final class Snippet(C)
 {
-    alias ConfType = C;
-
     /**
      * TODO: Load the input path
      */
@@ -50,8 +48,23 @@ public final class Snippet(C)
 
 private:
 
+    alias ConfType = C;
+
     /* Did we get handled a C[] ? */
     static bool arrayConfig = isArray!ConfType;
+
+    /* Allow struct[] or struct, nothing else */
+    static if (isArray!ConfType)
+    {
+        alias ElemType = typeof(*ConfType.init.ptr);
+    }
+    else
+        static
+    {
+        alias ElemType = ConfType;
+    }
+
+    static assert(is(ElemType == struct), "Snippet can only be used with structs");
 
     ConfType _config;
 }
