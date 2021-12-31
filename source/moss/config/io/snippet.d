@@ -41,16 +41,18 @@ public final class Snippet(C)
         auto rootNode = loader.load();
 
         /* If we're passed an array configuration, we expect a sequence. */
-        if (arrayConfig)
+        static if (arrayConfig)
         {
             enforce(rootNode.type == NodeType.sequence,
                     "Snippet!" ~ C.stringof ~ ": Expected sequence");
-        }
 
-        /* Work on each item in the list */
-        foreach (ref Node node; rootNode)
-        {
-            ElemType builder;
+            /* Work on each item in the list */
+            foreach (ref Node node; rootNode)
+            {
+                ElemType builder;
+
+                _config ~= builder;
+            }
         }
     }
 
@@ -67,10 +69,10 @@ private:
     alias ConfType = C;
 
     /* Did we get handed a C[] ? */
-    static bool arrayConfig = isArray!ConfType;
+    static enum arrayConfig = isArray!ConfType;
 
     /* Allow struct[] or struct, nothing else */
-    static if (isArray!ConfType)
+    static if (arrayConfig)
     {
         alias ElemType = typeof(*ConfType.init.ptr);
     }
