@@ -21,6 +21,9 @@
  */
 
 module moss.config.io.configuration;
+
+import moss.config.io.snippet;
+
 import std.path : buildPath;
 import std.exception : enforce;
 import std.string : format;
@@ -77,7 +80,7 @@ package enum Directories : string
  * The Configuration is merged from multiple snippet sources which can be
  * individually enabled/masked/etc
  */
-public final class Configuration
+public final class Configuration(C)
 {
     @disable this();
 
@@ -112,6 +115,8 @@ public final class Configuration
 
 private:
 
+    alias ConfType = C;
+
     /**
      * Set the domain
      */
@@ -122,6 +127,8 @@ private:
     }
 
     SearchPath[] paths;
+    Snippet!(ConfType)[] _snippets;
+
     string _domain = null;
 }
 
@@ -129,6 +136,10 @@ private unittest
 {
     import std.stdio : writeln;
 
-    auto n = new Configuration("repos");
+    static struct NoopStruct
+    {
+    }
+
+    auto n = new Configuration!NoopStruct("repos");
     writeln(n.paths);
 }
