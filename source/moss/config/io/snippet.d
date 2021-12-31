@@ -49,6 +49,17 @@ public final class Snippet(C)
             /* Work on each item in the list */
             foreach (ref Node node; rootNode)
             {
+                enforce(node.type == NodeType.mapping,
+                        "Snippet!" ~ C.stringof
+                        ~ ": Each sequence item should be a mapping with an ID");
+                Node.Pair[] paired = node.get!(Node.Pair[]);
+
+                /* Capture the ID for this key as we expect ElemType[] */
+                immutable string key = paired[0].key.get!string;
+
+                auto value = paired[0].value;
+
+                /* Build from value. i.e the struct we can read */
                 ElemType builder;
 
                 _config ~= builder;
