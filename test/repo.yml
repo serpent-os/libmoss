@@ -1,0 +1,7 @@
+#
+# Primary repository used during moss development
+#
+
+- bootstrap:
+    description: "Serpent OS (Protosnek)"
+    url: "https://dev.serpentos.com/protosnek/x86_64/stone.index"
