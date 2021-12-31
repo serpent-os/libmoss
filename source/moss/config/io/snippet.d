@@ -50,7 +50,7 @@ private:
 
     alias ConfType = C;
 
-    /* Did we get handled a C[] ? */
+    /* Did we get handed a C[] ? */
     static bool arrayConfig = isArray!ConfType;
 
     /* Allow struct[] or struct, nothing else */
