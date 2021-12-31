@@ -22,7 +22,7 @@
 
 module moss.config.io.snippet;
 
-import std.traits : isArray;
+import std.traits : isArray, OriginalType;
 import dyaml;
 import std.exception : enforce;
 
@@ -102,7 +102,7 @@ private:
     static auto hasIdentifierField(F)()
     {
         F j = F.init;
-        static if (is(typeof(j.id) == string))
+        static if (is(OriginalType!(typeof(j.id)) == string))
         {
             return true;
         }
