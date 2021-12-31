@@ -61,6 +61,7 @@ public final class Snippet(C)
 
                 /* Build from value. i.e the struct we can read */
                 ElemType builder;
+                parseStruct(value, builder);
                 builder.id = key;
 
                 _config ~= builder;
@@ -113,6 +114,14 @@ private:
     }
 
     static assert(is(ElemType == struct), "Snippet can only be used with structs");
+
+    /**
+     * Handle parsing of an individual struct
+     */
+    void parseStruct(ref Node rootNode, out ElemType elem)
+    {
+        elem = ElemType.init;
+    }
 
     ConfType _config;
 }
