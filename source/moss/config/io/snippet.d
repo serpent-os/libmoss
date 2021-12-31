@@ -22,11 +22,53 @@
 
 module moss.config.io.snippet;
 
+import std.traits : isArray;
+
 /**
  * A Snippet is a partial or complete file providing some level of merged
  * runtime configuration.
  */
-public final class Snippet
+public final class Snippet(C)
 {
+    alias ConfType = C;
 
+    /**
+     * TODO: Load the input path
+     */
+    void load(in string path)
+    {
+
+    }
+
+    /**
+     * Expose the configuration as something to be openly abused.
+     */
+    pure @property ref inout(ConfType) config() @safe @nogc nothrow inout
+    {
+        return _config;
+    }
+
+private:
+
+    /* Did we get handled a C[] ? */
+    static bool arrayConfig = isArray!ConfType;
+
+    ConfType _config;
+}
+
+/**
+ * Get our basic functionality working
+ */
+private unittest
+{
+    import std.stdio : writeln;
+
+    static struct Repo
+    {
+        string description;
+    }
+
+    auto c = new Snippet!(Repo[])();
+    c.load("test/repo.yml");
+    writeln(c.config);
 }
