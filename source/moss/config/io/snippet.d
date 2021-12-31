@@ -123,14 +123,22 @@ private:
         elem = ElemType.init;
 
         /* Iterate all usable fields */
-        static foreach (type, name; FieldNameTuple!ElemType)
+        static foreach (idx, name; FieldNameTuple!ElemType)
         {
             {
+                /* Simplify life, get the local type */
+                mixin("alias localType = typeof(__traits(getMember, ElemType, \"" ~ name ~ "\"));");
+
+                static if (!is(localType == string))
+                {
+                    static assert(!isArray!localType, "parseStruct: Unsupported array: " ~ name);
+                }
+
                 if (rootNode.containsKey(name))
                 {
                     Node val = rootNode[name];
                     /* TODO: Properly handle types and whatnot. */
-                    mixin("elem." ~ name ~ " = val.as!(typeof(elem." ~ name ~ "));");
+                    mixin("elem." ~ name ~ " = val.as!localType;");
                 }
             }
         }
