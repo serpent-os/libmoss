@@ -23,6 +23,8 @@
 module moss.config.io.snippet;
 
 import std.traits : isArray;
+import dyaml;
+import std.exception : enforce;
 
 /**
  * A Snippet is a partial or complete file providing some level of merged
@@ -35,7 +37,21 @@ public final class Snippet(C)
      */
     void load(in string path)
     {
+        auto loader = Loader.fromFile(path);
+        auto rootNode = loader.load();
 
+        /* If we're passed an array configuration, we expect a sequence. */
+        if (arrayConfig)
+        {
+            enforce(rootNode.type == NodeType.sequence,
+                    "Snippet!" ~ C.stringof ~ ": Expected sequence");
+        }
+
+        /* Work on each item in the list */
+        foreach (ref Node node; rootNode)
+        {
+            ElemType builder;
+        }
     }
 
     /**
