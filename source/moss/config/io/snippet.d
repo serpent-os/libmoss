@@ -59,7 +59,6 @@ private:
         alias ElemType = typeof(*ConfType.init.ptr);
     }
     else
-        static
     {
         alias ElemType = ConfType;
     }
