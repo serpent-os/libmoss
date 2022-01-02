@@ -27,6 +27,9 @@ import moss.config.io.snippet;
 import std.path : buildPath;
 import std.exception : enforce;
 import std.string : format;
+import std.traits : getUDAs;
+import moss.config.io.schema;
+import std.range : empty;
 
 private enum ConfigType
 {
@@ -82,14 +85,17 @@ package enum Directories : string
  */
 public final class Configuration(C)
 {
-    @disable this();
-
     /**
-     * Construct a new Configuration with the given domain
+     * Construct a new Configuration
      */
-    this(in string domain)
+    this()
     {
-        this.domain = domain;
+        enum udas = getUDAs!(C, DomainKey);
+        static assert(udas.length == 1,
+                "Configuration!" ~ C.stringof ~ ": No domain set via @DomainKey");
+        static assert(!udas[0].key.empty, "Configuration!" ~ C.stringof ~ ": Domain is empty");
+        _domain = udas[0].key;
+
         paths = [
             /* Vendor possible paths */
             SearchPath(format!"%s/%s%s"(cast(string) Directories.Vendor, domain,
@@ -117,15 +123,6 @@ private:
 
     alias ConfType = C;
 
-    /**
-     * Set the domain
-     */
-    @property void domain(in string d) @safe
-    {
-        enforce(d !is null, "Configuration.domain(): Non empty string required");
-        _domain = d;
-    }
-
     SearchPath[] paths;
     Snippet!(ConfType)[] _snippets;
 
@@ -136,10 +133,10 @@ private unittest
 {
     import std.stdio : writeln;
 
-    static struct NoopStruct
+    @DomainKey("noop") static struct NoopStruct
     {
     }
 
-    auto n = new Configuration!NoopStruct("repos");
+    auto n = new Configuration!NoopStruct();
     writeln(n.paths);
 }
