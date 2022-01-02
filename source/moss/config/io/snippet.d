@@ -89,6 +89,24 @@ public final class Snippet(C)
         return cast(immutable(string)) _name;
     }
 
+    /**
+     * Return whether this Snippet is enabled
+     */
+    pure @property bool enabled() @safe @nogc nothrow
+    {
+        return _enabled;
+    }
+
+package:
+
+    /**
+     * Set enabled property from package classes
+     */
+    pure @property void enabled(bool b) @safe @nogc nothrow
+    {
+        _enabled = b;
+    }
+
 private:
 
     alias ConfType = C;
@@ -180,6 +198,7 @@ private:
 
     ConfType _config;
     string _name = null;
+    bool _enabled = true;
 }
 
 import moss.config.io.schema;

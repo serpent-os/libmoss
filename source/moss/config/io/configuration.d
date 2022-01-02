@@ -32,7 +32,7 @@ import moss.config.io.schema;
 import std.range : empty;
 import std.file : dirEntries, DirEntry, exists, isDir, readLink, isSymlink, isFile, SpanMode;
 import std.array : array;
-import std.algorithm : filter, each;
+import std.algorithm : find, filter, each;
 
 /**
  * If a symlink points to /dev/null - it's "masked"
@@ -182,6 +182,13 @@ private:
         if ((type & ConfigType.Admin) == ConfigType.Admin)
         {
             adminSnippets ~= snippet;
+            immutable auto name = snippet.name;
+
+            if (isMasked(path))
+            {
+                vendorSnippets.find!((s) => s.name == snippet.name)
+                    .each!((s) => s.enabled = false);
+            }
         }
         else if ((type & ConfigType.Vendor) == ConfigType.Vendor)
         {
@@ -199,7 +206,6 @@ private:
     static if (arrayConfig)
     {
         alias ElemType = typeof(*ConfType.init.ptr);
-
     }
     else
     {
