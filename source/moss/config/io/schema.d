@@ -34,6 +34,14 @@ enum YamlType
 }
 
 /**
+ * Assign the domain automatically during struct creation
+ */
+public struct DomainKey
+{
+    string key = null;
+}
+
+/**
  * UDA to help unmarshall the correct values.
  */
 struct YamlSchema
