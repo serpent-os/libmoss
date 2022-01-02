@@ -29,7 +29,7 @@ import moss.config.io.schema;
  * Holds all the relevant details for Repository deserialisation from
  * a set of YML files
  */
-public struct Repository
+@DomainKey("repos") public struct Repository
 {
     /**
      * Unique identifier for the repository
