@@ -169,13 +169,14 @@ private:
     {
         import std.stdio : writeln;
 
-        auto snippet = new Snippet!ConfType();
+        auto snippet = new SnippetType;
         snippet.load(path);
         writeln(snippet.name);
         _snippets ~= snippet;
     }
 
     alias ConfType = C;
+    alias SnippetType = Snippet!ConfType;
     static enum arrayConfig = isArray!ConfType;
 
     /**
@@ -192,7 +193,7 @@ private:
     }
 
     SearchPath[] paths;
-    Snippet!(ConfType)[] _snippets;
+    SnippetType[] _snippets;
 
     string _domain = null;
 }
