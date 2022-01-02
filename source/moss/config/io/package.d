@@ -22,5 +22,4 @@
 
 module moss.config.io;
 
-public import moss.config.io.section;
 public import moss.config.io.snippet;
