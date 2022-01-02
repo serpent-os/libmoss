@@ -152,7 +152,9 @@ private:
                 /* Key is mandatory */
                 if (schema.required)
                 {
-                    enforce(rootNode.containsKey(lookupKey));
+                    enforce(rootNode.containsKey(lookupKey),
+                            "Snippet!" ~ ConfType.stringof
+                            ~ ": Mandatory key is absent: " ~ lookupKey);
                 }
 
                 /* Can we use it? */
@@ -169,21 +171,17 @@ private:
     ConfType _config;
 }
 
+import moss.config.io.schema;
+
 /**
  * Get our basic functionality working
  */
 private unittest
 {
     import std.stdio : writeln;
+    import moss.config.repo;
 
-    static struct Repo
-    {
-        string id;
-        string description;
-        string url;
-    }
-
-    auto c = new Snippet!(Repo[])();
+    auto c = new Snippet!(Repository[])();
     c.load("test/repo.yml");
     writeln(c.config);
 }
