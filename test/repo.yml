@@ -4,4 +4,4 @@
 
 - bootstrap:
     description: "Serpent OS (Protosnek)"
-    url: "https://dev.serpentos.com/protosnek/x86_64/stone.index"
+    uri: "https://dev.serpentos.com/protosnek/x86_64/stone.index"
