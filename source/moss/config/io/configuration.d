@@ -127,6 +127,14 @@ public final class Configuration(C)
      */
     void load(in string rootDirectory)
     {
+        /**
+         * Placeholder; Eventually handle masking logic based on Vendor vs Admin path
+         */
+        void configLoader(in string path)
+        {
+            loadConfigFile(path);
+        }
+
         /* Iterate potential search paths */
         foreach (path; paths)
         {
@@ -142,7 +150,7 @@ public final class Configuration(C)
                 /* Find .conf files within .conf.d */
                 dirEntries(searchPath, SpanMode.shallow, false).array
                     .filter!((DirEntry e) => e.name.endsWith(configSuffix) && !e.name.isDir)
-                    .each!((e) => loadConfigFile(e.name));
+                    .each!((e) => configLoader(e.name));
             }
             else if ((path.type & ConfigType.File) == ConfigType.File && searchPath.isFile)
             {

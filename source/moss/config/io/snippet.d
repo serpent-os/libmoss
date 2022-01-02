@@ -25,6 +25,7 @@ module moss.config.io.snippet;
 import std.traits : isArray, OriginalType, FieldNameTuple, getUDAs;
 import dyaml;
 import std.exception : enforce;
+import std.path : baseName;
 import std.range : empty;
 import moss.config.io.schema;
 
@@ -39,6 +40,7 @@ public final class Snippet(C)
      */
     void load(in string path)
     {
+        _name = path.baseName;
         auto loader = Loader.fromFile(path);
         auto rootNode = loader.load();
 
@@ -77,6 +79,14 @@ public final class Snippet(C)
     pragma(inline, true) pure @property ref inout(ConfType) config() @safe @nogc nothrow inout
     {
         return _config;
+    }
+
+    /**
+     * Return the name of the snippet
+     */
+    pragma(inline, true) pure @property immutable(string) name() @safe @nogc nothrow const
+    {
+        return cast(immutable(string)) _name;
     }
 
 private:
@@ -169,6 +179,7 @@ private:
     }
 
     ConfType _config;
+    string _name = null;
 }
 
 import moss.config.io.schema;
