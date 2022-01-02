@@ -35,12 +35,26 @@ import moss.config.io.schema;
  */
 public final class Snippet(C)
 {
+    @disable this();
+
     /**
-     * TODO: Load the input path
+     * Construct a new Snippet for the given path
      */
-    void load(in string path)
+    this(in string path)
     {
+        enforce(!path.empty, "Snippet!" ~ ConfType.stringof ~ ": Path required");
+        this._path = path;
         _name = path.baseName;
+    }
+
+    /**
+     * Begin loading the file
+     */
+    void load()
+    {
+        import std.stdio : writeln;
+
+        writeln("reading: ", path);
         auto loader = Loader.fromFile(path);
         auto rootNode = loader.load();
 
@@ -87,6 +101,14 @@ public final class Snippet(C)
     pragma(inline, true) pure @property immutable(string) name() @safe @nogc nothrow const
     {
         return cast(immutable(string)) _name;
+    }
+
+    /**
+     * Return the path for the file being loaded
+     */
+    pragma(inline, true) pure @property immutable(string) path() @safe @nogc nothrow const
+    {
+        return cast(immutable(string)) _path;
     }
 
     /**
@@ -198,6 +220,7 @@ private:
 
     ConfType _config;
     string _name = null;
+    string _path = null;
     bool _enabled = true;
 }
 
@@ -211,7 +234,7 @@ private unittest
     import std.stdio : writeln;
     import moss.config.repo;
 
-    auto c = new Snippet!(Repository[])();
-    c.load("test/repo.yml");
+    auto c = new Snippet!(Repository[])("test/repo.yml");
+    c.load();
     writeln(c.config);
 }
