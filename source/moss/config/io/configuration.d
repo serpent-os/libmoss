@@ -172,12 +172,8 @@ private:
      */
     void loadConfigFile(in string path, ConfigType type)
     {
-        import std.stdio : writeln;
-
-        auto snippet = new SnippetType;
-        snippet.load(path);
-        writeln(snippet.name);
-        _snippets ~= snippet;
+        auto snippet = new SnippetType(path);
+        bool masked = false;
 
         if ((type & ConfigType.Admin) == ConfigType.Admin)
         {
@@ -186,14 +182,18 @@ private:
 
             if (isMasked(path))
             {
-                vendorSnippets.find!((s) => s.name == snippet.name)
+                vendorSnippets.find!((s) => s.name == name)
                     .each!((s) => s.enabled = false);
+                return;
             }
         }
         else if ((type & ConfigType.Vendor) == ConfigType.Vendor)
         {
             vendorSnippets ~= snippet;
         }
+
+        snippet.load();
+        _snippets ~= snippet;
     }
 
     alias ConfType = C;
@@ -247,6 +247,6 @@ private unittest
 
     foreach (s; n._snippets)
     {
-        writeln(s.config);
+        writeln("enabled? ", s.enabled, "  ", s.config);
     }
 }
