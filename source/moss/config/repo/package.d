@@ -21,3 +21,40 @@
  */
 
 module moss.config.repo;
+
+import std.string : format;
+import moss.config.io.schema;
+
+/**
+ * Holds all the relevant details for Repository deserialisation from
+ * a set of YML files
+ */
+public struct Repository
+{
+    /**
+     * Unique identifier for the repository
+     */
+    string id = null;
+
+    /**
+     * A human description for this repository
+     */
+    string description = null;
+
+    /**
+     * Where does one find said repository
+     */
+    @YamlSchema("uri", true) string uri = null;
+
+    /**
+     * Return a human readable description of the repo
+     */
+    pure @property auto toString()
+    {
+        if (description !is null)
+        {
+            return format!"%s - \"%s\" (%s)"(id, uri, description);
+        }
+        return format!"%s - \"%s\""(id, uri);
+    }
+}
