@@ -30,9 +30,14 @@ import std.string : format, endsWith;
 import std.traits : getUDAs, isArray;
 import moss.config.io.schema;
 import std.range : empty;
-import std.file : dirEntries, DirEntry, exists, isDir, isFile, SpanMode;
+import std.file : dirEntries, DirEntry, exists, isDir, readLink, isSymlink, isFile, SpanMode;
 import std.array : array;
 import std.algorithm : filter, each;
+
+/**
+ * If a symlink points to /dev/null - it's "masked"
+ */
+private static immutable(string) maskTarget = "/dev/null";
 
 private enum ConfigType
 {
@@ -130,9 +135,9 @@ public final class Configuration(C)
         /**
          * Placeholder; Eventually handle masking logic based on Vendor vs Admin path
          */
-        void configLoader(in string path)
+        void configLoader(in string path, in ConfigType type)
         {
-            loadConfigFile(path);
+            loadConfigFile(path, type);
         }
 
         /* Iterate potential search paths */
@@ -150,12 +155,12 @@ public final class Configuration(C)
                 /* Find .conf files within .conf.d */
                 dirEntries(searchPath, SpanMode.shallow, false).array
                     .filter!((DirEntry e) => e.name.endsWith(configSuffix) && !e.name.isDir)
-                    .each!((e) => configLoader(e.name));
+                    .each!((e) => configLoader(e.name, path.type));
             }
             else if ((path.type & ConfigType.File) == ConfigType.File && searchPath.isFile)
             {
                 /* Handle a specific file (.conf) */
-                loadConfigFile(searchPath);
+                loadConfigFile(searchPath, path.type);
             }
         }
     }
@@ -165,7 +170,7 @@ private:
     /**
      * Attempt to load a Snippet for the given input path
      */
-    void loadConfigFile(in string path)
+    void loadConfigFile(in string path, ConfigType type)
     {
         import std.stdio : writeln;
 
@@ -173,6 +178,15 @@ private:
         snippet.load(path);
         writeln(snippet.name);
         _snippets ~= snippet;
+
+        if ((type & ConfigType.Admin) == ConfigType.Admin)
+        {
+            adminSnippets ~= snippet;
+        }
+        else if ((type & ConfigType.Vendor) == ConfigType.Vendor)
+        {
+            vendorSnippets ~= snippet;
+        }
     }
 
     alias ConfType = C;
@@ -192,8 +206,25 @@ private:
         alias ElemType = ConfType;
     }
 
+    /**
+     * A path is masked if it points to /dev/null
+     */
+    static bool isMasked(in string path) @system
+    {
+        if (!path.isSymlink)
+        {
+            return false;
+        }
+        auto target = path.readLink();
+        return target == maskTarget;
+    }
+
     SearchPath[] paths;
     SnippetType[] _snippets;
+
+    /* Separation of snippet types */
+    SnippetType[] adminSnippets;
+    SnippetType[] vendorSnippets;
 
     string _domain = null;
 }
