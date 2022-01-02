@@ -22,4 +22,6 @@
 
 module moss.config.io;
 
+public import moss.config.io.configuration;
+public import moss.config.io.schema;
 public import moss.config.io.snippet;
