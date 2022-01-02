@@ -167,14 +167,20 @@ private:
      */
     void loadConfigFile(in string path)
     {
+        import std.stdio : writeln;
+
         auto snippet = new Snippet!ConfType();
         snippet.load(path);
+        writeln(snippet.name);
         _snippets ~= snippet;
     }
 
     alias ConfType = C;
     static enum arrayConfig = isArray!ConfType;
 
+    /**
+     * Ascertain the configuration type (dynamic array etc)
+     */
     static if (arrayConfig)
     {
         alias ElemType = typeof(*ConfType.init.ptr);
