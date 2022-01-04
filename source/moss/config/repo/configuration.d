@@ -20,7 +20,15 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.config.repo;
+module moss.config.repo.configuration;
 
-public import moss.config.repo.configuration;
+public import moss.config.io.configuration;
 public import moss.config.repo.type;
+
+/**
+ * Manages the configuration for system software repositories
+ */
+public final class RepositoryConfiguration : Configuration!Repository
+{
+
+}
