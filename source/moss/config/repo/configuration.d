@@ -31,5 +31,20 @@ public import moss.config.repo.type;
 public final class RepositoryConfiguration : Configuration!(Repository[])
 {
 
+    /**
+     * Return the repositories currently supported
+     */
+    final @property auto repos()
+    {
+        return [Repository()];
+    }
+}
 
+unittest
+{
+    import std.stdio : writeln;
+
+    auto c = new RepositoryConfiguration();
+    c.load("test/");
+    writeln(c.repos);
 }
