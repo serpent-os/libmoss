@@ -24,7 +24,7 @@ module moss.config.io.snippet;
 
 import std.traits : isArray, OriginalType, FieldNameTuple, getUDAs;
 import dyaml;
-import std.algorithm : map;
+import std.algorithm : canFind, map;
 import std.exception : enforce;
 import std.path : baseName;
 import std.range : empty;
@@ -75,8 +75,11 @@ public final class Snippet(C)
 
                 /* Capture the ID for this key as we expect ElemType[] */
                 immutable string key = paired[0].key.get!string;
-
                 auto value = paired[0].value;
+
+                /* Be unique pls */
+                enforce(!_config.canFind!((ref c) => c.id == key),
+                        "Snippet!" ~ C.stringof ~ ": Non-unique ID: " ~ key);
 
                 /* Build from value. i.e the struct we can read */
                 ElemType builder;
