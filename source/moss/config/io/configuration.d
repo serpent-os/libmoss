@@ -90,8 +90,10 @@ package enum Directories : string
 /**
  * The Configuration is merged from multiple snippet sources which can be
  * individually enabled/masked/etc
+ *
+ * It is up to subclasses to do something *useful* with this management
  */
-public final class Configuration(C)
+public class Configuration(C)
 {
     /**
      * Construct a new Configuration
