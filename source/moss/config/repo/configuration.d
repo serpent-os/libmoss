@@ -28,7 +28,8 @@ public import moss.config.repo.type;
 /**
  * Manages the configuration for system software repositories
  */
-public final class RepositoryConfiguration : Configuration!Repository
+public final class RepositoryConfiguration : Configuration!(Repository[])
 {
+
 
 }
