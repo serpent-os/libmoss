@@ -24,6 +24,7 @@ module moss.config.io.snippet;
 
 import std.traits : isArray, OriginalType, FieldNameTuple, getUDAs;
 import dyaml;
+import std.algorithm : map;
 import std.exception : enforce;
 import std.path : baseName;
 import std.range : empty;
@@ -117,6 +118,18 @@ public final class Snippet(C)
     pure @property bool enabled() @safe @nogc nothrow const
     {
         return _enabled;
+    }
+
+    static if (arrayConfig)
+    {
+
+        /**
+         * Return the IDs found within this Snippet
+         */
+        pure auto @property ids() @safe @nogc nothrow const
+        {
+            return config.map!((ref c) => c.id);
+        }
     }
 
 package:
@@ -237,4 +250,5 @@ private unittest
     auto c = new Snippet!(Repository[])("test/repo.yml");
     c.load();
     writeln(c.config);
+    writeln(c.ids);
 }
