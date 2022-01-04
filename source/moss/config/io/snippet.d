@@ -114,7 +114,7 @@ public final class Snippet(C)
     /**
      * Return whether this Snippet is enabled
      */
-    pure @property bool enabled() @safe @nogc nothrow
+    pure @property bool enabled() @safe @nogc nothrow const
     {
         return _enabled;
     }

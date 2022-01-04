@@ -167,6 +167,14 @@ public class Configuration(C)
         }
     }
 
+    /**
+     * Return all active snippets in their original order
+     */
+    pure auto @property snippets() @safe @nogc nothrow const
+    {
+        return _snippets.filter!((ref s) => s.enabled);
+    }
+
 private:
 
     /**
