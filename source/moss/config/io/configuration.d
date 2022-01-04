@@ -32,7 +32,7 @@ import moss.config.io.schema;
 import std.range : empty;
 import std.file : dirEntries, DirEntry, exists, isDir, readLink, isSymlink, isFile, SpanMode;
 import std.array : array;
-import std.algorithm : find, filter, each;
+import std.algorithm : find, filter, each, map, uniq, sort, joiner;
 
 /**
  * If a symlink points to /dev/null - it's "masked"
@@ -173,6 +173,24 @@ public class Configuration(C)
     pure auto @property snippets() @safe @nogc nothrow const
     {
         return _snippets.filter!((ref s) => s.enabled);
+    }
+
+    static if (arrayConfig)
+    {
+
+        /**
+         * Extract unique IDs across all snippets
+         */
+        auto @property ids() const
+        {
+            string[] allIds = _snippets.filter!((s) => s.enabled)
+                .map!((s) => s.ids.map!((i) => cast(string) i))
+                .joiner
+                .array;
+            allIds.sort();
+            return allIds.uniq;
+        }
+
     }
 
 private:
