@@ -28,6 +28,7 @@ import std.algorithm : canFind, map;
 import std.exception : enforce;
 import std.path : baseName;
 import std.range : empty;
+import std.string : format;
 import moss.config.io.schema;
 
 /**
@@ -46,6 +47,20 @@ public final class Snippet(C)
         enforce(!path.empty, "Snippet!" ~ ConfType.stringof ~ ": Path required");
         this._path = path;
         _name = path.baseName;
+    }
+
+    /**
+     * Returns true if the property was explicitly defined
+     */
+    pure @property bool explicitlyDefined(in string key, in string id = null) @safe
+    {
+        auto keyStorageName = id is null ? key : format!"%s/%s"(id, key);
+        bool* set = keyStorageName in _explicitlyDefined;
+        if (set is null)
+        {
+            return false;
+        }
+        return *set;
     }
 
     /**
@@ -83,7 +98,7 @@ public final class Snippet(C)
 
                 /* Build from value. i.e the struct we can read */
                 ElemType builder;
-                parseStruct(value, builder);
+                parseStruct(value, builder, key);
                 builder.id = key;
 
                 _config ~= builder;
@@ -186,7 +201,7 @@ private:
     /**
      * Handle parsing of an individual struct
      */
-    void parseStruct(ref Node rootNode, out ElemType elem)
+    void parseStruct(ref Node rootNode, out ElemType elem, string id = null)
     {
         elem = ElemType.init;
 
@@ -229,6 +244,8 @@ private:
                     Node val = rootNode[lookupKey];
                     /* TODO: Properly handle types and whatnot. */
                     mixin("elem." ~ name ~ " = val.as!localType;");
+                    auto keyStorageName = id is null ? name : format!"%s/%s"(id, name);
+                    _explicitlyDefined[keyStorageName] = true;
                 }
             }
         }
@@ -238,6 +255,7 @@ private:
     string _name = null;
     string _path = null;
     bool _enabled = true;
+    bool[string] _explicitlyDefined;
 }
 
 import moss.config.io.schema;
