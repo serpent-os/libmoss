@@ -27,7 +27,7 @@ import moss.config.io.snippet;
 import std.path : buildPath;
 import std.exception : enforce;
 import std.string : format, endsWith;
-import std.traits : getUDAs, isArray;
+import std.traits : getUDAs, isArray, FieldNameTuple;
 import moss.config.io.schema;
 import std.range : empty;
 import std.file : dirEntries, DirEntry, exists, isDir, readLink, isSymlink, isFile, SpanMode;
@@ -234,6 +234,43 @@ private:
     static if (arrayConfig)
     {
         alias ElemType = typeof(*ConfType.init.ptr);
+
+        /* We contain sections as its a list of types with an identifier */
+        ElemType[string] _sections;
+
+        /**
+         * Handle the global sections based on identifiers within the snippet
+         */
+        void loadSections(ref SnippetType snip)
+        {
+            foreach (ref candidateSection; snip.config)
+            {
+                const auto id = candidateSection.id;
+                ElemType* storedSection = null;
+
+                /* Store the new section if it doesn't exist */
+                if (!(id in _sections))
+                {
+                    _sections[id] = ElemType.init;
+                    storedSection = &_sections[id];
+                }
+
+                /* For every explicitly defined field, override current value */
+                static foreach (idx, name; FieldNameTuple!ElemType)
+                {
+                    {
+                        /* Get candidate value */
+                        mixin("auto candidateFieldValue = candidateSection." ~ name ~ ";");
+
+                        if (snip.explicitlyDefined(name, id))
+                        {
+                            mixin("storedSection." ~ name ~ " = candidateFieldValue;");
+                        }
+                    }
+                }
+            }
+        }
+
     }
     else
     {
