@@ -68,9 +68,6 @@ public final class Snippet(C)
      */
     void load()
     {
-        import std.stdio : writeln;
-
-        writeln("reading: ", path);
         auto loader = Loader.fromFile(path);
         auto rootNode = loader.load();
 
