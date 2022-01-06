@@ -154,10 +154,13 @@ public class Configuration(C)
 
             if ((path.type & ConfigType.Directory) == ConfigType.Directory && searchPath.isDir)
             {
-                /* Find .conf files within .conf.d */
-                dirEntries(searchPath, SpanMode.shallow, false).array
-                    .filter!((DirEntry e) => e.name.endsWith(configSuffix) && !e.name.isDir)
-                    .each!((e) => configLoader(e.name, path.type));
+                /* Find .conf files within .conf.d according to alpha sort */
+                string[] entries = dirEntries(searchPath, SpanMode.shallow, false).map!(
+                        (e) => cast(string) e.name.dup)
+                    .filter!((n) => n.endsWith(configSuffix) && !n.isDir)
+                    .array;
+                entries.sort!((a, b) => a < b);
+                entries.each!((n) => configLoader(n, path.type));
             }
             else if ((path.type & ConfigType.File) == ConfigType.File && searchPath.isFile)
             {
