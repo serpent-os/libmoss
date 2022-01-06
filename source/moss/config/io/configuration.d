@@ -197,6 +197,13 @@ public class Configuration(C)
             return allIds.uniq;
         }
 
+        /**
+         * Return all known sections
+         */
+        pure auto @property sections() @safe nothrow
+        {
+            return _sections.values;
+        }
     }
 
 private:
@@ -259,6 +266,7 @@ private:
                 {
                     _sections[id] = ElemType.init;
                     storedSection = &_sections[id];
+                    storedSection.id = id;
                 }
                 else
                 {
@@ -334,4 +342,6 @@ private unittest
     {
         writeln("enabled? ", s.enabled, "  ", s.config);
     }
+
+    writeln(n.sections);
 }
