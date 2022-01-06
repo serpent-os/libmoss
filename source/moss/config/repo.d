@@ -20,31 +20,41 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-module moss.config.repo.configuration;
+module moss.config.repo;
 
-public import moss.config.io.configuration;
-public import moss.config.repo.type;
+import std.string : format;
+import moss.config.io.schema;
 
 /**
- * Manages the configuration for system software repositories
+ * Holds all the relevant details for Repository deserialisation from
+ * a set of YML files
  */
-public final class RepositoryConfiguration : Configuration!(Repository[])
+@DomainKey("repos") public struct Repository
 {
+    /**
+     * Unique identifier for the repository
+     */
+    string id = null;
 
     /**
-     * Return the repositories currently supported
+     * A human description for this repository
      */
-    final @property auto repos()
+    string description = null;
+
+    /**
+     * Where does one find said repository
+     */
+    @YamlSchema("uri", true) string uri = null;
+
+    /**
+     * Return a human readable description of the repo
+     */
+    pure @property auto toString()
     {
-        return [Repository()];
+        if (description !is null)
+        {
+            return format!"%s - \"%s\" (%s)"(id, uri, description);
+        }
+        return format!"%s - \"%s\""(id, uri);
     }
-}
-
-unittest
-{
-    import std.stdio : writeln;
-
-    auto c = new RepositoryConfiguration();
-    c.load("test/");
-    writeln(c.repos);
 }
