@@ -241,7 +241,7 @@ private:
         /**
          * Handle the global sections based on identifiers within the snippet
          */
-        void loadSections(ref SnippetType snip)
+        void loadSnippetSections(ref SnippetType snip)
         {
             foreach (ref candidateSection; snip.config)
             {
