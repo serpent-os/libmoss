@@ -230,14 +230,6 @@ private:
                 /* Schema may have a different name */
                 auto lookupKey = schema.name.empty ? name : schema.name;
 
-                /* Key is mandatory */
-                if (schema.required)
-                {
-                    enforce(rootNode.containsKey(lookupKey),
-                            "Snippet!" ~ ConfType.stringof
-                            ~ ": Mandatory key is absent: " ~ lookupKey);
-                }
-
                 /* Can we use it? */
                 if (rootNode.containsKey(lookupKey))
                 {
