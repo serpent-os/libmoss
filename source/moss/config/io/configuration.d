@@ -29,7 +29,7 @@ import std.exception : enforce;
 import std.string : format, endsWith;
 import std.traits : getUDAs, isArray, FieldNameTuple;
 import moss.config.io.schema;
-import std.range : empty;
+import std.range : chain, empty;
 import std.file : dirEntries, DirEntry, exists, isDir, readLink, isSymlink, isFile, SpanMode;
 import std.array : array;
 import std.algorithm : find, filter, each, map, uniq, sort, joiner;
@@ -165,6 +165,12 @@ public class Configuration(C)
                 loadConfigFile(searchPath, path.type);
             }
         }
+
+        /* If all has been loaded now, we can load all *valid* sections */
+        static if (arrayConfig)
+        {
+            loadSections();
+        }
     }
 
     /**
@@ -254,6 +260,10 @@ private:
                     _sections[id] = ElemType.init;
                     storedSection = &_sections[id];
                 }
+                else
+                {
+                    storedSection = &_sections[id];
+                }
 
                 /* For every explicitly defined field, override current value */
                 static foreach (idx, name; FieldNameTuple!ElemType)
@@ -269,6 +279,16 @@ private:
                     }
                 }
             }
+        }
+
+        /**
+         * Run through all *enabled* snippets to build the final sections for the
+         * configuration
+         */
+        void loadSections()
+        {
+            chain(vendorSnippets.filter!((s) => s.enabled), adminSnippets.filter!((s => s.enabled))).each!(
+                    (s) => loadSnippetSections(s));
         }
 
     }
