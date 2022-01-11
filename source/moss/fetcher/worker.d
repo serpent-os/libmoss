@@ -234,6 +234,13 @@ private:
             outputFD = -1;
         }
 
+        /* Allow redirection */
+        ret = curl_easy_setopt(handle, CurlOption.followlocation, 1);
+        if (ret != CurlError.ok)
+        {
+            return FetchResult(FetchError(ret, FetchErrorDomain.CurlEasy, fetchable.sourceURI));
+        }
+
         /* Set up the URL */
         ret = curl_easy_setopt(handle, CurlOption.url, fetchable.sourceURI.toStringz);
         if (ret != CurlError.ok)
