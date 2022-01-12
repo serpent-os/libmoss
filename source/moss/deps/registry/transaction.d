@@ -107,7 +107,7 @@ public final class Transaction
      */
     RegistryItem[] apply()
     {
-        return finalState;
+        return computeDependencies(finalState);
     }
 
     /**
@@ -196,6 +196,12 @@ private:
 
         foreach (pkg; items)
         {
+            /* Disallow duplication on input */
+            if (finalState.canFind!((p) => p.pkgID == pkg.pkgID))
+            {
+                continue;
+            }
+
             foreach (provider; pkg.providers)
             {
                 /* Make sure we don't duplicate a package name */
@@ -271,7 +277,12 @@ private:
 
         /* Add the incoming vertices */
         RegistryItem[] workItems = cast(RegistryItem[]) items;
-        workItems.each!((i) => dag.addVertex(i));
+        workItems.each!((i) {
+            if (!dag.hasVertex(i))
+            {
+                dag.addVertex(i);
+            }
+        });
 
         /* Keep processing all items until we've built all edges */
         while (workItems.length > 0)
