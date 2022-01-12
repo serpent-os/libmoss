@@ -24,6 +24,12 @@ module moss.config.repo;
 
 import std.string : format;
 import moss.config.io.schema;
+import moss.config.io.configuration;
+
+/**
+ * Provide a sane alias for typing
+ */
+public alias RepositoryConfiguration = Configuration!(Repository[]);
 
 /**
  * Holds all the relevant details for Repository deserialisation from
