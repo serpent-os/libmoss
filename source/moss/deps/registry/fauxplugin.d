@@ -153,6 +153,7 @@ static Dependency LD(const(string) name)
 }
 
 static PackageCandidate[] worldPackages = [
+    P("bash", [LD("libc.so.6(x86_64)"), D("ncurses"),]),
     P("nano", [LD("libc.so.6(x86_64)"), D("ncurses"),]),
     P("ncurses", [LD("libc.so.6(x86_64)"),]), P("baselayout", []),
     P("glibc", [D("baselayout")]),
@@ -214,4 +215,26 @@ unittest
     string[] revdepsOrder;
     revdepsGraph.topologicalSort((n) { revdepsOrder ~= n; });
     assert(revdepsOrder == ["nano", "ncurses"]);
+}
+
+/**
+ * Ensure manager integration works and we can preselect in batch
+ */
+unittest
+{
+    import moss.deps.registry : RegistryManager, RegistryItem;
+
+    auto fp = new FauxSource();
+    auto reg = new RegistryManager();
+    reg.addPlugin(fp);
+    worldPackages.each!((p) => fp.addPackage(p));
+
+    auto tr = reg.transaction();
+    auto nanoPkg = reg.byName("nano").front;
+    auto bashPkg = reg.byName("bash").front;
+    tr.installPackages([nanoPkg, bashPkg, bashPkg]);
+    auto res = tr.apply();
+    assert(tr.problems.length == 0);
+    auto names = res.map!((p) => p.pkgID).array();
+    assert(names == ["baselayout", "glibc", "ncurses", "bash", "nano"]);
 }
