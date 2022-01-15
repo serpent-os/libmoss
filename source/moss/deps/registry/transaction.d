@@ -101,13 +101,11 @@ public final class Transaction
     @disable this();
 
     /**
-     * Compute the final state. This is needed by moss to know what selections
-     * form the new state to apply it.       In essence this is a second fixed DFS
-     * of whichever DFS already ran.
+     * Return the final application state
      */
     RegistryItem[] apply()
     {
-        return computeDependencies(finalState);
+        return finalState;
     }
 
     /**
@@ -115,10 +113,7 @@ public final class Transaction
      */
     void installPackages(in RegistryItem[] items)
     {
-        auto deps = computeDependencies(items);
-
-        /* TODO: Work out replacements by Name etc */
-        finalState ~= deps;
+        finalState ~= computeDependencies(items);
     }
 
     /**
@@ -277,12 +272,6 @@ private:
 
         /* Add the incoming vertices */
         RegistryItem[] workItems = cast(RegistryItem[]) items;
-        workItems.each!((i) {
-            if (!dag.hasVertex(i))
-            {
-                dag.addVertex(i);
-            }
-        });
 
         /* Keep processing all items until we've built all edges */
         while (workItems.length > 0)
@@ -291,6 +280,10 @@ private:
 
             foreach (item; workItems)
             {
+                if (!dag.hasVertex(item))
+                {
+                    dag.addVertex(item);
+                }
                 foreach (dep; item.dependencies)
                 {
                     if (depCB is null)
