@@ -118,7 +118,7 @@ static string genGetOpt(T)(string passText = "std.getopt.config.passThrough")
     mixin("import " ~ moduleName!T ~ ";");
 
     auto gtext = text("auto optResult = getopt(args, " ~ passText
-            ~ ", std.getopt.config.caseSensitive, std.getopt.config.bundling,");
+            ~ ", std.getopt.config.caseSensitive, std.getopt.config.bundling, std.getopt.config.keepEndOfOptions,");
 
     static foreach (member; __traits(allMembers, T))
     {
