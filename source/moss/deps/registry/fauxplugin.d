@@ -61,6 +61,7 @@ package final class FauxSource : RegistryPlugin
     {
         final switch (type)
         {
+        case ProviderType.CmakeName:
         case ProviderType.PkgconfigName:
         case ProviderType.Interpreter:
             return [];

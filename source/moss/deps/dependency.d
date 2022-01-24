@@ -40,6 +40,8 @@ package auto dependencyToString(in DependencyType type, in string target)
         return format!"pkgconfig(%s)"(target);
     case DependencyType.Interpreter:
         return format!"interpreter(%s)"(target);
+    case DependencyType.CmakeName:
+        return format!"cmake(%s)"(target);
     }
 }
 /**
@@ -68,6 +70,11 @@ public enum DependencyType : uint8_t
      * script interpreter is required to run a specific file.
      */
     Interpreter,
+
+    /**
+     * Provided by the filename of a Config.cmake or -config.cmake file
+     */
+    CmakeName,
 }
 
 /**
