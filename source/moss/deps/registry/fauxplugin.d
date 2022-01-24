@@ -63,6 +63,7 @@ package final class FauxSource : RegistryPlugin
         {
         case ProviderType.CmakeName:
         case ProviderType.PkgconfigName:
+        case ProviderType.PythonName:
         case ProviderType.Interpreter:
             return [];
         case ProviderType.PackageName:

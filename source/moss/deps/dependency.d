@@ -42,6 +42,8 @@ package auto dependencyToString(in DependencyType type, in string target)
         return format!"interpreter(%s)"(target);
     case DependencyType.CmakeName:
         return format!"cmake(%s)"(target);
+    case DependencyType.PythonName:
+        return format!"python(%s)"(target);
     }
 }
 /**
@@ -75,6 +77,11 @@ public enum DependencyType : uint8_t
      * Provided by the filename of a Config.cmake or -config.cmake file
      */
     CmakeName,
+
+    /**
+     * Python package name from the METADATA or PKG-INFO
+     */
+    PythonName,
 }
 
 /**
