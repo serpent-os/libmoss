@@ -8,6 +8,10 @@ project(
 )
 
 pkgconf = import('pkgconfig')
+installFiles = true
+if meson.is_subproject()
+	installFiles = false
+endif
 
 # Package sources
 core_sources = [
@@ -34,7 +38,7 @@ libcore_includes = [
 libcore = static_library(
 	'moss-core',
 	core_sources,
-	install: true,
+	install: installFiles,
 	include_directories: libcore_includes,
 )
 
@@ -45,7 +49,7 @@ link_libcore = declare_dependency(
 )
 
 # Installed system-wide?
-if not meson.is_subproject()
+if installFiles
 	
 	# Install source for other D applications
 	install_subdir('source/moss', install_dir: 'include/d/moss-core')
