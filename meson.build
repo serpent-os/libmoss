@@ -14,7 +14,7 @@ if meson.is_subproject()
 endif
 
 # Package sources
-moss_config_sources = [
+libmoss_config_sources = [
 	'source/moss/config/package.d',
 	'source/moss/config/io/package.d',
 	'source/moss/config/io/schema.d',
@@ -33,7 +33,7 @@ libmoss_config_includes = [
 # Compile as a static library 
 libmoss_config = static_library(
 	'moss-config',
-	moss_config_sources,
+	libmoss_config_sources,
 	install: installFiles,
 	include_directories: libmoss_config_includes,
 )
