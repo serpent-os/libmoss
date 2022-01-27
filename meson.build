@@ -16,7 +16,7 @@ if meson.is_subproject()
 endif
 
 moss_core = subproject('moss-core')
-link_libmoss_core = moss_core.get_variable('link_libcore')
+link_libmoss_core = moss_core.get_variable('link_libmoss_core')
 
 # Package sources
 deps_sources = [
@@ -77,6 +77,7 @@ libmoss_deps = static_library(
 link_libmoss_deps = declare_dependency(
 	link_with: libmoss_deps,
 	include_directories: libmoss_deps_includes,
+	dependencies: [link_libmoss_core, dep_libxhhash],
 )
 
 # Installed system-wide?
