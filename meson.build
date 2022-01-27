@@ -14,7 +14,7 @@ if meson.is_subproject()
 endif
 
 # Package sources
-config_sources = [
+moss_config_sources = [
 	'source/moss/config/package.d',
 	'source/moss/config/io/package.d',
 	'source/moss/config/io/schema.d',
@@ -24,24 +24,24 @@ config_sources = [
 ]
 
 # Expose source dependencies
-libconfig_includes = [
+libmoss_config_includes = [
 	include_directories('source'),
 	include_directories('external/dyaml/source'),
 	include_directories('external/tinyendian/source'),
 ]
 
 # Compile as a static library 
-libconfig = static_library(
+libmoss_config = static_library(
 	'moss-config',
-	config_sources,
+	moss_config_sources,
 	install: installFiles,
-	include_directories: libconfig_includes,
+	include_directories: libmoss_config_includes,
 )
 
 # Allow linking to us
-link_libconfig = declare_dependency(
-	link_with: libconfig,
-	include_directories: libconfig_includes,
+link_libmoss_config = declare_dependency(
+	link_with: libmoss_config,
+	include_directories: libmoss_config_includes,
 )
 
 # Installed system-wide?
@@ -51,7 +51,7 @@ if installFiles
 
 	# Generate pkgconfig for linking
 	pkgconf.generate(name: 'moss-config',
-		libraries: libconfig,
+		libraries: libmoss_config,
 		subdirs: 'd/moss-config',
 		version: meson.project_version(),
 		description: 'moss-config module'
