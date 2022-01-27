@@ -20,6 +20,43 @@ endif
 moss_core = subproject('moss-core')
 link_libcore = moss_core.get_variable('link_libcore')
 
+
+aux_sources_format_source = [
+    'external/tinyendian/source/tinyendian.d',
+    'external/dyaml/source/dyaml/composer.d',
+    'external/dyaml/source/dyaml/constructor.d',
+    'external/dyaml/source/dyaml/dumper.d',
+    'external/dyaml/source/dyaml/encoding.d',
+    'external/dyaml/source/dyaml/escapes.d',
+    'external/dyaml/source/dyaml/event.d',
+    'external/dyaml/source/dyaml/linebreak.d',
+    'external/dyaml/source/dyaml/package.d',
+    'external/dyaml/source/dyaml/parser.d',
+    'external/dyaml/source/dyaml/queue.d',
+    'external/dyaml/source/dyaml/serializer.d',
+    'external/dyaml/source/dyaml/style.d',
+    'external/dyaml/source/dyaml/tagdirective.d',
+    'external/dyaml/source/dyaml/test/common.d',
+    'external/dyaml/source/dyaml/test/compare.d',
+    'external/dyaml/source/dyaml/test/constructor.d',
+    'external/dyaml/source/dyaml/test/emitter.d',
+    'external/dyaml/source/dyaml/test/errors.d',
+    'external/dyaml/source/dyaml/test/inputoutput.d',
+    'external/dyaml/source/dyaml/test/reader.d',
+    'external/dyaml/source/dyaml/test/representer.d',
+    'external/dyaml/source/dyaml/test/resolver.d',
+    'external/dyaml/source/dyaml/test/tokens.d',
+    'external/dyaml/source/dyaml/token.d',
+    'external/dyaml/source/dyaml/emitter.d',
+    'external/dyaml/source/dyaml/exception.d',
+    'external/dyaml/source/dyaml/loader.d',
+    'external/dyaml/source/dyaml/node.d',
+    'external/dyaml/source/dyaml/reader.d',
+    'external/dyaml/source/dyaml/representer.d',
+    'external/dyaml/source/dyaml/resolver.d',
+    'external/dyaml/source/dyaml/scanner.d',
+]
+
 formatSource_sources = [
     'source/moss/format/source/package.d',
     'source/moss/format/source/package_definition.d',
@@ -35,6 +72,7 @@ formatSource_sources = [
     'source/moss/format/source/upstream_definition.d',
     'source/moss/format/source/script.d',
 ]
+formatSource_sources += aux_sources_format_source
 
 formatBinary_sources = [
     'source/moss/format/binary/archive_header.d',
@@ -62,6 +100,19 @@ formatBinary_sources = [
     'source/moss/format/binary/repo/package.d',
     'source/moss/format/binary/repo/repo_writer.d',
 ]
+
+aux_sources_format_binary = [
+    'external/xxhash-d/source/xxhash/binding.d',
+    'external/xxhash-d/source/xxhash/package.d',
+    'external/xxhash-d/source/xxhash/util.d',
+    'external/zstd/source/zstd/c/zstd.d',
+    'external/zstd/source/zstd/common.d',
+    'external/zstd/source/zstd/compress.d',
+    'external/zstd/source/zstd/decompress.d',
+    'external/zstd/source/zstd/package.d',
+]
+
+formatBinary_sources += aux_sources_format_binary
 
 libmoss_format_source_includes = [
     include_directories('source'),
@@ -97,7 +148,8 @@ libmoss_format_binary = static_library(
 )
 
 link_libmoss_format_binary = declare_dependency(
-	link_with: libmoss_format_binary,
+	link_with: [libmoss_format_binary],
+    dependencies: [dep_xxhash, dep_libzstd],
 	include_directories: libmoss_format_binary_includes,
 )
 
