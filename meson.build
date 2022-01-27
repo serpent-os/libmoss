@@ -14,7 +14,7 @@ if meson.is_subproject()
 endif
 
 # Package sources
-core_sources = [
+libmoss_core_sources = [
 	'source/moss/core/cli/package.d',
 	'source/moss/core/download/manager.d',
 	'source/moss/core/download/package.d',
@@ -30,22 +30,22 @@ core_sources = [
 ]
 
 # Expose source dependencies
-libcore_includes = [
+libmoss_core_includes = [
 	include_directories('source'),
 ]
 
 # Compile as a static library 
-libcore = static_library(
+libmoss_core = static_library(
 	'moss-core',
-	core_sources,
+	libmoss_core_sources,
 	install: installFiles,
-	include_directories: libcore_includes,
+	include_directories: libmoss_core_includes,
 )
 
 # Allow linking to us
-link_libcore = declare_dependency(
-	link_with: libcore,
-	include_directories: libcore_includes,
+link_libmoss_core = declare_dependency(
+	link_with: libmoss_core,
+	include_directories: libmoss_core_includes,
 )
 
 # Installed system-wide?
@@ -56,7 +56,7 @@ if installFiles
 
 	# Generate pkgconfig for linking
 	pkgconf.generate(name: 'moss-core',
-		libraries: libcore,
+		libraries: libmoss_core,
 		subdirs: 'd/moss-core',
 		version: meson.project_version(),
 		description: 'moss-core module'
