@@ -18,7 +18,7 @@ endif
 
 # Grab moss-core
 moss_core = subproject('moss-core')
-link_libcore = moss_core.get_variable('link_libcore')
+link_libmoss_core = moss_core.get_variable('link_libmoss_core')
 
 
 aux_sources_format_source = [
@@ -124,13 +124,14 @@ libmoss_format_source = static_library(
 	'moss-format-source',
 	formatSource_sources,
 	install: installFiles,
-    dependencies: [link_libcore],
+	dependencies: [link_libmoss_core],
 	include_directories: libmoss_format_source_includes,
 )
 
 link_libmoss_format_source = declare_dependency(
 	link_with: libmoss_format_source,
 	include_directories: libmoss_format_source_includes,
+	dependencies: [link_libmoss_core],
 )
 
 libmoss_format_binary_includes = [
@@ -143,13 +144,13 @@ libmoss_format_binary = static_library(
 	'moss-format-binary',
 	formatBinary_sources,
 	install: installFiles,
-    dependencies: [link_libcore, dep_xxhash, dep_libzstd],
+    dependencies: [link_libmoss_core, dep_xxhash, dep_libzstd],
 	include_directories: libmoss_format_binary_includes,
 )
 
 link_libmoss_format_binary = declare_dependency(
 	link_with: [libmoss_format_binary],
-    dependencies: [dep_xxhash, dep_libzstd],
+	dependencies: [link_libmoss_core, dep_xxhash, dep_libzstd],
 	include_directories: libmoss_format_binary_includes,
 )
 
