@@ -16,7 +16,7 @@ if meson.is_subproject()
 endif
 
 moss_core = subproject('moss-core')
-link_libmoss_core = moss_core.get_variable('link_libcore')
+link_libmoss_core = moss_core.get_variable('link_libmoss_core')
 
 # Package sources
 fetcher_sources = [
@@ -46,6 +46,7 @@ libmoss_fetcher = static_library(
 link_libmoss_fetcher = declare_dependency(
 	link_with: libmoss_fetcher,
 	include_directories: libmoss_fetcher_includes,
+	dependencies: [link_libmoss_core, dep_libcurl],
 )
 
 # Installed system-wide?
