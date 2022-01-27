@@ -101,6 +101,17 @@ link_libmoss_format_binary = declare_dependency(
 	include_directories: libmoss_format_binary_includes,
 )
 
+link_libmoss_format = declare_dependency(
+    link_with: [libmoss_format_binary, libmoss_format_source],
+    include_directories: [
+        include_directories('source'),
+        include_directories('external/xxhash-d/source'),
+        include_directories('external/zstd/source'),
+        include_directories('external/dyaml/source'),
+        include_directories('external/tinyendian/source'),
+    ]
+)
+
 # Installed system-wide?
 if installFiles
 	
