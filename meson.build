@@ -69,7 +69,7 @@ libmoss_deps = static_library(
 	'moss-deps',
 	deps_sources,
 	install: installFiles,
-    dependencies: [link_libmoss_core, dep_libxhhash],
+	dependencies: [link_libmoss_core, dep_libxhhash],
 	include_directories: libmoss_deps_includes,
 )
 
