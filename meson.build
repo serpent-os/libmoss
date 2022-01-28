@@ -7,12 +7,11 @@ project(
 	]
 )
 
-dep_rocksdb = dependency('rocksdb', version: '>= 6.22.1')
+dep_rocksdb = dependency('rocksdb', version: '>= 6.22.1').partial_dependency(links: true)
 
 # Grab moss-core
 moss_core = subproject('moss-core')
 link_libmoss_core = moss_core.get_variable('link_libmoss_core')
-libmoss_core_includes = moss_core.get_variable('libmoss_core_includes')
 
 pkgconf = import('pkgconfig')
 installFiles = true
@@ -45,15 +44,15 @@ libmoss_db = static_library(
 	'moss-db',
 	libmoss_db_sources,
 	install: installFiles,
-	dependency: [link_libmoss_core, dep_rocksdb],
-	include_directories: [libmoss_core_includes, libmoss_db_includes],
+	dependencies: [link_libmoss_core, dep_rocksdb],
+	include_directories: libmoss_db_includes,
 )
 
 # Allow linking to us
 link_libmoss_db = declare_dependency(
 	link_with: libmoss_db,
-	include_directories: [libmoss_core_includes, libmoss_db_includes],
-	dependency: [link_libmoss_core, dep_rocksdb],
+	include_directories: libmoss_db_includes,
+	dependencies: [link_libmoss_core, dep_rocksdb],
 )
 
 # Installed system-wide?
