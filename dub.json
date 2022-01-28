@@ -1,0 +1,19 @@
+{
+       "authors": [
+               "Serpent OS Developers"
+       ],
+       "copyright": "Copyright © 2020-2022 Serpent OS Developers",
+       "description": "Dependency generation and consumption",
+       "license": "Zlib",
+       "version": "0.0.0",
+       "name": "moss-config",
+       "targetType": "autodetect",
+       "dependencies": {
+               "tinyendian": {
+                       "path": "external/tinyendian"
+               },
+               "dyaml": {
+                       "path": "external/dyaml"
+               }
+       },
+}
