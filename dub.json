@@ -2,10 +2,10 @@
 	"authors": [
 		"Serpent OS Developers"
 	],
-	"copyright": "Copyright © 2020-2021 Serpent OS Developers",
+	"copyright": "Copyright © 2020-2022 Serpent OS Developers",
 	"description": "Nested key-value database abstraction",
 	"license": "Zlib",
-	"version": "0.0.1",
+	"version": "0.0.0",
 	"name": "moss-db",
 	"targetType": "autodetect",
 	"dependencies": {
@@ -13,7 +13,7 @@
 			"path": "external/rocksdb-binding"
 		},
 		"moss-core": {
-			"path": "external/moss-core"
+			"path": "../moss-core"
 		}
 	}
 }
