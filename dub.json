@@ -1,0 +1,22 @@
+{
+       "authors": [
+               "Serpent OS Developers"
+       ],
+       "copyright": "Copyright © 2020-2022 Serpent OS Developers",
+       "description": "Dependency generation and consumption",
+       "license": "Zlib",
+       "version": "0.0.0",
+       "name": "moss-deps",
+       "targetType": "autodetect",
+       "dependencies": {
+               "moss-core": {
+                       "path": "../moss-core"
+               },
+               "elf-d": {
+                       "path": "external/elf-d"
+               },
+               "xxhash-d": {
+                       "path": "external/xxhash-d"
+               }
+       },
+}
