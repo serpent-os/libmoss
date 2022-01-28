@@ -7,7 +7,7 @@ project(
 	]
 )
 
-dep_rocksdb = dependency('rocksdb', version: '>= 6.22.1').partial_dependency(links: true)
+dep_rocksdb = dependency('rocksdb', version: '>= 6.15.5').partial_dependency(links: true, link_args: true)
 
 # Grab moss-core
 moss_core = subproject('moss-core')
@@ -33,6 +33,25 @@ libmoss_db_sources = [
 	'source/moss/db/package.d',
 ]
 
+aux_db_sources = [
+	'external/rocksdb-binding/src/rocksdb/batch.d',
+	'external/rocksdb-binding/src/rocksdb/binding.d',
+	'external/rocksdb-binding/src/rocksdb/env.d',
+	'external/rocksdb-binding/src/rocksdb/filterpolicy.d',
+	'external/rocksdb-binding/src/rocksdb/iterator.d',
+	'external/rocksdb-binding/src/rocksdb/package.d',
+	'external/rocksdb-binding/src/rocksdb/queryable.d',
+	'external/rocksdb-binding/src/rocksdb/slice.d',
+	'external/rocksdb-binding/src/rocksdb/slicetransform.d',
+	'external/rocksdb-binding/src/rocksdb/snapshot.d',
+	'external/rocksdb-binding/src/rocksdb/options.d',
+	'external/rocksdb-binding/src/rocksdb/columnfamily.d',
+	'external/rocksdb-binding/src/rocksdb/comparator.d',
+	'external/rocksdb-binding/src/rocksdb/database.d',
+]
+
+libmoss_db_sources += aux_db_sources
+
 # Expose source dependencies
 libmoss_db_includes = [
 	include_directories('source'),
@@ -52,7 +71,7 @@ libmoss_db = static_library(
 link_libmoss_db = declare_dependency(
 	link_with: libmoss_db,
 	include_directories: libmoss_db_includes,
-	dependencies: [link_libmoss_core, dep_rocksdb],
+	dependencies: [dep_rocksdb, link_libmoss_core],
 )
 
 # Installed system-wide?
