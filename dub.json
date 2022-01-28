@@ -1,0 +1,49 @@
+{
+       "authors": [
+               "Serpent OS Developers"
+       ],
+       "copyright": "Copyright © 2020-2022 Serpent OS Developers",
+       "description": "Moss Source + Binary Formats",
+       "license": "Zlib",
+       "version": "0.0.0",
+       "name": "moss-format",
+       "targetType" : "none",
+       "dependencies": {
+               "moss-format:source": "*",
+               "moss-format:binary": "*"
+       },
+       "subPackages": [
+               {
+                       "name": "source",
+                       "targetType": "library",
+                       "sourcePaths": ["source/moss/format/source/"],
+                       "dependencies": {
+                               "moss-core": {
+                                       "path": "../moss-core"
+                               },
+                               "dyaml": {
+                                       "path": "external/dyaml"
+                               },
+                               "tinyendian": {
+                                       "path": "external/tinyendian"
+                               }
+                       }
+               },
+               {
+                       "name": "binary",
+                       "targetType": "library",
+                       "sourcePaths": ["source/moss/format/binary/"],
+                       "dependencies": {
+                               "moss-core": {
+                                       "path": "../moss-core"
+                               },
+                               "xxhash-d": {
+                                       "path": "external/xxhash-d"
+                               },
+                               "zstd": {
+                                       "path": "external/zstd"
+                               }
+                       }
+               }
+       ]
+}
