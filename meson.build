@@ -7,11 +7,18 @@ project(
 	]
 )
 
-dep_rocksdb = dependency('rocksdb', version: '>= 6.15.5').partial_dependency(links: true, link_args: true)
-
 # Grab moss-core
 moss_core = subproject('moss-core')
 link_libmoss_core = moss_core.get_variable('link_libmoss_core')
+
+# Grab moss-vendor
+moss_vendor = subproject('moss-vendor',
+	default_options: [
+		'with_rocksdb=true',
+	]
+)
+
+link_libmoss_vendor_rocksdb = moss_vendor.get_variable('link_libmoss_vendor_rocksdb')
 
 pkgconf = import('pkgconfig')
 installFiles = true
@@ -33,29 +40,9 @@ libmoss_db_sources = [
 	'source/moss/db/package.d',
 ]
 
-aux_db_sources = [
-	'external/rocksdb-binding/src/rocksdb/batch.d',
-	'external/rocksdb-binding/src/rocksdb/binding.d',
-	'external/rocksdb-binding/src/rocksdb/env.d',
-	'external/rocksdb-binding/src/rocksdb/filterpolicy.d',
-	'external/rocksdb-binding/src/rocksdb/iterator.d',
-	'external/rocksdb-binding/src/rocksdb/package.d',
-	'external/rocksdb-binding/src/rocksdb/queryable.d',
-	'external/rocksdb-binding/src/rocksdb/slice.d',
-	'external/rocksdb-binding/src/rocksdb/slicetransform.d',
-	'external/rocksdb-binding/src/rocksdb/snapshot.d',
-	'external/rocksdb-binding/src/rocksdb/options.d',
-	'external/rocksdb-binding/src/rocksdb/columnfamily.d',
-	'external/rocksdb-binding/src/rocksdb/comparator.d',
-	'external/rocksdb-binding/src/rocksdb/database.d',
-]
-
-libmoss_db_sources += aux_db_sources
-
 # Expose source dependencies
 libmoss_db_includes = [
 	include_directories('source'),
-	include_directories('external/rocksdb-binding/src'),
 ]
 
 # Compile as a static library
@@ -63,7 +50,7 @@ libmoss_db = static_library(
 	'moss-db',
 	libmoss_db_sources,
 	install: installFiles,
-	dependencies: [link_libmoss_core, dep_rocksdb],
+	dependencies: [link_libmoss_core, link_libmoss_vendor_rocksdb],
 	include_directories: libmoss_db_includes,
 )
 
@@ -71,7 +58,7 @@ libmoss_db = static_library(
 link_libmoss_db = declare_dependency(
 	link_with: libmoss_db,
 	include_directories: libmoss_db_includes,
-	dependencies: [dep_rocksdb, link_libmoss_core],
+	dependencies: [link_libmoss_core, link_libmoss_vendor_rocksdb],
 )
 
 # Installed system-wide?
