@@ -68,7 +68,7 @@ libmoss_deps = static_library(
 
 # Allow linking to us
 link_libmoss_deps = declare_dependency(
-	link_with: libmoss_deps,
+	link_whole: libmoss_deps,
 	include_directories: libmoss_deps_includes,
 	dependencies: [
 		link_libmoss_core,
