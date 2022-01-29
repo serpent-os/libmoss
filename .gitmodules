@@ -1,9 +1,3 @@
-[submodule "external/dyaml"]
-	path = external/dyaml
-	url = https://github.com/dlang-community/D-YAML.git
-[submodule "external/tinyendian"]
-	path = external/tinyendian
-	url = https://github.com/dlang-community/tinyendian.git
 [submodule "serpent-style"]
 	path = serpent-style
 	url = https://gitlab.com/serpent-os/core/serpent-style.git
