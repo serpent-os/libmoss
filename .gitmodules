@@ -7,3 +7,6 @@
 [submodule "elf-d"]
 	path = elf-d
 	url = https://gitlab.com/serpent-os/dlang/elf-d.git
+[submodule "rocksdb-binding"]
+	path = rocksdb-binding
+	url = https://gitlab.com/serpent-os/dlang/rocksdb-binding.git
