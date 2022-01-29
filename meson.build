@@ -8,7 +8,7 @@ project('moss-vendor',
 
 # We don't support system wide installation as this should be handled properly
 # by packaging for each component.
-yaml_sources = [
+libmoss_vendor_yaml_sources = [
     'tinyendian/source/tinyendian.d',
     'dyaml/source/dyaml/composer.d',
     'dyaml/source/dyaml/constructor.d',
@@ -34,19 +34,19 @@ yaml_sources = [
     'dyaml/source/dyaml/node.d',
 ]
 
-yaml_includes = [
+libmoss_vendor_yaml_includes = [
     include_directories('tinyendian/source'),
     include_directories('dyaml/source'),
 ]
 
-libvendor_yaml = static_library(
-    'vendor_yaml',
-    yaml_sources,
+libmoss_vendor_yaml = static_library(
+    'moss-vendor-yaml',
+    libmoss_vendor_yaml_sources,
     install: false,
-    include_directories: yaml_includes
+    include_directories: libmoss_vendor_yaml_includes
 )
 
-link_libvendor_yaml = declare_dependency(
-    link_with: libvendor_yaml,
-    include_directories: yaml_includes,
+link_libmoss_vendor_yaml = declare_dependency(
+    link_with: libmoss_vendor_yaml,
+    include_directories: libmoss_vendor_yaml_includes,
 )
