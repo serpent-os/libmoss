@@ -1,0 +1,6 @@
+[submodule "tinyendian"]
+	path = tinyendian
+	url = https://github.com/dlang-community/tinyendian.git
+[submodule "dyaml"]
+	path = dyaml
+	url = https://github.com/dlang-community/D-YAML.git
