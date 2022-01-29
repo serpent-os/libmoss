@@ -1,11 +1,11 @@
 [submodule "tinyendian"]
-	path = tinyendian
+	path = vendor/yaml/tinyendian
 	url = https://github.com/dlang-community/tinyendian.git
 [submodule "dyaml"]
-	path = dyaml
+	path = vendor/yaml/dyaml
 	url = https://github.com/dlang-community/D-YAML.git
 [submodule "elf-d"]
-	path = elf-d
+	path = vendor/elf/elf-d
 	url = https://gitlab.com/serpent-os/dlang/elf-d.git
 [submodule "rocksdb-binding"]
 	path = rocksdb-binding
