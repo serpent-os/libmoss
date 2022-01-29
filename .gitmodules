@@ -14,5 +14,5 @@
 	path = vendor/xxhash/xxhash-d
 	url = https://gitlab.com/serpent-os/dlang/xxhash-d.git
 [submodule "zstd"]
-	path = zstd
+	path = vendor/zstd/zstd
 	url = https://github.com/repeatedly/zstd-d.git
