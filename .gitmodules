@@ -4,3 +4,6 @@
 [submodule "dyaml"]
 	path = dyaml
 	url = https://github.com/dlang-community/D-YAML.git
+[submodule "elf-d"]
+	path = elf-d
+	url = https://gitlab.com/serpent-os/dlang/elf-d.git
