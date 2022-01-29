@@ -7,9 +7,6 @@ project(
 	]
 )
 
-dep_libzstd = dependency('libzstd', version: '>= 1.5.0')
-dep_xxhash = dependency('libxxhash', version: '>= 0.8.1')
-
 pkgconf = import('pkgconfig')
 installFiles = true
 if meson.is_subproject()
@@ -20,42 +17,18 @@ endif
 moss_core = subproject('moss-core')
 link_libmoss_core = moss_core.get_variable('link_libmoss_core')
 
+# Grab moss-vendor
+moss_vendor = subproject('moss-vendor',
+    default_options: [
+        'with_yaml=true',
+        'with_zstd=true',
+        'with_xxhash=true',
+    ]
+)
 
-aux_sources_format_source = [
-    'external/tinyendian/source/tinyendian.d',
-    'external/dyaml/source/dyaml/composer.d',
-    'external/dyaml/source/dyaml/constructor.d',
-    'external/dyaml/source/dyaml/dumper.d',
-    'external/dyaml/source/dyaml/encoding.d',
-    'external/dyaml/source/dyaml/escapes.d',
-    'external/dyaml/source/dyaml/event.d',
-    'external/dyaml/source/dyaml/linebreak.d',
-    'external/dyaml/source/dyaml/package.d',
-    'external/dyaml/source/dyaml/parser.d',
-    'external/dyaml/source/dyaml/queue.d',
-    'external/dyaml/source/dyaml/serializer.d',
-    'external/dyaml/source/dyaml/style.d',
-    'external/dyaml/source/dyaml/tagdirective.d',
-    'external/dyaml/source/dyaml/test/common.d',
-    'external/dyaml/source/dyaml/test/compare.d',
-    'external/dyaml/source/dyaml/test/constructor.d',
-    'external/dyaml/source/dyaml/test/emitter.d',
-    'external/dyaml/source/dyaml/test/errors.d',
-    'external/dyaml/source/dyaml/test/inputoutput.d',
-    'external/dyaml/source/dyaml/test/reader.d',
-    'external/dyaml/source/dyaml/test/representer.d',
-    'external/dyaml/source/dyaml/test/resolver.d',
-    'external/dyaml/source/dyaml/test/tokens.d',
-    'external/dyaml/source/dyaml/token.d',
-    'external/dyaml/source/dyaml/emitter.d',
-    'external/dyaml/source/dyaml/exception.d',
-    'external/dyaml/source/dyaml/loader.d',
-    'external/dyaml/source/dyaml/node.d',
-    'external/dyaml/source/dyaml/reader.d',
-    'external/dyaml/source/dyaml/representer.d',
-    'external/dyaml/source/dyaml/resolver.d',
-    'external/dyaml/source/dyaml/scanner.d',
-]
+link_libmoss_vendor_xxhash = moss_vendor.get_variable('link_libmoss_vendor_xxhash')
+link_libmoss_vendor_yaml = moss_vendor.get_variable('link_libmoss_vendor_yaml')
+link_libmoss_vendor_zstd = moss_vendor.get_variable('link_libmoss_vendor_zstd')
 
 formatSource_sources = [
     'source/moss/format/source/package.d',
@@ -72,7 +45,6 @@ formatSource_sources = [
     'source/moss/format/source/upstream_definition.d',
     'source/moss/format/source/script.d',
 ]
-formatSource_sources += aux_sources_format_source
 
 formatBinary_sources = [
     'source/moss/format/binary/archive_header.d',
@@ -112,45 +84,53 @@ aux_sources_format_binary = [
     'external/zstd/source/zstd/package.d',
 ]
 
-formatBinary_sources += aux_sources_format_binary
-
 libmoss_format_source_includes = [
     include_directories('source'),
-    include_directories('external/dyaml/source'),
-    include_directories('external/tinyendian/source'),
 ]
 
 libmoss_format_source = static_library(
 	'moss-format-source',
 	formatSource_sources,
 	install: installFiles,
-	dependencies: [link_libmoss_core],
+	dependencies: [
+        link_libmoss_core,
+        link_libmoss_vendor_yaml,
+    ],
 	include_directories: libmoss_format_source_includes,
 )
 
 link_libmoss_format_source = declare_dependency(
 	link_with: libmoss_format_source,
 	include_directories: libmoss_format_source_includes,
-	dependencies: [link_libmoss_core],
+	dependencies: [
+        link_libmoss_core,
+        link_libmoss_vendor_yaml,
+    ]
 )
 
 libmoss_format_binary_includes = [
     include_directories('source'),
-    include_directories('external/xxhash-d/source'),
-    include_directories('external/zstd/source'),
 ]
 
 libmoss_format_binary = static_library(
 	'moss-format-binary',
 	formatBinary_sources,
 	install: installFiles,
-    dependencies: [link_libmoss_core, dep_xxhash, dep_libzstd],
+    dependencies: [
+        link_libmoss_core,
+        link_libmoss_vendor_xxhash,
+        link_libmoss_vendor_zstd,
+    ],
 	include_directories: libmoss_format_binary_includes,
 )
 
 link_libmoss_format_binary = declare_dependency(
 	link_with: [libmoss_format_binary],
-	dependencies: [link_libmoss_core, dep_xxhash, dep_libzstd],
+	dependencies: [
+        link_libmoss_core,
+        link_libmoss_vendor_xxhash,
+        link_libmoss_vendor_zstd,
+    ],
 	include_directories: libmoss_format_binary_includes,
 )
 
@@ -158,10 +138,12 @@ link_libmoss_format = declare_dependency(
     link_with: [libmoss_format_binary, libmoss_format_source],
     include_directories: [
         include_directories('source'),
-        include_directories('external/xxhash-d/source'),
-        include_directories('external/zstd/source'),
-        include_directories('external/dyaml/source'),
-        include_directories('external/tinyendian/source'),
+    ],
+    dependencies: [
+        link_libmoss_core,
+        link_libmoss_vendor_xxhash,
+        link_libmoss_vendor_yaml,
+        link_libmoss_vendor_zstd,
     ]
 )
 
