@@ -69,3 +69,5 @@ if installFiles
         description: 'moss-config module'
     )
 endif
+
+subdir('tests')
