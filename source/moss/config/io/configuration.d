@@ -330,21 +330,3 @@ private:
 
     string _domain = null;
 }
-
-private unittest
-{
-    import moss.config.repo;
-    import std.stdio : writeln;
-
-    auto n = new Configuration!(Repository[])();
-    writeln(n.paths);
-    n.load("test/");
-    writeln("NSNIPPETS: ", n._snippets.length);
-
-    foreach (s; n._snippets)
-    {
-        writeln("enabled? ", s.enabled, "  ", s.config);
-    }
-
-    writeln(n.sections);
-}

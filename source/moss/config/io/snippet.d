@@ -246,19 +246,3 @@ private:
     bool _enabled = true;
     bool[string] _explicitlyDefined;
 }
-
-import moss.config.io.schema;
-
-/**
- * Get our basic functionality working
- */
-private unittest
-{
-    import std.stdio : writeln;
-    import moss.config.repo;
-
-    auto c = new Snippet!(Repository[])("test/repo.yml");
-    c.load();
-    writeln(c.config);
-    writeln(c.ids);
-}

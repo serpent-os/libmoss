@@ -11,8 +11,26 @@
 
 module simple;
 
-@("Primitve testing")
+import moss.config.io;
+import moss.config.repo;
+import std.stdio : writeln;
+
+@("Primitive testing")
 unittest
 {
-    assert(0 == 0);
+    auto n = new Configuration!(Repository[])();
+    n.load("../tests/");
+
+    assert(n.sections.length == 1);
+}
+
+import moss.config.io.schema;
+
+@("Ensure direct YML loading works")
+private unittest
+{
+    auto c = new Snippet!(Repository[])("../tests/repo.yml");
+    c.load();
+    writeln(c.config);
+    writeln(c.ids);
 }
