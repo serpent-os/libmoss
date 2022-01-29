@@ -44,7 +44,7 @@ libmoss_fetcher = static_library(
 
 # Allow linking to us
 link_libmoss_fetcher = declare_dependency(
-	link_with: libmoss_fetcher,
+	link_whole: libmoss_fetcher,
 	include_directories: libmoss_fetcher_includes,
 	dependencies: [link_libmoss_core, dep_libcurl],
 )
