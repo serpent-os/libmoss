@@ -8,7 +8,7 @@
 	path = vendor/elf/elf-d
 	url = https://gitlab.com/serpent-os/dlang/elf-d.git
 [submodule "rocksdb-binding"]
-	path = rocksdb-binding
+	path = vendor/rocksdb/rocksdb-binding
 	url = https://gitlab.com/serpent-os/dlang/rocksdb-binding.git
 [submodule "xxhash-d"]
 	path = xxhash-d
