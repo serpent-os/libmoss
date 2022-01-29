@@ -23,49 +23,11 @@ libmoss_config_sources = [
 	'source/moss/config/repo.d',
 ]
 
-aux_config_sources = [
-    'external/tinyendian/source/tinyendian.d',
-    'external/dyaml/source/dyaml/composer.d',
-    'external/dyaml/source/dyaml/constructor.d',
-    'external/dyaml/source/dyaml/dumper.d',
-    'external/dyaml/source/dyaml/encoding.d',
-    'external/dyaml/source/dyaml/escapes.d',
-    'external/dyaml/source/dyaml/event.d',
-    'external/dyaml/source/dyaml/linebreak.d',
-    'external/dyaml/source/dyaml/package.d',
-    'external/dyaml/source/dyaml/parser.d',
-    'external/dyaml/source/dyaml/queue.d',
-    'external/dyaml/source/dyaml/serializer.d',
-    'external/dyaml/source/dyaml/style.d',
-    'external/dyaml/source/dyaml/tagdirective.d',
-    'external/dyaml/source/dyaml/test/common.d',
-    'external/dyaml/source/dyaml/test/compare.d',
-    'external/dyaml/source/dyaml/test/constructor.d',
-    'external/dyaml/source/dyaml/test/emitter.d',
-    'external/dyaml/source/dyaml/test/errors.d',
-    'external/dyaml/source/dyaml/test/inputoutput.d',
-    'external/dyaml/source/dyaml/test/reader.d',
-    'external/dyaml/source/dyaml/test/representer.d',
-    'external/dyaml/source/dyaml/test/resolver.d',
-    'external/dyaml/source/dyaml/test/tokens.d',
-    'external/dyaml/source/dyaml/token.d',
-    'external/dyaml/source/dyaml/emitter.d',
-    'external/dyaml/source/dyaml/exception.d',
-    'external/dyaml/source/dyaml/loader.d',
-    'external/dyaml/source/dyaml/node.d',
-    'external/dyaml/source/dyaml/reader.d',
-    'external/dyaml/source/dyaml/representer.d',
-    'external/dyaml/source/dyaml/resolver.d',
-    'external/dyaml/source/dyaml/scanner.d',
-]
-
-libmoss_config_sources += aux_config_sources
+subdir('external')
 
 # Expose source dependencies
 libmoss_config_includes = [
 	include_directories('source'),
-	include_directories('external/dyaml/source'),
-	include_directories('external/tinyendian/source'),
 ]
 
 # Compile as a static library 
@@ -74,6 +36,7 @@ libmoss_config = static_library(
 	libmoss_config_sources,
 	install: installFiles,
 	include_directories: libmoss_config_includes,
+    dependencies: dep_libaux,
 )
 
 # Allow linking to us
