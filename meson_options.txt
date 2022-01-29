@@ -1,0 +1,5 @@
+option('with_elf', type: 'boolean', value: true)
+option('with_rocksdb', type: 'boolean', value: true)
+option('with_xxhash', type: 'boolean', value: true)
+option('with_yaml', type: 'boolean', value: true)
+option('with_zstd', type: 'boolean', value: true)

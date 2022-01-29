@@ -1,5 +1,13 @@
-subdir('elf')
-subdir('rocksdb')
-subdir('yaml')
-subdir('xxhash')
-subdir('zstd')
+possible_modules = [
+    'elf',
+    'rocksdb',
+    'yaml',
+    'xxhash',
+    'zstd',
+]
+
+foreach option : possible_modules
+    if get_option('with_@0@'.format(option)) == true
+        subdir(option)
+    endif
+endforeach
