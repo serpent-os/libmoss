@@ -7,16 +7,26 @@ project(
 	]
 )
 
-dep_libxhhash = dependency('libxxhash', version: '>= 0.8.1')
-
 pkgconf = import('pkgconfig')
 installFiles = true
 if meson.is_subproject()
 	installFiles = false
 endif
 
+# Grab moss-core
 moss_core = subproject('moss-core')
 link_libmoss_core = moss_core.get_variable('link_libmoss_core')
+
+# Grab moss-vendor
+moss_vendor = subproject('moss-vendor',
+	default_options: [
+		'with_elf=true',
+		'with_xxhash=true',
+	]
+)
+
+link_libmoss_vendor_elf = moss_vendor.get_variable('link_libmoss_vendor_elf')
+link_libmoss_vendor_xxhash = moss_vendor.get_variable('link_libmoss_vendor_xxhash')
 
 # Package sources
 deps_sources = [
@@ -38,30 +48,9 @@ deps_sources = [
     'source/moss/deps/dependency.d',
 ]
 
-aux_deps_sources = [
-	'external/elf-d/source/elf/low.d',
-	'external/elf-d/source/elf/low32.d',
-	'external/elf-d/source/elf/low64.d',
-	'external/elf-d/source/elf/meta.d',
-	'external/elf-d/source/elf/package.d',
-	'external/elf-d/source/elf/sections/debugabbrev/package.d',
-	'external/elf-d/source/elf/sections/debugline/debugline32.d',
-	'external/elf-d/source/elf/sections/debugline/debugline64.d',
-	'external/elf-d/source/elf/sections/debugline/package.d',
-	'external/elf-d/source/elf/sections/dynamiclinkingtable.d',
-	'external/elf-d/source/elf/sections/note.d',
-	'external/elf-d/source/elf/sections/package.d',
-	'external/elf-d/source/elf/sections/stringtable.d',
-	'external/elf-d/source/elf/sections/symboltable.d',
-]
-
-deps_sources += aux_deps_sources
-
 # Expose source dependencies
 libmoss_deps_includes = [
 	include_directories('source'),
-    include_directories('external/elf-d/source'),
-    include_directories('external/xxhash-d/source'),
 ]
 
 # Compile as a static library 
@@ -69,7 +58,11 @@ libmoss_deps = static_library(
 	'moss-deps',
 	deps_sources,
 	install: installFiles,
-	dependencies: [link_libmoss_core, dep_libxhhash],
+	dependencies: [
+		link_libmoss_core,
+		link_libmoss_vendor_elf,
+		link_libmoss_vendor_xxhash,
+	],
 	include_directories: libmoss_deps_includes,
 )
 
@@ -77,7 +70,11 @@ libmoss_deps = static_library(
 link_libmoss_deps = declare_dependency(
 	link_with: libmoss_deps,
 	include_directories: libmoss_deps_includes,
-	dependencies: [link_libmoss_core, dep_libxhhash],
+	dependencies: [
+		link_libmoss_core,
+		link_libmoss_vendor_elf,
+		link_libmoss_vendor_xxhash,
+	],
 )
 
 # Installed system-wide?
