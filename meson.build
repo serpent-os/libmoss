@@ -13,6 +13,14 @@ if meson.is_subproject()
     installFiles = false
 endif
 
+# Grab moss-vendor
+moss_vendor = subproject('moss-vendor',
+    default_options: [
+        'with_yaml=true',
+    ]
+)
+link_libmoss_vendor_yaml = moss_vendor.get_variable('link_libmoss_vendor_yaml')
+
 # Package sources
 libmoss_config_sources = [
     'source/moss/config/package.d',
@@ -22,8 +30,6 @@ libmoss_config_sources = [
     'source/moss/config/io/configuration.d',
     'source/moss/config/repo.d',
 ]
-
-subdir('external')
 
 # Expose source dependencies
 libmoss_config_includes = [
@@ -36,13 +42,18 @@ libmoss_config = static_library(
     libmoss_config_sources,
     install: installFiles,
     include_directories: libmoss_config_includes,
-    dependencies: dep_libaux,
+    dependencies: [
+        link_libmoss_vendor_yaml,
+    ],
 )
 
 # Allow linking to us
 link_libmoss_config = declare_dependency(
     link_with: libmoss_config,
     include_directories: libmoss_config_includes,
+    dependencies: [
+        link_libmoss_vendor_yaml,
+    ]
 )
 
 # Installed system-wide?
