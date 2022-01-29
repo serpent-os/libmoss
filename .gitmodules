@@ -13,3 +13,6 @@
 [submodule "xxhash-d"]
 	path = xxhash-d
 	url = https://gitlab.com/serpent-os/dlang/xxhash-d.git
+[submodule "zstd"]
+	path = zstd
+	url = https://github.com/repeatedly/zstd-d.git
