@@ -1,6 +1,0 @@
-[submodule "external/elf-d"]
-	path = external/elf-d
-	url = https://gitlab.com/serpent-os/dlang/elf-d.git
-[submodule "external/xxhash-d"]
-	path = external/xxhash-d
-	url = https://gitlab.com/serpent-os/dlang/xxhash-d.git
