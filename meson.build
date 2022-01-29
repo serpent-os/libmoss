@@ -100,7 +100,7 @@ libmoss_format_source = static_library(
 )
 
 link_libmoss_format_source = declare_dependency(
-	link_with: libmoss_format_source,
+	link_whole: libmoss_format_source,
 	include_directories: libmoss_format_source_includes,
 	dependencies: [
         link_libmoss_core,
@@ -125,7 +125,7 @@ libmoss_format_binary = static_library(
 )
 
 link_libmoss_format_binary = declare_dependency(
-	link_with: [libmoss_format_binary],
+	link_whole: [libmoss_format_binary],
 	dependencies: [
         link_libmoss_core,
         link_libmoss_vendor_xxhash,
@@ -135,7 +135,7 @@ link_libmoss_format_binary = declare_dependency(
 )
 
 link_libmoss_format = declare_dependency(
-    link_with: [libmoss_format_binary, libmoss_format_source],
+    link_whole: [libmoss_format_binary, libmoss_format_source],
     include_directories: [
         include_directories('source'),
     ],
