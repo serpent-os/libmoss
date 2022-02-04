@@ -74,32 +74,11 @@ public final class Snippet(C)
         /* If we're passed an array configuration, we expect a sequence. */
         static if (arrayConfig)
         {
-            enforce(rootNode.type == NodeType.sequence,
-                    "Snippet!" ~ C.stringof ~ ": Expected sequence");
-
-            /* Work on each item in the list */
-            foreach (ref Node node; rootNode)
-            {
-                enforce(node.type == NodeType.mapping,
-                        "Snippet!" ~ C.stringof
-                        ~ ": Each sequence item should be a mapping with an ID");
-                Node.Pair[] paired = node.get!(Node.Pair[]);
-
-                /* Capture the ID for this key as we expect ElemType[] */
-                immutable string key = paired[0].key.get!string;
-                auto value = paired[0].value;
-
-                /* Be unique pls */
-                enforce(!_config.canFind!((ref c) => c.id == key),
-                        "Snippet!" ~ C.stringof ~ ": Non-unique ID: " ~ key);
-
-                /* Build from value. i.e the struct we can read */
-                ElemType builder;
-                parseStruct(value, builder, key);
-                builder.id = key;
-
-                _config ~= builder;
-            }
+            _config = parseSequence(rootNode);
+        }
+        else
+        {
+            parseStruct(rootNode, _config);
         }
     }
 
@@ -194,6 +173,38 @@ private:
     }
 
     static assert(is(ElemType == struct), "Snippet can only be used with structs");
+
+    ElemType[] parseSequence(ref Node rootNode, string prefix = null)
+    {
+        enforce(rootNode.type == NodeType.sequence, "Snippet!" ~ C.stringof ~ ": Expected sequence");
+        ElemType[] ret;
+
+        /* Work on each item in the list */
+        foreach (ref Node node; rootNode)
+        {
+            enforce(node.type == NodeType.mapping,
+                    "Snippet!" ~ C.stringof ~ ": Each sequence item should be a mapping with an ID");
+            Node.Pair[] paired = node.get!(Node.Pair[]);
+
+            /* Capture the ID for this key as we expect ElemType[] */
+            immutable string key = paired[0].key.get!string;
+            auto value = paired[0].value;
+
+            /* Be unique pls */
+            enforce(!ret.canFind!((ref c) => c.id == key),
+                    "Snippet!" ~ C.stringof ~ ": Non-unique ID: " ~ key);
+
+            /* Build from value. i.e the struct we can read */
+            const auto keyStorageName = prefix is null ? key : format!"%s/%s"(prefix, key);
+            ElemType builder;
+            parseStruct(value, builder, keyStorageName);
+            builder.id = key;
+
+            ret ~= builder;
+        }
+
+        return ret;
+    }
 
     /**
      * Handle parsing of an individual struct
