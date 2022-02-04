@@ -10,10 +10,10 @@
        "targetType": "autodetect",
        "dependencies": {
                "tinyendian": {
-                       "path": "external/tinyendian"
+                       "path": "../moss-vendor/vendor/yaml/tinyendian"
                },
                "dyaml": {
-                       "path": "external/dyaml"
+                       "path": "../moss-vendor/vendor/yaml/dyaml"
                }
        },
 }
