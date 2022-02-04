@@ -31,6 +31,7 @@ private unittest
 {
     auto c = new Snippet!(Repository[])("../tests/repo.yml");
     c.load();
-    writeln(c.config);
-    writeln(c.ids);
+    assert (c.config.length == 1);
+    auto testItem = Repository("bootstrap", "Serpent OS (Protosnek)", "https://dev.serpentos.com/protosnek/x86_64/stone.index");
+    assert (c.config[0] == testItem);
 }
