@@ -226,11 +226,15 @@ private:
                     {
                         enum LocalArrayField = true;
                         alias LocalElemType = typeof(*localType.init.ptr);
-                    } else {
+                    }
+                    else
+                    {
                         enum LocalArrayField = false;
                         alias LocalElemType = localType;
                     }
-                } else {
+                }
+                else
+                {
                     alias LocalElemType = localType;
                     enum LocalArrayField = false;
                 }
@@ -265,14 +269,17 @@ private:
                                 auto results = parseSequence!LocalElemType(val, id);
                                 mixin("elem." ~ name ~ " = results;");
                             }
-                        } else {
+                        }
+                        else
+                        {
                             /* Set from array and let dyaml handle errors */
                             foreach (ref LocalElemType c; val)
                             {
-                                mixin("elem."  ~ name ~ " ~= c;");
+                                mixin("elem." ~ name ~ " ~= c;");
                             }
                         }
-                    } else 
+                    }
+                    else
                     {
                         {
                             /* Straight up value handling */

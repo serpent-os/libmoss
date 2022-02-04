@@ -11,4 +11,6 @@
 
 module main;
 
-void main(){}
+void main()
+{
+}
