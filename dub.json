@@ -22,10 +22,10 @@
                                        "path": "../moss-core"
                                },
                                "dyaml": {
-                                       "path": "external/dyaml"
+                                       "path": "../moss-vendor/vendor/yaml/dyaml"
                                },
                                "tinyendian": {
-                                       "path": "external/tinyendian"
+                                       "path": "../moss-vendor/vendor/yaml/tinyendian"
                                }
                        }
                },
@@ -38,10 +38,10 @@
                                        "path": "../moss-core"
                                },
                                "xxhash-d": {
-                                       "path": "external/xxhash-d"
+                                       "path": "../moss-vendor/vendor/xxhash/xxhash-d"
                                },
                                "zstd": {
-                                       "path": "external/zstd"
+                                       "path": "../moss-vendor/vendor/zstd/zstd"
                                }
                        }
                }
