@@ -222,8 +222,20 @@ private:
 
                 static if (!is(localType == string))
                 {
-                    static assert(!isArray!localType, "parseStruct: Unsupported array: " ~ name);
+                    static if (isArray!localType)
+                    {
+                        enum LocalArrayField = true;
+                        alias LocalElemType = typeof(*localType.init.ptr);
+                    } else {
+                        enum LocalArrayField = false;
+                        alias LocalElemType = localType;
+                    }
+                } else {
+                    alias LocalElemType = localType;
+                    enum LocalArrayField = false;
                 }
+
+                enum LocalFieldStruct = is(OriginalType!LocalElemType == struct);
 
                 /* Grab schema UDA */
                 mixin("enum udas = getUDAs!(__traits(getMember, S, \"" ~ name ~ "\"), YamlSchema);");
@@ -241,9 +253,12 @@ private:
                 {
                     Node val = rootNode[lookupKey];
                     /* TODO: Properly handle types and whatnot. */
-                    mixin("elem." ~ name ~ " = val.as!localType;");
-                    auto keyStorageName = id is null ? name : format!"%s/%s"(id, name);
-                    _explicitlyDefined[keyStorageName] = true;
+                    static if (!LocalArrayField)
+                    {
+                        mixin("elem." ~ name ~ " = val.as!localType;");
+                        auto keyStorageName = id is null ? name : format!"%s/%s"(id, name);
+                        _explicitlyDefined[keyStorageName] = true;
+                    }
                 }
             }
         }
