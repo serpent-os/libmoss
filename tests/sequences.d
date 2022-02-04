@@ -34,7 +34,8 @@ struct OurConfig
 @("Primitive testing")
 unittest
 {
-    auto n = new Snippet!OurConfig;
-    n.load("../tests/sequence_structs.yml");
+    auto n = new Snippet!OurConfig("../tests/sequence_structs.yml");
+    n.load();
+    assert(n.config.mainKey == "mainValue");
 }
 
