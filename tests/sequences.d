@@ -12,7 +12,7 @@
 module simple;
 
 import moss.config.io;
-import std.stdio : writeln;
+import std.stdio : stderr, writeln;
 
 struct Person
 {
@@ -36,6 +36,14 @@ unittest
 {
     auto n = new Snippet!OurConfig("../tests/sequence_structs.yml");
     n.load();
-    assert(n.config.mainKey == "mainValue");
+    OurConfig requiredMatch = OurConfig(
+        "mainValue",
+        [
+            Person("Bob", 40, ["Working", "Sleeping"]),
+            Person("Rupert", 0, ["Sleeping", "Sleeping"])
+        ]
+    );
+    assert(n.config == requiredMatch);
+    stderr.writeln(n.config);
 }
 
