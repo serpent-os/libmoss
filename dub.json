@@ -13,10 +13,10 @@
                        "path": "../moss-core"
                },
                "elf-d": {
-                       "path": "external/elf-d"
+                       "path": "../moss-vendor/vendor/elf/elf-d"
                },
                "xxhash-d": {
-                       "path": "external/xxhash-d"
+                       "path": "../moss-vendor/vendor/xxhash/xxhash-d"
                }
        },
 }
