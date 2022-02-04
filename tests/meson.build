@@ -2,6 +2,7 @@
 
 tests = [
     'simple',
+    'sequences',
 ]
 
 foreach testName : tests
