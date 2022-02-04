@@ -252,12 +252,32 @@ private:
                 if (rootNode.containsKey(lookupKey))
                 {
                     Node val = rootNode[lookupKey];
-                    /* TODO: Properly handle types and whatnot. */
-                    static if (!LocalArrayField)
+                    auto keyStorageName = id is null ? name : format!"%s/%s"(id, name);
+                    _explicitlyDefined[keyStorageName] = true;
+
+                    /* Do we have an array ? */
+                    static if (LocalArrayField)
                     {
-                        mixin("elem." ~ name ~ " = val.as!localType;");
-                        auto keyStorageName = id is null ? name : format!"%s/%s"(id, name);
-                        _explicitlyDefined[keyStorageName] = true;
+                        static if (LocalFieldStruct)
+                        {
+                            /* Parse array of struct */
+                            {
+                                auto results = parseSequence!LocalElemType(val, id);
+                                mixin("elem." ~ name ~ " = results;");
+                            }
+                        } else {
+                            /* Set from array and let dyaml handle errors */
+                            foreach (ref LocalElemType c; val)
+                            {
+                                mixin("elem."  ~ name ~ " ~= c;");
+                            }
+                        }
+                    } else 
+                    {
+                        {
+                            /* Straight up value handling */
+                            mixin("elem." ~ name ~ " = val.as!localType;");
+                        }
                     }
                 }
             }
