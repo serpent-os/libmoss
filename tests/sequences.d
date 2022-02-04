@@ -25,6 +25,7 @@ struct Person
 
 }
 
+@DomainKey("sequences")
 struct OurConfig
 {
     string mainKey = "oops not set";
@@ -42,4 +43,11 @@ unittest
             ]);
     assert(n.config == requiredMatch);
     stderr.writeln(n.config);
+}
+
+@("Layered config testing")
+unittest
+{
+    auto config = new Configuration!OurConfig();
+    config.load("../tests");
 }
