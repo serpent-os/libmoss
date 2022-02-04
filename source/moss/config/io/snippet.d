@@ -74,11 +74,11 @@ public final class Snippet(C)
         /* If we're passed an array configuration, we expect a sequence. */
         static if (arrayConfig)
         {
-            _config = parseSequence(rootNode);
+            _config = parseSequence!ElemType(rootNode);
         }
         else
         {
-            parseStruct(rootNode, _config);
+            parseStruct!ElemType(rootNode, _config);
         }
     }
 
@@ -174,10 +174,10 @@ private:
 
     static assert(is(ElemType == struct), "Snippet can only be used with structs");
 
-    ElemType[] parseSequence(ref Node rootNode, string prefix = null)
+    S[] parseSequence(S)(ref Node rootNode, string prefix = null)
     {
         enforce(rootNode.type == NodeType.sequence, "Snippet!" ~ C.stringof ~ ": Expected sequence");
-        ElemType[] ret;
+        S[] ret;
 
         /* Work on each item in the list */
         foreach (ref Node node; rootNode)
@@ -196,7 +196,7 @@ private:
 
             /* Build from value. i.e the struct we can read */
             const auto keyStorageName = prefix is null ? key : format!"%s/%s"(prefix, key);
-            ElemType builder;
+            S builder;
             parseStruct(value, builder, keyStorageName);
             builder.id = key;
 
@@ -209,16 +209,16 @@ private:
     /**
      * Handle parsing of an individual struct
      */
-    void parseStruct(ref Node rootNode, out ElemType elem, string id = null)
+    void parseStruct(S)(ref Node rootNode, out S elem, string id = null)
     {
-        elem = ElemType.init;
+        elem = S.init;
 
         /* Iterate all usable fields */
-        static foreach (idx, name; FieldNameTuple!ElemType)
+        static foreach (idx, name; FieldNameTuple!S)
         {
             {
                 /* Simplify life, get the local type */
-                mixin("alias localType = typeof(__traits(getMember, ElemType, \"" ~ name ~ "\"));");
+                mixin("alias localType = typeof(__traits(getMember, S, \"" ~ name ~ "\"));");
 
                 static if (!is(localType == string))
                 {
@@ -226,9 +226,7 @@ private:
                 }
 
                 /* Grab schema UDA */
-                mixin(
-                        "enum udas = getUDAs!(__traits(getMember, ElemType, \""
-                        ~ name ~ "\"), YamlSchema);");
+                mixin("enum udas = getUDAs!(__traits(getMember, S, \"" ~ name ~ "\"), YamlSchema);");
                 YamlSchema schema = YamlSchema.init;
                 static if (udas.length > 0)
                 {
