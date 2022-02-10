@@ -174,6 +174,10 @@ public class Configuration(C)
         {
             loadSections();
         }
+        else
+        {
+            loadConfiguration();
+        }
     }
 
     /**
@@ -321,6 +325,34 @@ private:
         alias ElemType = ConfType;
 
         ElemType _config = ElemType.init;
+
+        /**
+         * Handle potential overrides of fields within each encountered object.
+         */
+        void loadSnippetConfiguration(ref SnippetType snip)
+        {
+            static foreach (idx, name; FieldNameTuple!ElemType)
+            {
+                {
+                    /* Get candidate value */
+                    mixin("auto candidateFieldValue = snip.config." ~ name ~ ";");
+                    if (snip.explicitlyDefined(name))
+                    {
+                        /* TODO: Support nested structs */
+                        mixin("_config." ~ name ~ " = candidateFieldValue;");
+                    }
+                }
+            }
+        }
+
+        /**
+         * Run through all *enabled* snippets to build the final configuration object
+         */
+        void loadConfiguration()
+        {
+            chain(vendorSnippets.filter!((s) => s.enabled), adminSnippets.filter!((s => s.enabled))).each!(
+                    (s) => loadSnippetConfiguration(s));
+        }
     }
 
     /**
