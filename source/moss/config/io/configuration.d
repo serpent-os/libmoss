@@ -208,6 +208,18 @@ public class Configuration(C)
             return _sections.values;
         }
     }
+    else
+    {
+
+        /**
+         * For a flat configuration style, return the root configuration
+         * object.
+         */
+        pure @property auto config() @trusted @nogc nothrow const
+        {
+            return _config;
+        }
+    }
 
 private:
 
@@ -305,7 +317,10 @@ private:
     }
     else
     {
+        /* Flat configuration format, no sections at all */
         alias ElemType = ConfType;
+
+        ElemType _config = ElemType.init;
     }
 
     /**

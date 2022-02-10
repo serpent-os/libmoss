@@ -50,4 +50,8 @@ unittest
 {
     auto config = new Configuration!OurConfig();
     config.load("../tests");
+    OurConfig requiredMatch = OurConfig(null, [
+            Person("Person_A", 22, ["Programming"]),
+            ]);
+    assert(config.config == requiredMatch);
 }
