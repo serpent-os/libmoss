@@ -25,7 +25,7 @@ struct Person
 
 }
 
-@DomainKey("sequences")
+@ConfigurationDomain("moss", "sequences")
 struct OurConfig
 {
     string mainKey = "oops not set";

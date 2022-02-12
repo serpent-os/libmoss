@@ -36,9 +36,10 @@ enum YamlType
 /**
  * Assign the domain automatically during struct creation
  */
-public struct DomainKey
+public struct ConfigurationDomain
 {
-    string key = null;
+    string applicationIdentity = null;
+    string domain = null;
 }
 
 /**

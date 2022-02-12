@@ -35,7 +35,7 @@ public alias RepositoryConfiguration = Configuration!(Repository[]);
  * Holds all the relevant details for Repository deserialisation from
  * a set of YML files
  */
-@DomainKey("repos") public struct Repository
+@ConfigurationDomain("moss", "repos") public struct Repository
 {
     /**
      * Unique identifier for the repository

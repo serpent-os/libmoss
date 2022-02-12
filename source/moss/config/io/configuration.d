@@ -83,8 +83,8 @@ public static immutable(string) configDir = ".conf.d";
  */
 package enum Directories : string
 {
-    Vendor = buildPath("usr", "share", "moss"),
-    Admin = buildPath("etc", "moss")
+    Vendor = buildPath("usr", "share"),
+    Admin = buildPath("etc")
 }
 
 /**
@@ -100,31 +100,37 @@ public class Configuration(C)
      */
     this()
     {
-        enum udas = getUDAs!(ElemType, DomainKey);
+        enum udas = getUDAs!(ElemType, ConfigurationDomain);
         static assert(udas.length == 1,
-                "Configuration!" ~ C.stringof ~ ": No domain set via @DomainKey");
-        static assert(!udas[0].key.empty, "Configuration!" ~ C.stringof ~ ": Domain is empty");
-        _domain = udas[0].key;
+                "Configuration!" ~ C.stringof ~ ": No domain set via @ConfigurationDomain");
+        static assert(!udas[0].domain.empty, "Configuration!" ~ C.stringof ~ ": Domain is empty");
+        static assert(!udas[0].applicationIdentity.empty,
+                "Configuration!" ~ C.stringof ~ "ApplicationID is empty");
+        _domain = udas[0];
 
         paths = [
             /* Vendor possible paths */
-            SearchPath(format!"%s/%s%s"(cast(string) Directories.Vendor, domain,
-                    configSuffix), ConfigType.File | ConfigType.Vendor),
-            SearchPath(format!"%s/%s%s"(cast(string) Directories.Vendor, domain,
-                    configDir), ConfigType.Directory | ConfigType.Vendor),
+            SearchPath(format!"%s/%s/%s%s"(cast(string) Directories.Vendor,
+                    domain.applicationIdentity, domain.domain, configSuffix),
+                    ConfigType.File | ConfigType.Vendor),
+            SearchPath(format!"%s/%s/%s%s"(cast(string) Directories.Vendor,
+                    domain.applicationIdentity, domain.domain, configDir),
+                    ConfigType.Directory | ConfigType.Vendor),
 
             /* Admin possible paths */
-            SearchPath(format!"%s/%s%s"(cast(string) Directories.Admin, domain,
-                    configSuffix), ConfigType.File | ConfigType.Vendor),
-            SearchPath(format!"%s/%s%s"(cast(string) Directories.Admin,
-                    domain, configDir), ConfigType.Directory | ConfigType.Admin),
+            SearchPath(format!"%s/%s/%s%s"(cast(string) Directories.Admin,
+                    domain.applicationIdentity, domain.domain, configSuffix),
+                    ConfigType.File | ConfigType.Vendor),
+            SearchPath(format!"%s/%s/%s%s"(cast(string) Directories.Admin,
+                    domain.applicationIdentity, domain.domain, configDir),
+                    ConfigType.Directory | ConfigType.Admin),
         ];
     }
 
     /**
      * Return the domain for this configuration (i.e. "repos")
      */
-    pragma(inline, true) pure @property const(string) domain() @safe @nogc nothrow
+    pragma(inline, true) pure @property const(ConfigurationDomain) domain() @safe @nogc nothrow
     {
         return _domain;
     }
@@ -375,5 +381,5 @@ private:
     SnippetType[] adminSnippets;
     SnippetType[] vendorSnippets;
 
-    string _domain = null;
+    ConfigurationDomain _domain;
 }
