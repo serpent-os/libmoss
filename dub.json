@@ -10,7 +10,7 @@
 	"targetType": "autodetect",
 	"dependencies": {
 		"rocksdb": {
-			"path": "external/rocksdb-binding"
+			"path": "../moss-vendor/vendor/rocksdb/rocksdb-binding"
 		},
 		"moss-core": {
 			"path": "../moss-core"
