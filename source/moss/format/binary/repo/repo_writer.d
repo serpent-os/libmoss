@@ -43,10 +43,10 @@ public final class RepoWriter
      */
     this(const(string) outputDir) @safe
     {
-        import std.path : buildPath;
+        import std.array : join;
 
         _outputDir = outputDir;
-        _indexFile = _outputDir.buildPath("stone.index");
+        _indexFile = join([_outputDir, "stone.index"], "/");
         archWriter = new Writer(File(_indexFile, "wb"), mossFormatVersionNumber);
         archWriter.fileType = MossFileType.Repository;
         archWriter.compressionType = PayloadCompression.Zstd;
