@@ -24,14 +24,13 @@ module moss.config.io.configuration;
 
 import moss.config.io.snippet;
 
-import std.path : buildPath;
 import std.exception : enforce;
 import std.string : format, endsWith;
 import std.traits : getUDAs, isArray, FieldNameTuple;
 import moss.config.io.schema;
 import std.range : chain, empty;
 import std.file : dirEntries, DirEntry, exists, isDir, readLink, isSymlink, isFile, SpanMode;
-import std.array : array;
+import std.array : array, join;
 import std.algorithm : find, filter, each, map, uniq, sort, joiner;
 
 /**
@@ -83,8 +82,8 @@ public static immutable(string) configDir = ".conf.d";
  */
 package enum Directories : string
 {
-    Vendor = buildPath("usr", "share"),
-    Admin = buildPath("etc")
+    Vendor = "usr/share",
+    Admin = "etc"
 }
 
 /**
@@ -152,7 +151,7 @@ public class Configuration(C)
         foreach (path; paths)
         {
             /* Build path and ensure it is usable */
-            immutable auto searchPath = rootDirectory.buildPath(path.path);
+            immutable auto searchPath = join([rootDirectory, path.path], "/");
             if (!searchPath.exists)
             {
                 continue;
