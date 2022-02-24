@@ -134,9 +134,9 @@ public:
      */
     string fullPath(const(string) name) @safe
     {
-        import std.path : buildPath;
+        import std.array : join;
 
-        return _directory.buildPath(name);
+        return join([_directory, name], "/");
     }
 
     /**
@@ -144,9 +144,9 @@ public:
      */
     string stagingPath(const(string) name) @safe
     {
-        import std.path : buildPath;
+        import std.array : join;
 
-        return _directory.buildPath("staging", name);
+        return join([_directory, "staging", name], "/");
     }
 
 package:
@@ -158,8 +158,9 @@ package:
      */
     this(StoreType type, string id, string versionID)
     {
-        import std.path : buildPath, expandTilde;
+        import std.path : expandTilde;
         import std.file : mkdirRecurse;
+        import std.array : join;
 
         _type = type;
         _identifier = id;
@@ -170,12 +171,12 @@ package:
         final switch (type)
         {
         case StoreType.System:
-            _directory = buildPath("/.moss", "store",
-                    identifier, versionIdentifier);
+            _directory = join(["/.moss/store", identifier, versionIdentifier],
+                    "/");
             break;
         case StoreType.User:
-            _directory = userHome.buildPath(".moss", "store",
-                    identifier, versionIdentifier);
+            _directory = join([userHome, ".moss/store", identifier,
+                    versionIdentifier], "/");
             break;
         }
 

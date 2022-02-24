@@ -48,11 +48,11 @@ final class DownloadStore : DiskStore
      */
     override string fullPath(const(string) name)
     {
-        import std.path : buildPath;
+        import std.array : join;
 
         if (name.length > 10)
         {
-            return directory.buildPath(name[0 .. 5], name[$ - 5 .. $], name);
+            return join([directory, name[0 .. 5], name[$ - 5 .. $], name], "/");
         }
         return super.fullPath(name);
     }

@@ -141,7 +141,7 @@ private unittest
 {
     import std.string : toStringz;
     import std.file : getcwd, chdir, isDir;
-    import std.path : buildPath;
+    import std.array : join;
     import std.conv : octal;
     import core.sys.posix.fcntl : S_IFMT, S_IFDIR;
 
@@ -163,7 +163,7 @@ private unittest
     assert(ret == 0);
 
     /* Ensure we made path relative to old location */
-    assert(cd.buildPath("somedir").isDir);
+    assert(join([cd, "somedir"], "/").isDir);
 
     /* Relative stat */
     stat_t buf = {0};
