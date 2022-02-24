@@ -26,7 +26,7 @@ import elf : ELF, ELF64, ELFSection, DynamicLinkingTable, ElfNote;
 import std.string : format, fromStringz, startsWith;
 import std.exception : enforce;
 import std.algorithm : each, canFind, count;
-import std.path : baseName, dirName, buildPath;
+import std.path : baseName, dirName;
 import std.stdio : stderr, File;
 import std.file : exists;
 

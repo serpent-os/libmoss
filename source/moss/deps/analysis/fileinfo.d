@@ -22,7 +22,8 @@
 
 module moss.deps.analysis.fileinfo;
 
-import std.path;
+import std.path : dirName, relativePath;
+import std.array : join;
 import std.file;
 import moss.core : ChunkSize;
 import core.sys.posix.sys.stat;
@@ -167,7 +168,7 @@ public struct FileInfo
         enforce(type == FileType.Symlink, "FileInfo.symlinkResolved() only supported for symlinks");
 
         auto dirn = path.dirName;
-        return dirn.buildPath(_source.relativePath(dirn));
+        return join([dirn, _source.relativePath(dirn)], "/");
     }
 
     /**
