@@ -171,12 +171,13 @@ package:
         final switch (type)
         {
         case StoreType.System:
-            _directory = join(["/.moss/store", identifier, versionIdentifier],
-                    "/");
+            _directory = join(["/.moss/store", identifier,
+                    versionIdentifier], "/");
             break;
         case StoreType.User:
-            _directory = join([userHome, ".moss/store", identifier,
-                    versionIdentifier], "/");
+            _directory = join([
+                    userHome, ".moss/store", identifier, versionIdentifier
+                    ], "/");
             break;
         }
 
