@@ -136,6 +136,29 @@ version (linux)
     enum AT_SYMLINK_FOLLOW = 0x400;
 }
 
+/**
+ * Mount the filesystem specified by source to the location specified
+ * by dir.
+ *
+ * Returns: 0 on success otherwise consult errno
+ */
+extern (C) int mount(const(char*) specialFile, const(char*) dir,
+        const(char*) fstype, ulong rwflag, const void* data);
+
+/**
+ * Unmount the specialFile
+ *
+ * Returns: 0 on success otherwise consult errno
+ */
+extern (C) int umount(const(char*) specialFile);
+
+/**
+ * Alternative call to umount specifiying some flags
+ *
+ * Returns: 0 on success otherwise consult errno
+ */
+extern (C) int umount2(const(char*) specialFile, int flags);
+
 @("Test mkdirat/fstatat/unlinkat")
 private unittest
 {
