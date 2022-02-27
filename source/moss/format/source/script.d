@@ -87,7 +87,7 @@ public:
      */
     void addAction(string id, string action) @safe
     {
-        enforce(!baked, "Cannot addAction to baked ScriptSubstituter");
+        enforce(!baked, "Cannot addAction to baked ScriptBuilder");
         mapping["%s%s".format(macroStart, id)] = action.strip();
     }
 
@@ -99,7 +99,7 @@ public:
      */
     void addDefinition(string id, string define) @safe
     {
-        enforce(!baked, "Cannot addDefinition to baked ScriptSubstituter");
+        enforce(!baked, "Cannot addDefinition to baked ScriptBuilder");
         mapping["%s%s%s".format(defineStart, id, defineEnd)] = define.strip();
     }
 
@@ -113,7 +113,7 @@ public:
      */
     void addExport(string id, string altName = null) @safe
     {
-        enforce(baked, "Cannot addExport to unbaked ScriptSubstituter");
+        enforce(baked, "Cannot addExport to unbaked ScriptBuilder");
         auto realID = "%s%s%s".format(defineStart, id, defineEnd);
         enforce(realID in mapping, "addExport: Unknown macro: " ~ realID);
         if (altName !is null)
