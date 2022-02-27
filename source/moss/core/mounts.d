@@ -78,6 +78,8 @@ public struct Mount
 
     /**
      * Attempt to mount this mount point
+     *
+     * The required mount point must already exist or this call will fail
      */
     MountReturn mount() @system nothrow
     {
