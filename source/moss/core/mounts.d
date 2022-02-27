@@ -13,6 +13,7 @@ import cstdlib = moss.core.c;
 public import moss.core.ioutil : CError;
 
 public import std.typecons : Nullable;
+public import moss.core.c : MountFlags, UnmountFlags;
 
 import std.string : empty, toStringz;
 
@@ -26,11 +27,10 @@ public alias MountReturn = Nullable!(CError, CError.init);
  */
 public struct Mount
 {
-
     /**
-     * Set the filesystem type
+     * What are we mounting .. where?
      */
-    string filesystem;
+    string source;
 
     /**
      * Set the target mount point
@@ -38,26 +38,26 @@ public struct Mount
     string target;
 
     /**
-     * What are we mounting .. where?
+     * Set the filesystem type
      */
-    string source;
+    string filesystem;
 
     /** 
      * Default to normal mount flags
      */
-    cstdlib.MountFlags mountFlags = cstdlib.MountFlags.None;
+    MountFlags mountFlags = MountFlags.None;
 
     /**
      * Default to normal umount flags
      */
-    cstdlib.UnmountFlags unmountFlags = cstdlib.UnmountFlags.None;
+    UnmountFlags unmountFlags = UnmountFlags.None;
 
     /**
      * Returns: A new tmpfs mount at the given destination
      */
     static Mount tmpfs(in string destination)
     {
-        return Mount();
+        return Mount("tmpfs", destination, "tmpfs", MountFlags.NoDev);
     }
 
     /**
@@ -65,7 +65,7 @@ public struct Mount
      */
     static Mount bindRW(in string source, in string destination)
     {
-        return Mount();
+        return Mount(source, destination, null, MountFlags.Bind);
     }
 
     /**
@@ -73,7 +73,7 @@ public struct Mount
      */
     static Mount bindRO(in string source, in string destination)
     {
-        return Mount();
+        return Mount(source, destination, null, MountFlags.Bind | MountFlags.ReadOnly);
     }
 
     /**
@@ -94,16 +94,16 @@ public struct Mount
         }
 
         /* We need read-only? */
-        if ((mountFlags & cstdlib.MountFlags.ReadOnly) != cstdlib.MountFlags.ReadOnly)
+        if ((mountFlags & MountFlags.ReadOnly) != MountFlags.ReadOnly)
         {
             return MountReturn();
         }
 
         /* Remount read-only, preserve bind-flag */
-        auto newFlags = cstdlib.MountFlags.ReadOnly | cstdlib.MountFlags.Remount;
-        if ((mountFlags & cstdlib.MountFlags.Bind) == cstdlib.MountFlags.Bind)
+        auto newFlags = MountFlags.ReadOnly | MountFlags.Remount;
+        if ((mountFlags & MountFlags.Bind) == MountFlags.Bind)
         {
-            newFlags |= cstdlib.MountFlags.Bind;
+            newFlags |= MountFlags.Bind;
         }
 
         /* Perform the remount */
