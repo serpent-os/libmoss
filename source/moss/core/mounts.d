@@ -92,6 +92,28 @@ public struct Mount
         {
             return MountReturn(CError(cstdlib.errno));
         }
+
+        /* We need read-only? */
+        if ((mountFlags & cstdlib.MountFlags.ReadOnly) != cstdlib.MountFlags.ReadOnly)
+        {
+            return MountReturn();
+        }
+
+        /* Remount read-only, preserve bind-flag */
+        auto newFlags = cstdlib.MountFlags.ReadOnly | cstdlib.MountFlags.Remount;
+        if ((mountFlags & cstdlib.MountFlags.Bind) == cstdlib.MountFlags.Bind)
+        {
+            newFlags |= cstdlib.MountFlags.Bind;
+        }
+
+        /* Perform the remount */
+        ret = cstdlib.mount(fsSource, fsDest, fsType, cast(ulong) newFlags, data);
+        if (ret != 0)
+        {
+            return MountReturn(CError(cstdlib.errno));
+        }
+
+        /* All went well */
         return MountReturn();
     }
 
@@ -101,7 +123,7 @@ public struct Mount
     MountReturn unmount() @system nothrow
     {
         scope const char* fsDest = target.empty ? null : target.toStringz;
-        auto ret = cstdlib.umount2(fsDest, flags);
+        auto ret = cstdlib.umount2(fsDest, unmountFlags);
         if (ret != 0)
         {
             return MountReturn(CError(cstdlib.errno));
