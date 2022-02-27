@@ -137,13 +137,53 @@ version (linux)
 }
 
 /**
+ * Set mount specific options
+ */
+public enum MountFlags : ulong
+{
+    None = 0,
+    ReadOnly = 1,
+    NoSuid = 2,
+    NoDev = 4,
+    NoExec = 8,
+    Synchronous = 16,
+    Remount = 32,
+    MandatoryLock = 64,
+    DirSync = 128,
+    NoAccessTime = 1024,
+    NoDirectoryAccessTime = 2048,
+    Bind = 4096,
+    Move = 8192,
+    Rec = 16_384,
+    Silent = 32_768,
+    PosixACL = 1 << 16,
+    Unbindable = 1 << 17,
+    Private = 1 << 18,
+    Slave = 1 << 19,
+    Shared = 1 << 20,
+    RelativeAccessTime = 1 << 21,
+    KernMount = 1 << 22,
+    IVersion = 1 << 23,
+    StrictAtime = 1 << 24,
+    LazyTime = 1 << 25,
+    Active = 1 << 30,
+    NoUser = 1 << 31,
+}
+
+public enum UnmountFlags : int
+{
+    Force = 1,
+    Detach = 2,
+}
+
+/**
  * Mount the filesystem specified by source to the location specified
  * by dir.
  *
  * Returns: 0 on success otherwise consult errno
  */
 extern (C) int mount(const(char*) specialFile, const(char*) dir,
-        const(char*) fstype, ulong rwflag, const void* data);
+        const(char*) fstype, ulong mountFlags, const void* data);
 
 /**
  * Unmount the specialFile
