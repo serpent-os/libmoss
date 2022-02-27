@@ -47,31 +47,31 @@ alias loff_t = slong_t;
 /**
  * Create a directory relative to dirfd if pathname is not absolute
  */
-extern (C) int mkdirat(int dirfd, scope char* pathname, mode_t mode);
+extern (C) int mkdirat(int dirfd, scope char* pathname, mode_t mode) @system @nogc nothrow;
 
 /**
  * Open a file relative to dirfd if pathname is not absolute
  */
-extern (C) int openat(int dirfd, scope char* pathname, int flags, mode_t mode);
+extern (C) int openat(int dirfd, scope char* pathname, int flags, mode_t mode) @system @nogc nothrow;
 
 /**
  * Unlink a file relative to dirfd if pathname is not absolute
  * Flags can either be 0 or AT_REMOVEDIR
  */
-extern (C) int unlinkat(int dirfd, scope char* pathname, int flags);
+extern (C) int unlinkat(int dirfd, scope char* pathname, int flags) @system @nogc nothrow;
 
 /**
  * Link file from relative location to relative target, if non absolute
  * paths are used.
  */
 extern (C) int linkat(int olddirfd, scope char* oldpath, int newdirfd,
-        scope char* newpath, int flags);
+        scope char* newpath, int flags) @system @nogc nothrow;
 
 /**
  * Construct a symlink from oldpath to newpath, which is relative to newdirfd
  * if newpath is not absolute.
  */
-extern (C) int symlinkat(scope char* oldpath, int newdirfd, scope char* newpath);
+extern (C) int symlinkat(scope char* oldpath, int newdirfd, scope char* newpath) @system @nogc nothrow;
 
 /**
  * Create special file relative to directory file descriptor
@@ -81,7 +81,7 @@ extern (C) int mknodat(int dirfd, scope char* pathname, mode_t mode, dev_t dev);
 /**
  * Create a FIFO special file relative to directory file descriptor.
  */
-extern (C) int mkfifoat(int dirfd, scope char* pathname, mode_t mode);
+extern (C) int mkfifoat(int dirfd, scope char* pathname, mode_t mode) @system @nogc nothrow;
 
 /**
  * Copy one part of a file to another using the defined offsets and length.
@@ -89,7 +89,7 @@ extern (C) int mkfifoat(int dirfd, scope char* pathname, mode_t mode);
  * the same as splice()
  */
 extern (C) loff_t copy_file_range(int fd_in, loff_t* off_in, int fd_out,
-        loff_t* off_out, size_t len, uint flags);
+        loff_t* off_out, size_t len, uint flags) @system @nogc nothrow;
 
 version (X86_64)
 {
@@ -97,7 +97,7 @@ version (X86_64)
      * Stat a file relative to dirfd if pathname is not absolute.
      * Use with AT_SYMLINK_NOFOLLOW for lstat() style behaviour.
      */
-    extern (C) int fstatat64(int dirfd, scope char* pathname, scope stat_t* buf, int flags);
+    extern (C) int fstatat64(int dirfd, scope char* pathname, scope stat_t* buf, int flags) @system @nogc nothrow;
     alias fstatat = fstatat64;
 }
 else
@@ -106,7 +106,7 @@ else
      * Stat a file relative to dirfd if pathname is not absolute.
      * Use with AT_SYMLINK_NOFOLLOW for lstat() style behaviour.
      */
-    extern (C) int fstatat(int dirfd, scope char* pathname, scope stat_t* buf, int flags);
+    extern (C) int fstatat(int dirfd, scope char* pathname, scope stat_t* buf, int flags) @system @nogc nothrow;
 }
 
 /**
