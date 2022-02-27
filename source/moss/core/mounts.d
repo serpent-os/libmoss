@@ -98,8 +98,14 @@ public struct Mount
     /**
      * Attempt to unmount this mount point
      */
-    MountReturn unmount() @system @nogc nothrow
+    MountReturn unmount() @system nothrow
     {
+        scope const char* fsDest = target.empty ? null : target.toStringz;
+        auto ret = cstdlib.umount2(fsDest, flags);
+        if (ret != 0)
+        {
+            return MountReturn(CError(cstdlib.errno));
+        }
         return MountReturn();
     }
 
