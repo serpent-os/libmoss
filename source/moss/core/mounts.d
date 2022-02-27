@@ -48,4 +48,28 @@ public struct Mount
     {
         return Mount();
     }
+
+    /**
+     * Attempt to mount this mount point
+     */
+    MountReturn mount() @system @nogc nothrow
+    {
+        return MountReturn();
+    }
+
+    /**
+     * Attempt to unmount this mount point
+     */
+    MountReturn unmount() @system @nogc nothrow
+    {
+        return MountReturn();
+    }
+
+private:
+
+    string _target = null;
+    string _filesystem = null;
+
+    /* Always NULL, never used in our implementation */
+    void* options = null;
 }
