@@ -14,6 +14,8 @@ public import moss.core.ioutil : CError;
 
 public import std.typecons : Nullable;
 
+import std.string : empty, toStringz;
+
 /**
  * A null return from mount/umount/umount2 is "good" for us.
  */
@@ -24,6 +26,31 @@ public alias MountReturn = Nullable!(CError, CError.init);
  */
 public struct Mount
 {
+
+    /**
+     * Set the filesystem type
+     */
+    string filesystem;
+
+    /**
+     * Set the target mount point
+     */
+    string target;
+
+    /**
+     * What are we mounting .. where?
+     */
+    string source;
+
+    /** 
+     * Default to normal mount flags
+     */
+    cstdlib.MountFlags mountFlags = cstdlib.MountFlags.None;
+
+    /**
+     * Default to normal umount flags
+     */
+    cstdlib.UnmountFlags unmountFlags = cstdlib.UnmountFlags.None;
 
     /**
      * Returns: A new tmpfs mount at the given destination
@@ -52,8 +79,17 @@ public struct Mount
     /**
      * Attempt to mount this mount point
      */
-    MountReturn mount() @system @nogc nothrow
+    MountReturn mount() @system nothrow
     {
+        scope const char* fsType = filesystem.empty ? null : filesystem.toStringz;
+        scope const char* fsSource = source.empty ? null : source.toStringz;
+        scope const char* fsDest = target.empty ? null : target.toStringz;
+
+        auto ret = cstdlib.mount(fsSource, fsDest, fsType, cast(ulong) mountFlags, data);
+        if (ret != 0)
+        {
+            return MountReturn(CError(cstdlib.errno));
+        }
         return MountReturn();
     }
 
@@ -67,9 +103,6 @@ public struct Mount
 
 private:
 
-    string _target = null;
-    string _filesystem = null;
-
     /* Always NULL, never used in our implementation */
-    void* options = null;
+    static void* data = null;
 }

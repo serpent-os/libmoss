@@ -172,6 +172,7 @@ public enum MountFlags : ulong
 
 public enum UnmountFlags : int
 {
+    None = 0,
     Force = 1,
     Detach = 2,
 }
@@ -183,21 +184,21 @@ public enum UnmountFlags : int
  * Returns: 0 on success otherwise consult errno
  */
 extern (C) int mount(const(char*) specialFile, const(char*) dir,
-        const(char*) fstype, ulong mountFlags, const void* data);
+        const(char*) fstype, ulong mountFlags, const void* data) @system @nogc nothrow;
 
 /**
  * Unmount the specialFile
  *
  * Returns: 0 on success otherwise consult errno
  */
-extern (C) int umount(const(char*) specialFile);
+extern (C) int umount(const(char*) specialFile) @system @nogc nothrow;
 
 /**
  * Alternative call to umount specifiying some flags
  *
  * Returns: 0 on success otherwise consult errno
  */
-extern (C) int umount2(const(char*) specialFile, int flags);
+extern (C) int umount2(const(char*) specialFile, int flags) @system @nogc nothrow;
 
 @("Test mkdirat/fstatat/unlinkat")
 private unittest
