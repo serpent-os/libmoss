@@ -4,7 +4,7 @@ Agnostic format library for package management. Roll your own package manager. R
 
 #### Binary Format (`moss.format.binary`)
 
-The binary archive provides an agnostic streaming system via the `Reader` and `Writer` classes. No default limitations are imposed on the format other than complying with the `Payload` API. In the **default** implementation (i.e. in [boulder](https:/github.com/serpent-linux/boulder)) - the core Payload types are included by default. It is possible to reuse this library for a lightweight, well organised binary package format without using any of the default Payloads.
+The binary archive provides an agnostic streaming system via the `Reader` and `Writer` classes. No default limitations are imposed on the format other than complying with the `Payload` API. In the **default** implementation (i.e. in [boulder](https:/gitlab.com/serpent-os/core/boulder)) - the core Payload types are included by default. It is possible to reuse this library for a lightweight, well organised binary package format without using any of the default Payloads.
 
 ##### `MetaPayload`
 
