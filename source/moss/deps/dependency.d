@@ -28,6 +28,11 @@ import std.exception : enforce;
 import moss.core.encoding;
 import std.string : format;
 
+/**
+ * Regex to capture type(target) dependency/provider strings
+ */
+private static immutable auto reDepString = `^([a-z]+)\(([a-zA-Z0-9_\-\.]+)\)$`;
+
 package auto dependencyToString(in DependencyType type, in string target)
 {
     final switch (type)
