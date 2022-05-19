@@ -49,6 +49,10 @@ package auto dependencyToString(in DependencyType type, in string target)
         return format!"cmake(%s)"(target);
     case DependencyType.PythonName:
         return format!"python(%s)"(target);
+    case DependencyType.BinaryName:
+        return format!"binary(%s)"(target);
+    case DependencyType.SystemBinaryName:
+        return format!"sbinary(%s)"(target);
     }
 }
 /**

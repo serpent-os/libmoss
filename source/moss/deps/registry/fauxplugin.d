@@ -65,6 +65,8 @@ package final class FauxSource : RegistryPlugin
         case ProviderType.PkgconfigName:
         case ProviderType.PythonName:
         case ProviderType.Interpreter:
+        case ProviderType.BinaryName:
+        case ProviderType.SystemBinaryName:
             return [];
         case ProviderType.PackageName:
             return packages.values
