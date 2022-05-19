@@ -82,6 +82,16 @@ public enum DependencyType : uint8_t
      * Python package name from the METADATA or PKG-INFO
      */
     PythonName,
+
+    /**
+     * A binary exported from the /usr/bin tree
+     */
+    BinaryName,
+
+    /**
+     * A binary exported from the /usr/sbin tree
+     */
+    SystemBinaryName,
 }
 
 /**
