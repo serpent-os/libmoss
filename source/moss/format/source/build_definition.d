@@ -83,6 +83,13 @@ public struct BuildDefinition
      */
     @YamlSchema("builddeps", false, YamlType.Array) string[] buildDependencies;
 
+    /**
+     * Check dependencies
+     *
+     * Additional dependencies used for the check stage of the build.
+     */
+    @YamlSchema("checkdeps", false, YamlType.Array) string[] checkDependencies;
+
     /** Parent definition to permit lookups */
     BuildDefinition* parent = null;
 
