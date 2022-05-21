@@ -27,11 +27,47 @@ public import std.stdint : uint8_t;
 import std.exception : enforce;
 import moss.core.encoding;
 import std.string : format;
+import std.regex : ctRegex, matchAll;
+import std.array : array;
 
 /**
  * Regex to capture type(target) dependency/provider strings
  */
 private static immutable auto reDepString = `^([a-z]+)\(([a-zA-Z0-9_\-\.]+)\)$`;
+private static auto reDep = ctRegex!reDepString;
+
+private static DependencyType[string] depLookupTable;
+
+shared static this()
+{
+    depLookupTable["binary"] = DependencyType.BinaryName;
+    depLookupTable["cmake"] = DependencyType.CmakeName;
+    depLookupTable["name"] = DependencyType.PackageName;
+    depLookupTable["pkgconfig"] = DependencyType.PkgconfigName;
+    depLookupTable["python"] = DependencyType.PythonName;
+    depLookupTable["soname"] = DependencyType.SharedLibraryName;
+}
+
+/**
+ * Construct T (Dependency or Provider) from input string
+ * We only permit one match!
+ */
+public T fromString(T)(in string inp) if (is(T == Dependency) || is(T == Provider))
+{
+    auto results = inp.matchAll(reDep);
+    if (results.empty)
+    {
+        return T(inp, DependencyType.PackageName);
+    }
+
+    auto match = results.front;
+    immutable auto key = match[1];
+    immutable auto target = match[2];
+
+    auto lookup = key in depLookupTable;
+    enforce(lookup !is null, ".fromString(): Unknown type: %s".format(key));
+    return T(target, *lookup);
+}
 
 package auto dependencyToString(in DependencyType type, in string target)
 {
