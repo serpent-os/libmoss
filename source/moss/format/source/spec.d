@@ -137,9 +137,23 @@ public:
     }
 
     /**
+     * Return true if emul32 is enabled for the given architecture or
+     * indeed all emul32 builds.
+     */
+    @property bool emul32() const
+    {
+        import moss.core : platform;
+        import std.string : format;
+
+        immutable auto plat = platform();
+        return plat.emul32 && (supportedArchitecture(format!"emul32/%s"(plat.name))
+                || supportedArchitecture("emul32"));
+    }
+
+    /**
      * Returns true if the architecture is supported by this spec
      */
-    pure bool supportedArchitecture(string architecture)
+    pure bool supportedArchitecture(string architecture) const
     {
         import std.algorithm : canFind;
 
