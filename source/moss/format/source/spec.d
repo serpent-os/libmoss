@@ -304,9 +304,16 @@ private:
             auto emul32name = "emul32/" ~ plat.name;
 
             /* If "emul32" is enabled, add the emul32 architecture */
-            if (options.emul32)
+            if (node.containsKey("emul32"))
             {
-                architectures ~= emul32name;
+                Node emul32n = node["emul32"];
+                enforce(emul32n.nodeID == NodeID.scalar, "emul32 must be a boolean scalar value");
+
+                /* Enable the host architecture + emul32 */
+                if (emul32n.as!bool == true)
+                {
+                    architectures ~= emul32name;
+                }
             }
 
             /* Add native architecture */

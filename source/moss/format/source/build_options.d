@@ -67,12 +67,6 @@ struct BuildOptions
     @YamlSchema("toolchain", false, YamlType.Single, ["gnu", "llvm"]) string toolchain = "llvm";
 
     /**
-     * The emul32 determines whether to perform a 32bit build on supported
-     * architectures.
-     */
-    @YamlSchema("emul32") bool emul32 = false;
-
-    /**
      * Context Sensitive Profile Guided Optimisation
      *
      * Turning this on will result in a multiple stage profiling build of the
