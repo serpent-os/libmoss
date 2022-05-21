@@ -85,7 +85,7 @@ package struct PayloadWrapper
     /**
      * Expose Header property
      */
-    pragma(inline, true) pure @property ref PayloadHeader header() @safe @nogc nothrow return 
+    pragma(inline, true) pure @property ref PayloadHeader header() @safe @nogc nothrow return
     {
         return _header;
     }
