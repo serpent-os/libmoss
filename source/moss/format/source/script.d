@@ -25,10 +25,11 @@ module moss.format.source.script;
 import std.string : format, splitLines, startsWith, endsWith;
 import std.exception : enforce;
 import moss.format.source.package_definition;
-import moss.format.source.macros : MacroFile;
+import moss.format.source.macros : Action, MacroFile;
 import moss.format.source.tuning_flag;
 import moss.format.source.tuning_group;
 import std.string : strip;
+import std.container.rbtree;
 
 /**
  * The private ParseContext is used by the Script to step through
@@ -85,10 +86,13 @@ public:
      * task, such as %configure. The text is replaced with the action
      * text and will be recursively resolved.
      */
-    void addAction(string id, string action) @safe
+    void addAction(in string id, in Action action) @trusted
     {
         enforce(!baked, "Cannot addAction to baked ScriptBuilder");
-        mapping["%s%s".format(macroStart, id)] = action.strip();
+        mapping["%s%s".format(macroStart, id)] = action.command.strip();
+        Action newAction = Action.init;
+        newAction = cast(Action) action;
+        actionMap[id] = newAction;
     }
 
     /**
@@ -312,6 +316,20 @@ public:
     }
 
     /**
+     * Return an automatic set of extra dependencies due to the use of macros
+     */
+    auto extraDependencies()
+    {
+        import std.algorithm : map, each;
+        import std.array : array;
+
+        auto tree = new RedBlackTree!(string, "a < b", false);
+        usedMacros.map!((const s) => actionMap[s].dependencies)
+            .each!((const d) { tree.insert(d); });
+        return tree[].array;
+    }
+
+    /**
      * Begin tokenisation of the file, line by line
      */
     string process(const(string) input) @safe
@@ -491,4 +509,5 @@ private:
 
     bool baked = false;
     string[] usedMacros;
+    Action[string] actionMap;
 }

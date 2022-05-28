@@ -30,6 +30,26 @@ import moss.format.source.tuning_flag;
 import moss.format.source.tuning_group;
 
 /**
+ * An Action encompasses behaviour defined in the `actions`
+ * section of a macro YML file, allowing substitution to be
+ * performed and automatic dependencies added to the build.
+ */
+struct Action
+{
+    /**
+     * The command to run (required) when invoked
+     */
+    @YamlSchema("command", true, YamlType.Array, null)
+    string command = null;
+
+    /**
+     * Optional list of dependencies to add to build
+     */
+    @YamlSchema("dependencies", false, YamlType.Array, null)
+    string[] dependencies = null;
+}
+
+/**
  * A MacroFile can contain a set of macro definitions, actions and otherwise
  * to form the basis of the ScriptBuilder context. All MacroFiles are loaded
  * at builder initialisation and cached in memory.
@@ -42,7 +62,7 @@ struct MacroFile
 public:
 
     /** A mapping of string (key) to string (value) actions */
-    string[string] actions;
+    Action[string] actions;
 
     /** A mapping of string (key) to string (value) global definitions */
     string[string] definitions;
@@ -90,8 +110,8 @@ public:
         try
         {
             auto root = loader.load();
-            parseMacros("actions", actions, root);
-            parseMacros("definitions", definitions, root);
+            parseActions(root);
+            parseDefinitions(root);
             parseFlags(root);
             parseTuning(root);
             parsePackages(root);
@@ -201,6 +221,40 @@ private:
         }
     }
 
+    /**
+     * Parse a set of actions into a usable mapping
+     */
+    void parseActions(ref Node root)
+    {
+        import std.exception : enforce;
+
+        /* Only interested in Actions */
+        if (!root.containsKey("actions"))
+        {
+            return;
+        }
+
+        Node node = root["actions"];
+        enforce(node.nodeID == NodeID.sequence, "parseActions(): Expected sequence for actions");
+
+        /**
+         * Walk each node and unmarshal as Action struct
+         */
+        foreach (ref Node k; node)
+        {
+            assert(k.nodeID == NodeID.mapping, "Each item in actions must be a mapping");
+            foreach (ref Node c, ref Node v; k)
+            {
+                enforce(v.nodeID == NodeID.mapping, "parseActions: Expected map for each item");
+                auto name = c.as!string;
+                Action candidateAction;
+                parseSection(v, candidateAction);
+
+                actions[name] = candidateAction;
+            }
+        }
+    }
+
     void parseTuning(ref Node root)
     {
         import std.exception : enforce;
@@ -269,37 +323,36 @@ private:
         }
     }
 
-    void parseMacros(string name, ref string[string] target, ref Node root)
+    void parseDefinitions(ref Node root)
     {
         import std.exception : enforce;
         import std.string : strip, endsWith;
 
-        if (!root.containsKey(name))
+        if (!root.containsKey("definitions"))
         {
             return;
         }
 
         /* Grab root sequence */
-        Node node = root[name];
-        enforce(node.nodeID == NodeID.sequence, "parseMacros(): Expected sequence for " ~ name);
+        Node node = root["definitions"];
+        enforce(node.nodeID == NodeID.sequence, "parseDefinitions(): Expected sequence");
 
         /* Grab each map */
         foreach (ref Node k; node)
         {
-            enforce(k.nodeID == NodeID.mapping,
-                    "parseMacros(): Expected mapping in sequence for " ~ name);
+            enforce(k.nodeID == NodeID.mapping, "parseDefinitions(): Expected mapping in sequence");
 
             auto mappingKeys = k.mappingKeys;
             auto mappingValues = k.mappingValues;
 
-            enforce(mappingKeys.length == 1, "parseMacros(): Expect only ONE key for " ~ name);
-            enforce(mappingValues.length == 1, "parseMacros(): Expect only ONE value for " ~ name);
+            enforce(mappingKeys.length == 1, "parseDefinitions(): Expect only ONE key");
+            enforce(mappingValues.length == 1, "parseDefinitions(): Expect only ONE value");
 
             Node key = mappingKeys[0];
             Node val = mappingValues[0];
 
-            enforce(key.nodeID == NodeID.scalar, "parseMacros: Expected scalar key for " ~ name);
-            enforce(val.nodeID == NodeID.scalar, "parseMacros: Expected scalar key for " ~ name);
+            enforce(key.nodeID == NodeID.scalar, "parseDefinitions: Expected scalar key");
+            enforce(val.nodeID == NodeID.scalar, "parseDefinitions: Expected scalar key");
 
             auto skey = key.as!string;
             auto sval = val.as!string;
@@ -309,7 +362,7 @@ private:
             {
                 sval = sval[0 .. $ - 1];
             }
-            target[skey] = sval;
+            definitions[skey] = sval;
         }
     }
 
