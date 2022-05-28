@@ -76,15 +76,30 @@ void setValueArray(T)(ref Node node, ref T value)
 
     switch (node.nodeID)
     {
-    case NodeID.scalar:
-        value ~= node.as!(typeof(value[0]));
-        break;
-    case NodeID.sequence:
-        foreach (ref Node v; node)
+        static if (is(T == string) || is(T == string[]))
         {
-            value ~= v.as!(typeof(value[0]));
+    case NodeID.scalar:
+            value ~= node.as!string;
+            break;
+    case NodeID.sequence:
+            foreach (ref Node v; node)
+            {
+                value ~= v.as!string;
+            }
+            break;
         }
-        break;
+        else
+        {
+    case NodeID.scalar:
+            value ~= node.as!(typeof(value[0]));
+            break;
+    case NodeID.sequence:
+            foreach (ref Node v; node)
+            {
+                value ~= v.as(typeof(value[0]));
+            }
+            break;
+        }
     default:
         break;
     }
