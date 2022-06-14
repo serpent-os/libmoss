@@ -81,6 +81,11 @@ public alias IOFDResult = SumType!(int, CError);
 public alias IOTempResult = SumType!(TemporaryFile, CError);
 
 /**
+ * Return a temporary directory result
+ */
+public alias IOTempdResult = SumType!(string, CError);
+
+/**
  * Forcibly namespace all of the operations to ensure no conflicts with the stdlib.
  */
 public struct IOUtil
@@ -210,6 +215,26 @@ public struct IOUtil
         /* Return open file descriptor + the resolved name */
         return IOTempResult(TemporaryFile(ret, cast(string) copyBuffer.fromStringz));
     }
+
+    /**
+     * Create a temporary directory using the system /tmp directory.
+     * Consult mkstemp() for XXXXXX usage
+     */
+    static IOTempdResult createTemporaryDirectory(in string pattern)
+    {
+        auto copyBuffer = new char[pattern.length + 1];
+        copyBuffer[0 .. pattern.length] = pattern;
+        copyBuffer[pattern.length] = '\0';
+        char* retPtr = null;
+
+        retPtr = cstdlib.mkdtemp(copyBuffer.ptr);
+        if (retPtr is null)
+        {
+            return IOTempdResult(CError(cstdlib.errno));
+        }
+
+        return IOTempdResult(cast(string) copyBuffer.fromStringz);
+    }
 }
 
 @("Ensure copyFile works as expected")
@@ -244,4 +269,21 @@ private unittest
 
     auto contents = cast(string) read(tmp.realPath);
     assert(contents == theWrittenWord);
+}
+
+@("Ensure mkdtemp wrapper works too")
+private unittest
+{
+    import std.file : exists, isDir;
+    import std.stdio : writeln;
+
+    auto result = IOUtil.createTemporaryDirectory("/tmp/ioutil.XXXXXX");
+    string name = result.tryMatch!((string name) => name);
+    scope (exit)
+    {
+        cstdlib.rmdir(name.toStringz);
+    }
+    writeln("mkdtemp: ", name);
+    assert(name.exists);
+    assert(name.isDir);
 }
