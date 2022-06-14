@@ -14,6 +14,23 @@ module moss.core.logging;
 public import std.experimental.logger;
 
 import std.stdio : stderr;
+import std.concurrency : initOnce;
+
+/**
+ * This should be performed in the main routine of a module that
+ * wishes to use logging. For now we only set the sharedLogger to
+ * a new instance of the logger
+ */
+public static void configureLogging()
+{
+    auto instance = initOnce!logger(new ColorLogger);
+    sharedLog = instance;
+}
+
+/**
+ * Maintain the global logger instance
+ */
+private __gshared ColorLogger logger = null;
 
 /**
  * Simplistic logger that provides colourised output
