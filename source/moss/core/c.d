@@ -32,7 +32,7 @@ public import core.sys.posix.fcntl : AT_SYMLINK_NOFOLLOW, AT_FDCWD, O_RDONLY,
 
 public import core.stdc.stdio : SEEK_SET;
 public import core.sys.posix.fcntl : mkdir, open;
-public import core.sys.posix.stdlib : mkstemp;
+public import core.sys.posix.stdlib : mkstemp, mkdtemp;
 public import core.sys.posix.unistd : close, unlink, lseek;
 public import std.conv : octal;
 public import std.string : fromStringz, toStringz;
