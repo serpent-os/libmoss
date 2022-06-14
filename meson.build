@@ -28,6 +28,7 @@ libmoss_core_sources = [
 	'source/moss/core/c.d',
 	'source/moss/core/fetchcontext.d',
 	'source/moss/core/mounts.d',
+	'source/moss/core/logging.d',
 ]
 
 # Expose source dependencies
