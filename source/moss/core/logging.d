@@ -73,8 +73,7 @@ final class ColorLogger : Logger
 
         import std.format : format;
 
-        // Add timestamp and fileinfo if the global log level is trace
-        /* Format as a "nice" timestamp. */
+        /* Add timestamp and fileinfo if the global log level is trace */
         if (globalLogLevel() == LogLevel.trace)
         {
             timestamp = format!"[%02s:%02s:%02s]"(payload.timestamp.hour,
