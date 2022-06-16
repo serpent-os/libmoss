@@ -26,7 +26,7 @@ public static void configureLogging(LogLevel level = LogLevel.all)
 {
     auto instance = initOnce!logger(new ColorLogger());
     sharedLog = instance;
-    if(level != globalLogLevel())
+    if (level != globalLogLevel())
     {
         /* Ensure that the level is set correctly outside of the first invocation */
         globalLogLevel(level);
@@ -75,40 +75,46 @@ final class ColorLogger : Logger
 
         // Add timestamp and fileinfo if the global log level is trace
         /* Format as a "nice" timestamp. */
-        if(globalLogLevel() == LogLevel.trace)
+        if (globalLogLevel() == LogLevel.trace)
         {
             timestamp = format!"[%02s:%02s:%02s]"(payload.timestamp.hour,
-                                                  payload.timestamp.minute, payload.timestamp.second);
+                    payload.timestamp.minute, payload.timestamp.second);
             fileinfo = format!"(%s:%s)"(payload.file, payload.line);
         }
 
         switch (payload.logLevel)
         {
         case LogLevel.trace:
-            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright, cast(ubyte) ColourFG.Blue);
+            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
+                    cast(ubyte) ColourFG.Blue);
             break;
         case LogLevel.info:
-            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright, cast(ubyte) ColourFG.Green);
+            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
+                    cast(ubyte) ColourFG.Green);
             break;
         case logLevel.warning:
-            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright, cast(ubyte) ColourFG.Yellow);
+            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
+                    cast(ubyte) ColourFG.Yellow);
             break;
         case LogLevel.error:
-            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright, cast(ubyte) ColourFG.Red);
+            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
+                    cast(ubyte) ColourFG.Red);
             break;
         case LogLevel.critical:
-            renderString = format!"\x1b[%s;%s;%sm"(cast(ubyte) ColourAttr.Underscore, cast(ubyte) ColourAttr.Bright, cast(ubyte) ColourFG.Red);
+            renderString = format!"\x1b[%s;%s;%sm"(cast(ubyte) ColourAttr.Underscore,
+                    cast(ubyte) ColourAttr.Bright, cast(ubyte) ColourFG.Red);
             break;
         case LogLevel.fatal:
-            renderString = format!"\x1b[%s;%s;%sm"(cast(ubyte) ColourAttr.Bright, cast(ubyte) ColourFG.Black, cast(ubyte) ColourBG.Red);
+            renderString = format!"\x1b[%s;%s;%sm"(cast(ubyte) ColourAttr.Bright,
+                    cast(ubyte) ColourFG.Black, cast(ubyte) ColourBG.Red);
             break;
         default:
             renderString = format!"\x1b[%sm"(cast(ubyte) ColourAttr.Bright);
             break;
         }
 
-        stderr.writefln!"%s%s %s%-9s%s %s"(timestamp, fileinfo, renderString, level,
-                resetSequence, payload.msg);
+        stderr.writefln!"%s%s %s%-9s%s %s"(timestamp, fileinfo, renderString,
+                level, resetSequence, payload.msg);
     }
 
     enum ColourAttr : ubyte
