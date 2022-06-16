@@ -15,16 +15,22 @@ public import std.experimental.logger;
 
 import std.stdio : stderr;
 import std.concurrency : initOnce;
+import std.traits;
 
 /**
  * This should be performed in the main routine of a module that
  * wishes to use logging. For now we only set the sharedLogger to
  * a new instance of the logger
  */
-public static void configureLogging()
+public static void configureLogging(LogLevel level = LogLevel.all)
 {
-    auto instance = initOnce!logger(new ColorLogger);
+    auto instance = initOnce!logger(new ColorLogger());
     sharedLog = instance;
+    if(level != globalLogLevel())
+    {
+        /* Ensure that the level is set correctly outside of the first invocation */
+        globalLogLevel(level);
+    }
 }
 
 /**
@@ -61,33 +67,82 @@ final class ColorLogger : Logger
 
         string renderString;
         string level = to!string(payload.logLevel).toUpper;
+        string timestamp = "";
+        string fileinfo = "";
         immutable(string) resetSequence = "\x1b[0m";
+
         import std.format : format;
+
+        // Add timestamp and fileinfo if the global log level is trace
+        /* Format as a "nice" timestamp. */
+        if(globalLogLevel() == LogLevel.trace)
+        {
+            timestamp = format!"[%02s:%02s:%02s]"(payload.timestamp.hour,
+                                                  payload.timestamp.minute, payload.timestamp.second);
+            fileinfo = format!"(%s:%s)"(payload.file, payload.line);
+        }
 
         switch (payload.logLevel)
         {
-        case logLevel.warning:
-            renderString = "\x1b[1;33m\x1b[1m";
-            break;
-        case LogLevel.error:
-            renderString = "\x1b[1;31m\x1b[1m";
+        case LogLevel.trace:
+            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright, cast(ubyte) ColourFG.Blue);
             break;
         case LogLevel.info:
-            renderString = "\x1b[1;34m\x1b[1m";
+            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright, cast(ubyte) ColourFG.Green);
+            break;
+        case logLevel.warning:
+            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright, cast(ubyte) ColourFG.Yellow);
+            break;
+        case LogLevel.error:
+            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright, cast(ubyte) ColourFG.Red);
+            break;
+        case LogLevel.critical:
+            renderString = format!"\x1b[%s;%s;%sm"(cast(ubyte) ColourAttr.Underscore, cast(ubyte) ColourAttr.Bright, cast(ubyte) ColourFG.Red);
             break;
         case LogLevel.fatal:
-            renderString = "\x1b[1;31m\x1b[1m";
+            renderString = format!"\x1b[%s;%s;%sm"(cast(ubyte) ColourAttr.Bright, cast(ubyte) ColourFG.Black, cast(ubyte) ColourBG.Red);
             break;
         default:
-            renderString = "\x1b[1m";
+            renderString = format!"\x1b[%sm"(cast(ubyte) ColourAttr.Bright);
             break;
         }
 
-        /* Format as a "nice" timestamp. */
-        auto timestamp = format!"[%02s:%02s:%02s]"(payload.timestamp.hour,
-                payload.timestamp.minute, payload.timestamp.second);
-
-        stderr.writefln!"%s %s%-9s%s %s"(timestamp, renderString, level,
+        stderr.writefln!"%s%s %s%-9s%s %s"(timestamp, fileinfo, renderString, level,
                 resetSequence, payload.msg);
+    }
+
+    enum ColourAttr : ubyte
+    {
+        Reset = 0,
+        Bright = 1,
+        Dim = 2,
+        Underscore = 4,
+        Blink = 5,
+        Reverse = 7,
+        Hidden = 8
+    }
+
+    enum ColourFG : ubyte
+    {
+        Black = 30,
+        Red = 31,
+        Green = 32,
+        Yellow = 33,
+        Blue = 34,
+        Magenta = 35,
+        Cyan = 36,
+        White = 37
+    }
+
+    enum ColourBG : ubyte
+    {
+        Black = 40,
+        Red = 41,
+        Green = 42,
+        Yellow = 43,
+        Blue = 44,
+        Magenta = 45,
+        Cyan = 46,
+        White = 47
     }
 }
