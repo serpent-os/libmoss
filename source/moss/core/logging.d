@@ -20,11 +20,13 @@ import std.traits;
 /**
  * This should be performed in the main routine of a module that
  * wishes to use logging. For now we only set the sharedLogger to
- * a new instance of the logger
+ * a new instance of the logger.
+ *
+ * FIXME: For production, set LogLevel.info by default?
  */
-public static void configureLogging(LogLevel level = LogLevel.all)
+public static void configureLogging(LogLevel level = LogLevel.trace)
 {
-    auto instance = initOnce!logger(new ColorLogger());
+    auto instance = initOnce!logger(new ColorLogger(level));
     sharedLog = instance;
     if (level != globalLogLevel())
     {
@@ -58,6 +60,8 @@ final class ColorLogger : Logger
     /**
      * Write a new log message to stdout/stderr
      *
+     * TODO: Check for performance penalties / optimisation opportunities
+     *
      * Params:    payload   The log payload
      */
     override void writeLogMsg(ref LogEntry payload) @trusted
@@ -73,8 +77,8 @@ final class ColorLogger : Logger
 
         import std.format : format;
 
-        /* Add timestamp and fileinfo if the global log level is trace */
-        if (globalLogLevel() == LogLevel.trace)
+        /* Add timestamp and fileinfo if the global log level is all ('-vv') */
+        if (globalLogLevel() == LogLevel.all)
         {
             timestamp = format!"[%02s:%02s:%02s]"(payload.timestamp.hour,
                     payload.timestamp.minute, payload.timestamp.second);
@@ -85,11 +89,10 @@ final class ColorLogger : Logger
         {
         case LogLevel.trace:
             renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
-                    cast(ubyte) ColourFG.Blue);
+                    cast(ubyte) ColourFG.Green);
             break;
         case LogLevel.info:
-            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
-                    cast(ubyte) ColourFG.Green);
+            renderString = format!"\x1b[%sm"(cast(ubyte) ColourAttr.Bright);
             break;
         case logLevel.warning:
             renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
@@ -107,8 +110,9 @@ final class ColorLogger : Logger
             renderString = format!"\x1b[%s;%s;%sm"(cast(ubyte) ColourAttr.Bright,
                     cast(ubyte) ColourFG.Black, cast(ubyte) ColourBG.Red);
             break;
-        default:
-            renderString = format!"\x1b[%sm"(cast(ubyte) ColourAttr.Bright);
+        default: /* log level all */
+            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
+                    cast(ubyte) ColourFG.Blue);
             break;
         }
 
