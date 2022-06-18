@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: Zlib */
 
 /**
- * Platform
+ * moss.core.platform
  *
- * Contains platform definitions for x86_64 (AMD64), x86 (IA32) and AArch64
+ * Contains platform definitions for x86_64 (AMD64), x86 (IA32) and AArch64.
  *
  * Authors: Copyright © 2020-2022 Serpent OS Developers
- * License: ZLib
+ * License: Zlib
  */
 module moss.core.platform;
 

@@ -1,13 +1,13 @@
 /* SPDX-License-Identifier: Zlib */
 
 /**
- * Encoding
+ * moss.core.encoding
  *
  * Moss packages use extensive binary encoding of types of ubytes.
- * Within the context of any moss package, a Datum is some encoded data
+ * Within the context of any moss package, a Datum is some encoded data.
  *
  * Authors: Copyright © 2020-2022 Serpent OS Developers
- * License: ZLib
+ * License: Zlib
  */
 module moss.core.encoding;
 

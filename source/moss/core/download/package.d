@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: Zlib */
 
 /**
- * Download
+ * moss.core.download package
  *
- * Handle and store moss downloads
+ * Module namespace imports for handling and storing moss downloads.
  *
  * Authors: Copyright © 2020-2022 Serpent OS Developers
- * License: ZLib
+ * License: Zlib
  */
 module moss.core.download;
 

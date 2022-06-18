@@ -1,13 +1,13 @@
 /* SPDX-License-Identifier: Zlib */
 
 /**
- * FetchContext
+ * moss.core.fetchcontext
  *
  * A FetchContext is responsible for queuing + downloading assets in the form
  * of Fetchables.
  *
  * Authors: Copyright © 2020-2022 Serpent OS Developers
- * License: ZLib
+ * License: Zlib
  */
 module moss.core.fetchcontext;
 

@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: Zlib */
 
 /**
- * IOUtil
+ * moss.core.ioutil
  *
- * Extra I/O related C bindings which moss requires
+ * Extra I/O related C bindings that moss requires.
  *
  * Authors: Copyright © 2020-2022 Serpent OS Developers
- * License: ZLib
+ * License: Zlib
  */
 module moss.core.ioutil;
 

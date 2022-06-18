@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: Zlib */
 
 /**
- * CLI
+ * moss.core.cli package
  *
- * Moss command line interface helpers and UDAs
+ * Module namespace imports, command line interface helpers and UDAs.
  *
  * Authors: Copyright © 2020-2022 Serpent OS Developers
- * License: ZLib
+ * License: Zlib
  */
 module moss.core.cli;
 

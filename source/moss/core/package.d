@@ -1,12 +1,13 @@
 /* SPDX-License-Identifier: Zlib */
 
 /**
- * Moss Core
+ * moss.core package
  *
- * Contains useful shared core moss functionality and basic building blocks
+ * Module namespace imports. Contains useful shared core moss functionality
+ * and basic building blocks.
  *
  * Authors: Copyright © 2020-2022 Serpent OS Developers
- * License: ZLib
+ * License: Zlib
  */
 module moss.core;
 

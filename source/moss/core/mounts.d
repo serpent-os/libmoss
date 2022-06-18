@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: Zlib */
 
 /**
- * Mounts
+ * moss.core.mounts
  *
- * Mount specific functionality
+ * Mount specific functionality for moss.
  *
  * Authors: Copyright © 2020-2022 Serpent OS Developers
- * License: ZLib
+ * License: Zlib
  */
 module moss.core.mounts;
 

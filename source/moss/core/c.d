@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: Zlib */
 
 /**
- * C
+ * moss.core.c
  *
- * Extra C bindings that moss requires
+ * Extra C bindings that moss requires.
  *
  * Authors: Copyright © 2020-2022 Serpent OS Developers
- * License: ZLib
+ * License: Zlib
  */
 module moss.core.c;
 

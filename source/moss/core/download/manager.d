@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: Zlib */
 
 /**
- * Manager
+ * moss.core.download.manager
  *
- * Defines how to finagle downloads into a moss store
+ * Defines how to finagle downloads into a moss store.
  *
  * Authors: Copyright © 2020-2022 Serpent OS Developers
- * License: ZLib
+ * License: Zlib
  */
 module moss.core.download.manager;
 

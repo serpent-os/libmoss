@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: Zlib */
 
 /**
- * Store
+ * moss.core.store
  *
- * Defines and implements various moss user and system on-disk stores
+ * Defines and implements various moss user and system on-disk stores.
  *
  * Authors: Copyright © 2020-2022 Serpent OS Developers
- * License: ZLib
+ * License: Zlib
  */
 module moss.core.store;
 

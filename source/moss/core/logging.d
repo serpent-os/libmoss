@@ -1,10 +1,10 @@
 /* SPDX-License-Identifier: Zlib */
 
 /**
- * Logging
+ * moss.core.logging
  *
- * Improves logging experience to provide a more normalised
- * terminal experience.
+ * Improves logging experience to provide a more normalised terminal
+ * experience.
  *
  * Authors: Copyright © 2022 Serpent OS Developers
  * License: Zlib
