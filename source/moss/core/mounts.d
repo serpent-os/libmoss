@@ -1,12 +1,13 @@
 /* SPDX-License-Identifier: Zlib */
 
 /**
+ * Mounts
+ *
  * Mount specific functionality
  *
  * Authors: © 2020-2022 Serpent OS Developers
  * License: ZLib
  */
-
 module moss.core.mounts;
 
 import cstdlib = moss.core.c;
