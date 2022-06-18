@@ -6,7 +6,7 @@
  * A FetchContext is responsible for queuing + downloading assets in the form
  * of Fetchables.
  *
- * Authors: © 2020-2022 Serpent OS Developers
+ * Authors: Copyright © 2020-2022 Serpent OS Developers
  * License: ZLib
  */
 module moss.core.fetchcontext;

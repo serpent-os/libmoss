@@ -6,7 +6,7 @@
  * Defines a DownloadStore for downloading + fetching files into
  * the moss store.
  *
- * Authors: © 2020-2022 Serpent OS Developers
+ * Authors: Copyright © 2020-2022 Serpent OS Developers
  * License: ZLib
  */
 module moss.core.download.store;

@@ -5,7 +5,7 @@
  *
  * Contains useful shared core moss functionality and basic building blocks
  *
- * Authors: © 2020-2022 Serpent OS Developers
+ * Authors: Copyright © 2020-2022 Serpent OS Developers
  * License: ZLib
  */
 module moss.core;

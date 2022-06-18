@@ -5,7 +5,7 @@
  *
  * Contains platform definitions for x86_64 (AMD64), x86 (IA32) and AArch64
  *
- * Authors: © 2020-2022 Serpent OS Developers
+ * Authors: Copyright © 2020-2022 Serpent OS Developers
  * License: ZLib
  */
 module moss.core.platform;
