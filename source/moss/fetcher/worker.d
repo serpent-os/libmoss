@@ -5,7 +5,7 @@
  *
  * Defines worker functionality for moss fetcher download threads.
  *
- * Authors: © 2020-2022 Serpent OS Developers
+ * Authors: Copyright © 2020-2022 Serpent OS Developers
  * License: Zlib
  */
 module moss.fetcher.worker;

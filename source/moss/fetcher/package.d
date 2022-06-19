@@ -5,7 +5,7 @@
  *
  * Module namespace imports for the threaded moss fetch functionality.
  *
- * Authors: © 2020-2022 Serpent OS Developers
+ * Authors: Copyright © 2020-2022 Serpent OS Developers
  * License: Zlib
  */
 
