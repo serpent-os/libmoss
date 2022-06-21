@@ -1,4 +1,4 @@
-option('with_difflib', type: 'boolean', value: false);
+option('with_difflib', type: 'boolean', value: false)
 option('with_elf', type: 'boolean', value: false)
 option('with_rocksdb', type: 'boolean', value: false)
 option('with_xxhash', type: 'boolean', value: false)
