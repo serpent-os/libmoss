@@ -16,7 +16,7 @@
                        "path": "../moss-vendor/vendor/elf/elf-d"
                },
                "xxhash-d": {
-                       "path": "../moss-vendor/vendor/xxhash/xxhash-d"
+                       "path": "../moss-vendor/subprojects/xxhash-d"
                }
        },
 }
