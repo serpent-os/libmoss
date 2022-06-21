@@ -1,4 +1,5 @@
 possible_modules = [
+    'difflib',
     'elf',
     'rocksdb',
     'yaml',
