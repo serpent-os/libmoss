@@ -11,7 +11,7 @@
 	path = vendor/rocksdb/rocksdb-binding
 	url = https://gitlab.com/serpent-os/dlang/rocksdb-binding.git
 [submodule "xxhash-d"]
-	path = vendor/xxhash/xxhash-d
+	path = subprojects/xxhash-d
 	url = https://gitlab.com/serpent-os/dlang/xxhash-d.git
 [submodule "zstd"]
 	path = vendor/zstd/zstd
