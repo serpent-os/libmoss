@@ -16,7 +16,7 @@ public import std.experimental.logger;
 import std.stdio : stderr;
 import std.concurrency : initOnce;
 import std.traits;
-
+import std.exception : assumeWontThrow;
 /**
  * This should be performed in the main routine of a module that
  * wishes to use logging. For now we only set the sharedLogger to
@@ -24,15 +24,12 @@ import std.traits;
  *
  * FIXME: For production, set LogLevel.info by default?
  */
-public static void configureLogging(LogLevel level = LogLevel.trace)
+public static void configureLogging(LogLevel level = LogLevel.trace) @safe nothrow
 {
-    auto instance = initOnce!logger(new ColorLogger(level));
-    sharedLog = instance;
-    if (level != globalLogLevel())
-    {
-        /* Ensure that the level is set correctly outside of the first invocation */
-        globalLogLevel(level);
-    }
+    assumeWontThrow(() @trusted  {
+        sharedLog = initOnce!logger(new ColorLogger(level));
+        globalLogLevel = level;
+    }());
 }
 
 /**
