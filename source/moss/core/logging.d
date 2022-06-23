@@ -86,8 +86,7 @@ final class ColorLogger : Logger
         final switch (payload.logLevel)
         {
         case LogLevel.trace:
-            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
-                    cast(ubyte) ColourFG.Green);
+            renderString = format!"\x1b[%sm"(cast(ubyte) ColourAttr.Dim);
             break;
         case LogLevel.info:
             renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
