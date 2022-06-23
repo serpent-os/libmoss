@@ -17,6 +17,7 @@ import std.stdio : stderr;
 import std.concurrency : initOnce;
 import std.traits;
 import std.exception : assumeWontThrow;
+
 /**
  * This should be performed in the main routine of a module that
  * wishes to use logging. For now we only set the sharedLogger to
@@ -26,7 +27,7 @@ import std.exception : assumeWontThrow;
  */
 public static void configureLogging(LogLevel level = LogLevel.trace) @safe nothrow
 {
-    assumeWontThrow(() @trusted  {
+    assumeWontThrow(() @trusted {
         sharedLog = initOnce!logger(new ColorLogger(level));
         globalLogLevel = level;
     }());
@@ -75,21 +76,22 @@ final class ColorLogger : Logger
         import std.format : format;
 
         /* Add timestamp and fileinfo if the global log level is all ('-vv') */
-        if (globalLogLevel() == LogLevel.all)
+        if (globalLogLevel == LogLevel.all)
         {
             timestamp = format!"[%02s:%02s:%02s]"(payload.timestamp.hour,
                     payload.timestamp.minute, payload.timestamp.second);
             fileinfo = format!"(%s:%s)"(payload.file, payload.line);
         }
 
-        switch (payload.logLevel)
+        final switch (payload.logLevel)
         {
         case LogLevel.trace:
             renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
                     cast(ubyte) ColourFG.Green);
             break;
         case LogLevel.info:
-            renderString = format!"\x1b[%sm"(cast(ubyte) ColourAttr.Bright);
+            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
+                    cast(ubyte) ColourFG.Blue);
             break;
         case logLevel.warning:
             renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
@@ -107,10 +109,13 @@ final class ColorLogger : Logger
             renderString = format!"\x1b[%s;%s;%sm"(cast(ubyte) ColourAttr.Bright,
                     cast(ubyte) ColourFG.Black, cast(ubyte) ColourBG.Red);
             break;
-        default: /* log level all */
+        case LogLevel.all: /* log level all */
             renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
                     cast(ubyte) ColourFG.Blue);
             break;
+        case LogLevel.off:
+            /* shush you */
+            return;
         }
 
         stderr.writefln!"%s%s %s%-9s%s %s"(timestamp, fileinfo, renderString,
