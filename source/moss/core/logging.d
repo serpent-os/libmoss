@@ -17,6 +17,8 @@ import std.stdio : stderr;
 import std.concurrency : initOnce;
 import std.traits;
 import std.exception : assumeWontThrow;
+import std.string : format;
+import std.range : empty;
 
 /**
  * This should be performed in the main routine of a module that
@@ -31,6 +33,62 @@ public static void configureLogging(LogLevel level = LogLevel.trace) @safe nothr
         sharedLog = initOnce!logger(new ColorLogger(level));
         globalLogLevel = level;
     }());
+}
+
+private enum ColourAttr : ubyte
+{
+    Reset = 0,
+    Bright = 1,
+    Dim = 2,
+    Underscore = 4,
+    Blink = 5,
+    Reverse = 7,
+    Hidden = 8
+}
+
+private enum ColourFG : ubyte
+{
+    Black = 30,
+    Red = 31,
+    Green = 32,
+    Yellow = 33,
+    Blue = 34,
+    Magenta = 35,
+    Cyan = 36,
+    White = 37
+}
+
+private enum ColourBG : ubyte
+{
+    Black = 40,
+    Red = 41,
+    Green = 42,
+    Yellow = 43,
+    Blue = 44,
+    Magenta = 45,
+    Cyan = 46,
+    White = 47
+}
+
+private __gshared immutable string[LogLevel] logFormatStrings;
+
+shared static this()
+{
+    logFormatStrings = [
+        LogLevel.off: null,
+        LogLevel.trace: format!"\x1b[%sm"(cast(ubyte) ColourAttr.Dim),
+        LogLevel.info: format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
+                cast(ubyte) ColourFG.Blue),
+        LogLevel.warning: format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
+                cast(ubyte) ColourFG.Yellow),
+        LogLevel.error: format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
+                cast(ubyte) ColourFG.Red),
+        LogLevel.critical: format!"\x1b[%s;%s;%sm"(cast(ubyte) ColourAttr.Underscore,
+                cast(ubyte) ColourAttr.Bright, cast(ubyte) ColourFG.Red),
+        LogLevel.fatal: format!"\x1b[%s;%s;%sm"(cast(ubyte) ColourAttr.Bright,
+                cast(ubyte) ColourFG.Black, cast(ubyte) ColourBG.Red)
+    ];
+    logFormatStrings = logFormatStrings.rehash();
 }
 
 /**
@@ -67,13 +125,17 @@ final class ColorLogger : Logger
         import std.conv : to;
         import std.string : toUpper;
 
-        string renderString;
         string level = to!string(payload.logLevel).toUpper;
         string timestamp = "";
         string fileinfo = "";
         immutable(string) resetSequence = "\x1b[0m";
 
-        import std.format : format;
+        /* Make sure we have a built render string */
+        auto renderString = assumeWontThrow(logFormatStrings[payload.logLevel]);
+        if (renderString.empty)
+        {
+            return;
+        }
 
         /* Add timestamp and fileinfo if the global log level is all ('-vv') */
         if (globalLogLevel == LogLevel.all)
@@ -83,73 +145,7 @@ final class ColorLogger : Logger
             fileinfo = format!"(%s:%s)"(payload.file, payload.line);
         }
 
-        final switch (payload.logLevel)
-        {
-        case LogLevel.trace:
-            renderString = format!"\x1b[%sm"(cast(ubyte) ColourAttr.Dim);
-            break;
-        case LogLevel.info:
-            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
-                    cast(ubyte) ColourFG.Blue);
-            break;
-        case logLevel.warning:
-            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
-                    cast(ubyte) ColourFG.Yellow);
-            break;
-        case LogLevel.error:
-            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
-                    cast(ubyte) ColourFG.Red);
-            break;
-        case LogLevel.critical:
-            renderString = format!"\x1b[%s;%s;%sm"(cast(ubyte) ColourAttr.Underscore,
-                    cast(ubyte) ColourAttr.Bright, cast(ubyte) ColourFG.Red);
-            break;
-        case LogLevel.fatal:
-            renderString = format!"\x1b[%s;%s;%sm"(cast(ubyte) ColourAttr.Bright,
-                    cast(ubyte) ColourFG.Black, cast(ubyte) ColourBG.Red);
-            break;
-        case LogLevel.all: /* wut */
-        case LogLevel.off:
-            /* shush you */
-            return;
-        }
-
         stderr.writefln!"%s%s %s%-9s%s %s"(timestamp, fileinfo, renderString,
                 level, resetSequence, payload.msg);
-    }
-
-    enum ColourAttr : ubyte
-    {
-        Reset = 0,
-        Bright = 1,
-        Dim = 2,
-        Underscore = 4,
-        Blink = 5,
-        Reverse = 7,
-        Hidden = 8
-    }
-
-    enum ColourFG : ubyte
-    {
-        Black = 30,
-        Red = 31,
-        Green = 32,
-        Yellow = 33,
-        Blue = 34,
-        Magenta = 35,
-        Cyan = 36,
-        White = 37
-    }
-
-    enum ColourBG : ubyte
-    {
-        Black = 40,
-        Red = 41,
-        Green = 42,
-        Yellow = 43,
-        Blue = 44,
-        Magenta = 45,
-        Cyan = 46,
-        White = 47
     }
 }
