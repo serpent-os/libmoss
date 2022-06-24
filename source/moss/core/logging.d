@@ -25,9 +25,8 @@ import std.range : empty;
  * wishes to use logging. For now we only set the sharedLogger to
  * a new instance of the logger.
  *
- * FIXME: For production, set LogLevel.info by default?
  */
-public static void configureLogging(LogLevel level = LogLevel.trace) @safe nothrow
+public static void configureLogging(LogLevel level = LogLevel.info) @safe nothrow
 {
     assumeWontThrow(() @trusted {
         sharedLog = initOnce!logger(new ColorLogger(level));
