@@ -38,7 +38,7 @@
                                        "path": "../moss-core"
                                },
                                "xxhash-d": {
-                                       "path": "../moss-vendor/vendor/xxhash/xxhash-d"
+                                       "path": "../moss-vendor/subprojects/xxhash-d"
                                },
                                "zstd": {
                                        "path": "../moss-vendor/vendor/zstd/zstd"
