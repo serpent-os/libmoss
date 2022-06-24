@@ -47,11 +47,11 @@ public enum ColorLoggerFlags
  * a new instance of the logger.
  *
  */
-public static void configureLogging(ColorLoggerFlags flags = ColorLoggerFlags.Color)() @trusted nothrow
+public static void configureLogging(ColorLoggerFlags flags = ColorLoggerFlags.Color) @trusted nothrow
 {
-    __gshared ColorLogger!(flags) logger;
+    __gshared ColorLogger logger;
     assumeWontThrow(() @trusted {
-        sharedLog = initOnce!logger(new ColorLogger!flags);
+        sharedLog = initOnce!logger(new ColorLogger(flags));
         globalLogLevel = LogLevel.info;
     }());
 }
@@ -119,17 +119,18 @@ shared static this()
  * has configurable behaviour, i.e. timestamps, colour usage, and
  * label printing.
  */
-final class ColorLogger(ColorLoggerFlags loggerFlags = ColorLoggerFlags.Color) : Logger
+final class ColorLogger : Logger
 {
     /**
      * Construct a new ColorLogger with all messages enabled
      *
      * Params:
-     *      timestamps = Enable printing of timestamps
+     *      loggerFlags = Flags to enable capabilities
      */
-    this() @safe
+    this(ColorLoggerFlags loggerFlags = ColorLoggerFlags.Color) @trusted
     {
         super(LogLevel.all);
+        this.loggerFlags = loggerFlags;
     }
 
     /**
@@ -145,22 +146,18 @@ final class ColorLogger(ColorLoggerFlags loggerFlags = ColorLoggerFlags.Color) :
         string level = to!string(payload.logLevel).toUpper;
         string timestamp = "";
         string fileinfo = "";
+        string resetSequence = "";
 
         /* Make sure we have a built render string */
         string renderString;
-        static if ((loggerFlags & ColorLoggerFlags.Color) == ColorLoggerFlags.Color)
+        if ((loggerFlags & ColorLoggerFlags.Color) == ColorLoggerFlags.Color)
         {
-            immutable(string) resetSequence = "\x1b[0m";
-
+            resetSequence = "\x1b[0m";
             renderString = assumeWontThrow(logFormatStrings[payload.logLevel]);
             if (renderString.empty)
             {
                 return;
             }
-        }
-        else
-        {
-            immutable(string) resetSequence = "";
         }
 
         /* Show file information for critical & fatal only */
@@ -175,7 +172,7 @@ final class ColorLogger(ColorLoggerFlags loggerFlags = ColorLoggerFlags.Color) :
         }
 
         /* Use timestamps? */
-        static if ((loggerFlags & ColorLoggerFlags.Timestamps) == ColorLoggerFlags.Timestamps)
+        if ((loggerFlags & ColorLoggerFlags.Timestamps) == ColorLoggerFlags.Timestamps)
         {
             timestamp = format!"[%02s:%02s:%02s]"(payload.timestamp.hour,
                     payload.timestamp.minute, payload.timestamp.second);
@@ -185,4 +182,8 @@ final class ColorLogger(ColorLoggerFlags loggerFlags = ColorLoggerFlags.Color) :
         stderr.writefln!"%s%s %s%-9s%s %s"(timestamp, fileinfo, renderString,
                 level, resetSequence, payload.msg);
     }
+
+private:
+
+    __gshared ColorLoggerFlags loggerFlags = ColorLoggerFlags.Color;
 }
