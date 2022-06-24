@@ -108,10 +108,7 @@ final class ColorLogger : Logger
             renderString = format!"\x1b[%s;%s;%sm"(cast(ubyte) ColourAttr.Bright,
                     cast(ubyte) ColourFG.Black, cast(ubyte) ColourBG.Red);
             break;
-        case LogLevel.all: /* log level all */
-            renderString = format!"\x1b[%s;%sm"(cast(ubyte) ColourAttr.Bright,
-                    cast(ubyte) ColourFG.Green);
-            break;
+        case LogLevel.all: /* wut */
         case LogLevel.off:
             /* shush you */
             return;
