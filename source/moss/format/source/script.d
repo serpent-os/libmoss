@@ -1,23 +1,17 @@
 /*
- * This file is part of moss-format.
+ * SPDX-FileCopyrightText: Copyright © 2020-2022 Serpent OS Developers
  *
- * Copyright © 2020-2021 Serpent OS Developers
+ * SPDX-License-Identifier: Zlib
+ */
+
+/**
+ * moss.format.source.script
  *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Defines the notion of a ScriptBuilder, which parses and expands
+ * macros to their actual values to be used in the build process.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
+ * Authors: Copyright © 2020-2022 Serpent OS Developers
+ * License: Zlib
  */
 
 module moss.format.source.script;
@@ -32,8 +26,8 @@ import std.string : strip;
 import std.container.rbtree;
 
 /**
- * The private ParseContext is used by the Script to step through
- * scripts and replace macros with their equivalent data.
+ * The private ParseContext is used by the ScriptBuilder to step
+ * through scripts and replace macros with their equivalent data.
  */
 static package struct ParseContext
 {
