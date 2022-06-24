@@ -21,15 +21,37 @@ import std.string : format;
 import std.range : empty;
 
 /**
+ * We create our logger with compile time constants
+ */
+public enum ColorLoggerFlags
+{
+    /**
+     * No flags is no color, no timestamps
+     */
+    None = 1 << 0,
+
+    /**
+     * Enable timestamps in log output
+     */
+    Timestamps = 1 << 1,
+
+    /**
+     * Enable color in log output
+     */
+    Color = 1 << 2,
+}
+
+/**
  * This should be performed in the main routine of a module that
  * wishes to use logging. For now we only set the sharedLogger to
  * a new instance of the logger.
  *
  */
-public static void configureLogging(bool enableTimestamps = false) @safe nothrow
+public static void configureLogging(ColorLoggerFlags flags = ColorLoggerFlags.Color)() @trusted nothrow
 {
+    __gshared ColorLogger!(flags) logger;
     assumeWontThrow(() @trusted {
-        sharedLog = initOnce!logger(new ColorLogger(enableTimestamps));
+        sharedLog = initOnce!logger(new ColorLogger!flags);
         globalLogLevel = LogLevel.info;
     }());
 }
@@ -91,18 +113,13 @@ shared static this()
 }
 
 /**
- * Maintain the global logger instance
- */
-private __gshared ColorLogger logger = null;
-
-/**
  * Simplistic logger that provides colourised output
  *
  * In future we need to rework the ColorLogger into something that
  * has configurable behaviour, i.e. timestamps, colour usage, and
  * label printing.
  */
-final class ColorLogger : Logger
+final class ColorLogger(ColorLoggerFlags loggerFlags = ColorLoggerFlags.Color) : Logger
 {
     /**
      * Construct a new ColorLogger with all messages enabled
@@ -110,10 +127,9 @@ final class ColorLogger : Logger
      * Params:
      *      timestamps = Enable printing of timestamps
      */
-    this(bool timestamps = false) @safe
+    this() @safe
     {
         super(LogLevel.all);
-        _timestamps = timestamps;
     }
 
     /**
@@ -129,13 +145,22 @@ final class ColorLogger : Logger
         string level = to!string(payload.logLevel).toUpper;
         string timestamp = "";
         string fileinfo = "";
-        immutable(string) resetSequence = "\x1b[0m";
 
         /* Make sure we have a built render string */
-        auto renderString = assumeWontThrow(logFormatStrings[payload.logLevel]);
-        if (renderString.empty)
+        string renderString;
+        static if ((loggerFlags & ColorLoggerFlags.Color) == ColorLoggerFlags.Color)
         {
-            return;
+            immutable(string) resetSequence = "\x1b[0m";
+
+            renderString = assumeWontThrow(logFormatStrings[payload.logLevel]);
+            if (renderString.empty)
+            {
+                return;
+            }
+        }
+        else
+        {
+            immutable(string) resetSequence = "";
         }
 
         /* Show file information for critical & fatal only */
@@ -150,7 +175,7 @@ final class ColorLogger : Logger
         }
 
         /* Use timestamps? */
-        if (timestamps)
+        static if ((loggerFlags & ColorLoggerFlags.Timestamps) == ColorLoggerFlags.Timestamps)
         {
             timestamp = format!"[%02s:%02s:%02s]"(payload.timestamp.hour,
                     payload.timestamp.minute, payload.timestamp.second);
@@ -160,13 +185,4 @@ final class ColorLogger : Logger
         stderr.writefln!"%s%s %s%-9s%s %s"(timestamp, fileinfo, renderString,
                 level, resetSequence, payload.msg);
     }
-
-    pragma(inline, true) pure @property bool timestamps() @safe @nogc nothrow const
-    {
-        return _timestamps;
-    }
-
-private:
-
-    bool _timestamps;
 }
