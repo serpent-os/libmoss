@@ -26,11 +26,11 @@ import std.range : empty;
  * a new instance of the logger.
  *
  */
-public static void configureLogging(LogLevel level = LogLevel.info) @safe nothrow
+public static void configureLogging(bool enableTimestamps = false) @safe nothrow
 {
     assumeWontThrow(() @trusted {
-        sharedLog = initOnce!logger(new ColorLogger(level));
-        globalLogLevel = level;
+        sharedLog = initOnce!logger(new ColorLogger(enableTimestamps));
+        globalLogLevel = LogLevel.info;
     }());
 }
 
@@ -106,16 +106,18 @@ final class ColorLogger : Logger
 {
     /**
      * Construct a new ColorLogger with all messages enabled
+     *
+     * Params:
+     *      timestamps = Enable printing of timestamps
      */
-    this(LogLevel level = LogLevel.all) @safe
+    this(bool timestamps = false) @safe
     {
-        super(level);
+        super(LogLevel.all);
+        _timestamps = timestamps;
     }
 
     /**
      * Write a new log message to stdout/stderr
-     *
-     * TODO: Check for performance penalties / optimisation opportunities
      *
      * Params:    payload   The log payload
      */
@@ -136,15 +138,35 @@ final class ColorLogger : Logger
             return;
         }
 
-        /* Add timestamp and fileinfo if the global log level is all ('-vv') */
-        if (globalLogLevel == LogLevel.all)
+        /* Show file information for critical & fatal only */
+        switch (payload.logLevel)
+        {
+        case LogLevel.critical:
+        case LogLevel.fatal:
+            fileinfo = format!"@[%s:%s] "(payload.file, payload.line);
+            break;
+        default:
+            break;
+        }
+
+        /* Use timestamps? */
+        if (timestamps)
         {
             timestamp = format!"[%02s:%02s:%02s]"(payload.timestamp.hour,
                     payload.timestamp.minute, payload.timestamp.second);
-            fileinfo = format!"(%s:%s)"(payload.file, payload.line);
         }
 
+        /* Emit. */
         stderr.writefln!"%s%s %s%-9s%s %s"(timestamp, fileinfo, renderString,
                 level, resetSequence, payload.msg);
     }
+
+    pragma(inline, true) pure @property bool timestamps() @safe @nogc nothrow const
+    {
+        return _timestamps;
+    }
+
+private:
+
+    bool _timestamps;
 }
