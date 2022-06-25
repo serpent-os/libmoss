@@ -63,11 +63,14 @@ public:
     /** A mapping of string (key) to TuningFlag combinations */
     TuningFlag[string] flags;
 
-    /** A tmapping of string (key) to TuningGroup group definitions */
+    /** A mapping of string (key) to TuningGroup group definitions */
     TuningGroup[string] groups;
 
     /** A list of packages predefined in the macros file */
     PackageDefinition[] packages;
+
+    /** Default tuning groups to enable */
+    string[] defaultGroups;
 
     /**
      * Construct a Spec from the given file
@@ -108,6 +111,7 @@ public:
             parseFlags(root);
             parseTuning(root);
             parsePackages(root);
+            parseDefaults(root);
         }
         catch (Exception ex)
         {
@@ -356,6 +360,30 @@ private:
                 sval = sval[0 .. $ - 1];
             }
             definitions[skey] = sval;
+        }
+    }
+
+    /**
+     * Parse the defaults (tuning group)
+     */
+    void parseDefaults(ref Node root)
+    {
+        import std.exception : enforce;
+
+        if (!root.containsKey("defaultTuningGroups"))
+        {
+            return;
+        }
+
+        /* Grab root sequence */
+        Node node = root["defaultTuningGroups"];
+        enforce(node.nodeID == NodeID.sequence, "parseDefaults(): Expected sequence");
+
+        /* Grab each scalar */
+        foreach (ref Node k; node)
+        {
+            enforce(k.nodeID == NodeID.scalar, "parseDefaults: Expected scalar in sequence");
+            defaultGroups ~= k.get!string;
         }
     }
 
