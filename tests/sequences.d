@@ -1,12 +1,16 @@
-/* SPDX-License-Identifier: Zlib */
+/*
+ * SPDX-FileCopyrightText: Copyright © 2020-2022 Serpent OS Developers
+ *
+ * SPDX-License-Identifier: Zlib
+ */
 
 /**
  * Nested sequence tests
  *
  * Simple use-case moss-config testing
  *
- * Authors: © 2020-2022 Serpent OS Developers
- * License: ZLib
+ * Authors: Copyright © 2020-2022 Serpent OS Developers
+ * License: Zlib
  */
 
 module simple;
