@@ -98,6 +98,29 @@ string computeSHA256(in string path, bool useMmap = false)
     return toHexString(sha.finish()).toLower();
 }
 
+/**
+ * Outperforms buildPath considerably by
+ * not attempting to fold or normalize the paths
+ *
+ * Given our requirements we assume this *will not* throw,
+ * otherwise we'll runtime panic.
+ *
+ * Note: This will not fold slashes contained in follow up elements
+ *
+ * Params:
+ *      datum   = Elements to join
+ * Returns: newly allocated string joining all path elements by "/"
+ */
+pragma(inline, true) pure auto joinPath(S...)(in S datum) @safe nothrow
+{
+    import std.array : join;
+    import std.exception : assumeWontThrow;
+
+    static assert(S.length > 0, "joinPath() requires at least one element");
+    static immutable dchar[] joinStr = "/";
+    return assumeWontThrow(join([datum[0 .. $]], joinStr));
+}
+
 unittest
 {
     const auto expHash = "5eca857080b9a65301edc2c6ebb5ebd3abc5ed679c49ab532a300c91d3674fc8";
