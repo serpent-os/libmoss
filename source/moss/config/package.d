@@ -10,6 +10,6 @@
  * Configuration functionality for moss.
  *
  * Authors: Copyright © 2020-2022 Serpent OS Developers
- * License: ZLib
+ * License: Zlib
  */
 module moss.config;
