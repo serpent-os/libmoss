@@ -233,7 +233,7 @@ public struct IOUtil
      *      target = Path to hardlink *to*
      * Returns: sumtype (bool true | CError)
      */
-    static IOResult hardlink(in string source, in string target)
+    static IOResult hardlink(in string source, in string target) @trusted
     {
         auto ret = cstdlib.link(source.toStringz, target.toStringz);
 
@@ -253,18 +253,18 @@ public struct IOUtil
      *      target = Path to hardlink *to*
      * Returns: sumtype (bool true | CError)
      */
-    static IOResult hardlinkOrCopy(in string source, in string target)
+    static IOResult hardlinkOrCopy(in string source, in string target) @trusted
     {
         auto ret = IOUtil.hardlink(source, target);
         auto err = ret.match!((e) => e.errorCode, (b) => 0);
         switch (err)
         {
-            case cstdlib.EXDEV:
-            case cstdlib.EMLINK:
-            case cstdlib.EPERM:
-                return IOUtil.copyFile(source, target);
-            default:
-                return IOResult(CError(err));
+        case cstdlib.EXDEV:
+        case cstdlib.EMLINK:
+        case cstdlib.EPERM:
+            return IOUtil.copyFile(source, target);
+        default:
+            return IOResult(CError(err));
         }
     }
 }
