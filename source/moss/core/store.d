@@ -14,6 +14,8 @@
  */
 module moss.core.store;
 
+import std.sumtype : tryMatch;
+
 /**
  * Type of cache being employed, affects writability
  */
@@ -115,9 +117,10 @@ public:
      */
     final void share(const(string) id, const(string) target) @system
     {
-        import moss.core.util : hardLink;
+        import moss.core.ioutil : IOUtil;
 
-        hardLink(fullPath(id), target);
+        auto res = IOUtil.hardlink(fullPath(id), target);
+        res.tryMatch!((bool b) => b);
     }
 
     /**

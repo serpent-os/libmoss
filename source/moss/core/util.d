@@ -29,39 +29,6 @@ import std.algorithm : each;
 import moss.core : ChunkSize;
 
 /**
- * Attempt construction of a hardlink.
- */
-pragma(inline, true) void hardLink(const(string) sourcePath, const(string) destPath) @trusted
-{
-    auto sourceZ = sourcePath.toStringz;
-    auto targetZ = destPath.toStringz;
-
-    auto ret = link(sourceZ, targetZ);
-    auto err = strerror(errno);
-    enforce(ret == 0, format!"hardLink(): Failed to link %s to %s: %s"(sourcePath,
-            destPath, err !is null ? fromStringz(err) : ""));
-}
-
-/**
- * Attempt hardlink, if it fails, fallback to a copy
- */
-pragma(inline, true) void hardLinkOrCopy(const(string) sourcePath, const(string) destPath) @trusted
-{
-    try
-    {
-        hardLink(sourcePath, destPath);
-        return;
-    }
-    catch (Exception ex)
-    {
-    }
-
-    import std.file : copy;
-
-    copy(sourcePath, destPath);
-}
-
-/**
  * Returns true if the path exists and is writable
  */
 pragma(inline, true) bool checkWritable(const(string) path) @trusted

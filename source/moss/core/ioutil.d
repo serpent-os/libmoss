@@ -224,6 +224,49 @@ public struct IOUtil
 
         return IOTempdResult(cast(string) copyBuffer.fromStringz);
     }
+
+    /**
+     * Create a hardlink between two paths
+     *
+     * Params:
+     *      source = Path to hardlink *from*
+     *      target = Path to hardlink *to*
+     * Returns: sumtype (bool true | CError)
+     */
+    static IOResult hardlink(in string source, in string target)
+    {
+        auto ret = cstdlib.link(source.toStringz, target.toStringz);
+
+        if (ret == 0)
+        {
+            return IOResult(true);
+        }
+
+        return IOResult(CError(cstdlib.errno));
+    }
+
+    /**
+     * Hardlink the files. If this fails, try to copy.
+     *
+     * Params:
+     *      source = Path to hardlink *from*
+     *      target = Path to hardlink *to*
+     * Returns: sumtype (bool true | CError)
+     */
+    static IOResult hardlinkOrCopy(in string source, in string target)
+    {
+        auto ret = IOUtil.hardlink(source, target);
+        auto err = ret.match!((e) => e.errorCode, (b) => 0);
+        switch (err)
+        {
+            case cstdlib.EXDEV:
+            case cstdlib.EMLINK:
+            case cstdlib.EPERM:
+                return IOUtil.copyFile(source, target);
+            default:
+                return IOResult(CError(err));
+        }
+    }
 }
 
 @("Ensure copyFile works as expected")
