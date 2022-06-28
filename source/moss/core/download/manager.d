@@ -99,9 +99,10 @@ public:
         enforce(writable.length >= 1, "DownloadManager.fetch(): No writable stores found");
         auto writeStore = writable[0];
 
-        import std.stdio : writefln, writeln;
+        import std.experimental.logger;
+        import std.string: format;
 
-        writefln("Using cache: %s", writeStore.directory);
+        info(format!"Using cache: %s"(writeStore.directory));
 
         /* Ugly download code */
         foreach (ref d; toDownload)
@@ -113,7 +114,7 @@ public:
             auto fullPath = writeStore.stagingPath(d.expectedHash);
             auto downloadDir = fullPath.dirName;
             downloadDir.mkdirRecurse();
-            writeln(fullPath);
+            info(fullPath);
             download(d.uri, fullPath);
 
             /* Verify the hash */
@@ -123,7 +124,7 @@ public:
                 import std.file : remove;
 
                 remove(fullPath);
-                writeln(hash, " vs ", d.expectedHash);
+                info(format!"%s vs %s"(hash, d.expectedHash));
             }
             assert(hash == d.expectedHash,
                     "DownloadManager.fetch(): Corrupt download %s".format(d.uri));

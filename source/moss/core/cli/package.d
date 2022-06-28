@@ -407,7 +407,7 @@ package:
      */
     void printUsage()
     {
-        writefln("usage: %s %s", fullName, usage);
+        writefln!"usage: %s %s"(fullName, usage);
     }
 
     /**
@@ -458,7 +458,7 @@ package:
                 itemLeft = c.name;
             }
 
-            writefln("    %*+s\t%s", wideness, itemLeft, c.blurb);
+            writefln!"    %*+s\t%s"(wideness, itemLeft, c.blurb);
         }
 
         if (commands.length > 0)
@@ -482,7 +482,7 @@ package:
             {
                 itemLeft ~= opt.optLong;
             }
-            writefln("    %*+s\t%s", wideness, itemLeft, opt.help);
+            writefln!"    %*+s\t%s"(wideness, itemLeft, opt.help);
         }
 
         static std.getopt.Option helpOption;
@@ -531,7 +531,8 @@ private:
         }
         catch (Exception ex)
         {
-            writefln("Error: %s", ex.message);
+            import std.experimental.logger;
+            error(ex.message);
             printUsage();
             return 1;
         }
@@ -552,7 +553,8 @@ private:
             }
             catch (Exception ex)
             {
-                writefln("Error: %s", ex.message);
+                import std.experimental.logger;
+                error(ex.message);
                 printUsage();
                 return true;
             }
@@ -595,7 +597,7 @@ private:
             {
                 return 1;
             }
-            writefln("Unknown command: %s", opt);
+            writefln!"Unknown command: %s"(opt);
             printUsage();
             return 1;
         }
@@ -614,7 +616,7 @@ private:
         }
         else
         {
-            writefln("Try with '-h' for help with commands + options");
+            writeln("Try with '-h' for help with commands + options");
             printUsage();
             return 1;
         }
