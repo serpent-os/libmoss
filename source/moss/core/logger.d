@@ -5,15 +5,14 @@
  */
 
 /**
- * moss.core.logging
+ * moss.core.logger
  *
- * Improves logging experience to provide a more normalised terminal
- * experience.
+ * Add coloured output tailored for a better terminal experience.
  *
  * Authors: Copyright © 2022 Serpent OS Developers
  * License: Zlib
  */
-module moss.core.logging;
+module moss.core.logger;
 
 public import std.experimental.logger;
 
@@ -47,11 +46,11 @@ public enum ColorLoggerFlags
 
 /**
  * This should be performed in the main routine of a module that
- * wishes to use logging. For now we only set the sharedLogger to
+ * wishes to use logging. For now we only set the sharedLog to
  * a new instance of the logger.
  *
  */
-public static void configureLogging(ColorLoggerFlags flags = ColorLoggerFlags.Color) @trusted nothrow
+public static void configureLogger(ColorLoggerFlags flags = ColorLoggerFlags.Color) @trusted nothrow
 {
     __gshared ColorLogger logger;
     assumeWontThrow(() @trusted {
