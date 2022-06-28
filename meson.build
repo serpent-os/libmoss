@@ -3,7 +3,7 @@ project(
 	['d'],
 	version: '0.0.0',
 	license: [
-		'ZLib',
+		'Zlib',
 	]
 )
 
@@ -28,7 +28,7 @@ libmoss_core_sources = [
 	'source/moss/core/c.d',
 	'source/moss/core/fetchcontext.d',
 	'source/moss/core/mounts.d',
-	'source/moss/core/logging.d',
+	'source/moss/core/logger.d',
 ]
 
 # Expose source dependencies
