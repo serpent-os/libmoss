@@ -104,8 +104,6 @@ public final class FetchController : FetchContext
             worker.allowWork();
         }
 
-        import std.stdio : writeln, writef;
-
         /* While workers live, let them get null responses */
         while (livingWorkers > 0)
         {
