@@ -307,7 +307,7 @@ private unittest
 private unittest
 {
     import std.file : exists, isDir;
-    import std.stdio : writeln;
+    import std.stdio : writefln;
 
     auto result = IOUtil.createTemporaryDirectory("/tmp/ioutil.XXXXXX");
     string name = result.tryMatch!((string name) => name);
@@ -315,7 +315,7 @@ private unittest
     {
         cstdlib.rmdir(name.toStringz);
     }
-    writeln("mkdtemp: ", name);
+    stdout.writefln!"mkdtemp: %s"(name);
     assert(name.exists);
     assert(name.isDir);
 }
