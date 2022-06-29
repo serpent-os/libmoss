@@ -220,5 +220,5 @@ unittest
 
     auto deps = an.bucket("main").dependencies;
     assert(!deps.empty, "Cannot find dependenies for this test");
-    writeln(deps);
+    stdout.writeln(deps);
 }

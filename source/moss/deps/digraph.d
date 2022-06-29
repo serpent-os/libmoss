@@ -240,12 +240,12 @@ public final class DirectedAcyclicalGraph(L)
         {
             if (v.edges.empty)
             {
-                output.writefln("%s;", v.label.to!string);
+                output.writefln!"%s;"(v.label.to!string);
                 continue;
             }
             foreach (edge; v.edges)
             {
-                output.writefln("%s -> %s;", v.label.to!string, getVertex(edge).label.to!string);
+                output.writefln!"%s -> %s;"(v.label.to!string, getVertex(edge).label.to!string);
             }
         }
         output.writeln("}");
