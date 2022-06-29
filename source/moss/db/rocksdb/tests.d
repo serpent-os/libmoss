@@ -253,7 +253,6 @@ private unittest
 
     db.set("john", 100);
     db.set("user 100", "bobby is my name");
-    import std.stdio : writeln;
 
     ensureMatchResult(db, "john", 100);
     ensureMatchResult(db, "user 100", "bobby is my name");
