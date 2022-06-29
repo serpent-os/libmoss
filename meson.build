@@ -2,7 +2,7 @@ project('moss-vendor',
     ['d'],
     version: '0.0.0',
     license: [
-        'ZLib',
+        'Zlib',
     ]
 )
 
