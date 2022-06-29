@@ -21,6 +21,8 @@ import moss.format.binary.writer;
 import moss.format.binary : mossFormatVersionNumber;
 import moss.format.binary.payload.meta;
 import moss.core : computeSHA256;
+import std.experimental.logger;
+import std.string: format;
 
 /**
  * A RepoWriter is responsible for emitting a binary repository to disk.
@@ -68,7 +70,6 @@ public final class RepoWriter
     void addPackage(const(string) inpPath, const(string) packageURI)
     {
         import std.exception : enforce;
-        import std.stdio : writeln;
 
         auto fi = File(inpPath, "rb");
         auto reader = new Reader(fi);
@@ -80,7 +81,7 @@ public final class RepoWriter
 
         if (reader.fileType != MossFileType.Binary)
         {
-            writeln("Skipping non binary file: ", reader.fileType);
+            info(format!"Skipping non binary file: %s"(reader.fileType));
         }
 
         auto metaPayload = reader.payload!MetaPayload();

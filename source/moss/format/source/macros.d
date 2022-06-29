@@ -21,6 +21,8 @@ import moss.format.source.yml_helper;
 import moss.format.source.package_definition;
 import moss.format.source.tuning_flag;
 import moss.format.source.tuning_group;
+import std.experimental.logger;
+import std.string: format;
 
 /**
  * An Action encompasses behaviour defined in the `actions`
@@ -115,9 +117,7 @@ public:
         }
         catch (Exception ex)
         {
-            import std.stdio : stderr, writefln;
-
-            stderr.writefln("Failed to parse: %s", _file.name);
+            error(format!"Failed to parse: %s"(_file.name));
             throw ex;
         }
     }

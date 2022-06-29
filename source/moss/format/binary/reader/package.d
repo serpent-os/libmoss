@@ -196,7 +196,6 @@ public final class Reader
     static Payload getPayloadImplForType(PayloadType type) @trusted
     {
         import std.exception : enforce;
-        import std.stdio : writeln;
 
         /* It's ok to return NULL */
         if (!(type in registeredHandlers))

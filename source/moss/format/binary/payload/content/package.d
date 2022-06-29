@@ -16,6 +16,7 @@
 module moss.format.binary.payload.content;
 
 public import moss.format.binary.payload;
+import std.experimental.logger;
 
 /**
  * The currently writing version for ContentPayload
@@ -75,9 +76,7 @@ public:
      */
     override void decode(scope ReaderToken rdr) @trusted
     {
-        import std.stdio : writeln;
-
-        writeln("ContentPayload.decode(): Implement me");
+        error("ContentPayload.decode(): Implement me");
     }
 
     /**
