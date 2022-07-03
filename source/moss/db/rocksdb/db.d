@@ -58,7 +58,14 @@ public class RDBDatabase : Database
         }
 
         /* Establish the DB connection. TODO: Support read-only connections  */
-        _dbCon = new rocksdb.Database(dbOpts, pathURI);
+        if (mut == DatabaseMutability.ReadOnly)
+        {
+            _dbCon = rocksdb.Database.openReadOnly(dbOpts, pathURI);
+        }
+        else
+        {
+            _dbCon = rocksdb.Database.open(dbOpts, pathURI);
+        }
         rootBucket = new RDBBucket(this, null);
     }
 
