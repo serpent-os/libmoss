@@ -22,7 +22,7 @@ import moss.format.binary : mossFormatVersionNumber;
 import moss.format.binary.payload.meta;
 import moss.core : computeSHA256;
 import std.experimental.logger;
-import std.string: format;
+import std.string : format;
 
 /**
  * A RepoWriter is responsible for emitting a binary repository to disk.

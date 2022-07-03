@@ -18,18 +18,22 @@ module moss.format.source.yml_helper;
 
 import dyaml;
 import moss.format.source.schema;
+import std.exception : enforce;
+import std.experimental.logger;
 import std.stdint;
+import std.string : format;
 
 /**
  * Set value appropriately.
  */
 void setValue(T)(ref Node node, ref T value, YamlSchema schema)
 {
-    import std.exception : enforce;
     import std.algorithm : canFind;
-    import std.string : format;
 
-    enforce(node.nodeID == NodeID.scalar, "Expected " ~ T.stringof ~ " for " ~ node.tag);
+    enforce(node.nodeID == NodeID.scalar, format!"Expected %s for %s"(T.stringof, node.tag));
+
+    trace(format!"Function %s parsing node: '%s' with value: '%s' via schema: '%s'"(__FUNCTION__,
+            node, value, schema));
 
     static if (is(T == int64_t))
     {
@@ -48,14 +52,16 @@ void setValue(T)(ref Node node, ref T value, YamlSchema schema)
         value = node.as!string;
         if (schema.acceptableValues.length < 1)
         {
+            trace(format!"'- schema '%s' has acceptableValues.length < 1"(schema));
             return;
         }
 
         /* Make sure the string is an acceptable value */
         enforce(schema.acceptableValues.canFind(value),
-                "setValue(): %s not a valid value for %s. Acceptable values: %s".format(value,
+                format!"setValue(): %s not a valid value for %s. Acceptable values: %s"(value,
                     schema.name, schema.acceptableValues));
     }
+    trace(format!"'- value '%s' parsed as type '%s'"(value, T.stringof));
 }
 
 /**
@@ -63,21 +69,25 @@ void setValue(T)(ref Node node, ref T value, YamlSchema schema)
  */
 void setValueArray(T)(ref Node node, ref T value)
 {
-    import std.exception : enforce;
 
     /* We can support a single value *or* a list. */
-    enforce(node.nodeID != NodeID.mapping, "Expected " ~ T.stringof ~ " for " ~ node.tag);
+    enforce(node.nodeID != NodeID.mapping, format!"Expected %s for %s"(T.stringof, node.tag));
+
+    trace(format!"Function %s parsing node: '%s' with value: '%s'"(__FUNCTION__, node, value));
 
     switch (node.nodeID)
     {
         static if (is(T == string) || is(T == string[]))
         {
     case NodeID.scalar:
+            trace(format!"  '- parsing '%s' as string scalar"(node));
             value ~= node.as!string;
             break;
     case NodeID.sequence:
+            trace("  '- parsing sequence as string scalars:");
             foreach (ref Node v; node)
             {
+                trace(format!"    '- parsing '%s' as string scalar"(node));
                 value ~= v.as!string;
             }
             break;
@@ -85,16 +95,21 @@ void setValueArray(T)(ref Node node, ref T value)
         else
         {
     case NodeID.scalar:
+            auto v = node.as!(typeof(value[0]));
+            trace(format!"  '- parsing '%s' as '%s'"(node, node.as!(typeof(value[0]))));
             value ~= node.as!(typeof(value[0]));
             break;
     case NodeID.sequence:
+            trace(format!"  '- parsing sequence:"(node));
             foreach (ref Node v; node)
             {
+                trace(format!"  '- parsing '%s' as '%s'"(node, node.as!(typeof(value[0]))));
                 value ~= v.as(typeof(value[0]));
             }
             break;
         }
     default:
+        trace("  '- parsing done.");
         break;
     }
 }
@@ -106,7 +121,6 @@ void setValueArray(T)(ref Node node, ref T value)
 void parseSection(T)(ref Node node, ref T section) @system
 {
     import std.traits : getUDAs, moduleName;
-    import std.exception : enforce;
 
     /* Walk members */
     static foreach (member; __traits(allMembers, T))
