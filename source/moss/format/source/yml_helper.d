@@ -50,7 +50,7 @@ void setValue(T)(ref Node node, ref T value, YamlSchema schema)
     else
     {
         value = node.as!string;
-        trace(format!"  '- parsed '%s' as type <%s>"(value, T.stringof));
+        trace(format!"  '- parsed '%s' as <%s>"(value, T.stringof));
         if (schema.acceptableValues.length < 1)
         {
             trace("  '- (schema acceptableValues.length < 1, skipping)");
