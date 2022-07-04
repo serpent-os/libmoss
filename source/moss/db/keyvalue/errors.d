@@ -54,9 +54,9 @@ public struct DatabaseError
 /**
  * Simply allowing testing err.isNull() golang style.
  */
-public alias DatabaseReturn = Nullable!(DatabaseError, DatabaseError.init);
+public alias DatabaseResult = Nullable!(DatabaseError, DatabaseError.init);
 
 /**
  * NoDatabaseError = success.
  */
-public static enum NoDatabaseError = DatabaseReturn(DatabaseError.init);
+public static enum NoDatabaseError = DatabaseResult(DatabaseError.init);

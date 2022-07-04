@@ -40,9 +40,9 @@ public final class Database
     /**
      * Connect the driver to the database
      */
-    DatabaseReturn connect() @safe
+    DatabaseResult connect() @safe
     {
-        return DatabaseReturn(DatabaseError(DatabaseErrorCode.UnsupportedDriver, "onoes"));
+        return DatabaseResult(DatabaseError(DatabaseErrorCode.UnsupportedDriver, "onoes"));
     }
 
 private:
