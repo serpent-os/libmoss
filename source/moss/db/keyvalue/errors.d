@@ -16,11 +16,12 @@
 module moss.db.keyvalue.errors;
 
 public import std.sumtype;
+public import std.stdint : uint8_t;
 
 /**
  * Error code. 0 = good.
  */
-public enum DatabaseErrorCode
+public enum DatabaseErrorCode : uint8_t
 {
     None = 0,
     UnsupportedDriver,
