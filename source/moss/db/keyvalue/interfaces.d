@@ -89,20 +89,20 @@ public interface GenericDatabase
     /**
      * Access a bucket in the DB
      */
-    DatabaseError bucket(in ubyte[] prefix, void delegate(scope Bucket) bucketCall) const;
+    DatabaseError bucket(in ubyte[] prefix, void delegate(scope Bucket) bucketCall) const @safe;
 
     /**
      * Start read only transaction of the DB
      */
-    DatabaseError view(void delegate(in Transaction tx) @safe) const nothrow;
+    DatabaseError view(void delegate(in Transaction tx) @safe) const @safe;
 
     /**
      * Start read-write transaction of the DB
      */
-    DatabaseError update(void delegate(scope Transaction tx));
+    DatabaseError update(void delegate(scope Transaction tx)) @safe;
 
     /**
      * Start a new transaction that is manually controlled.
      */
-    ManualTransaction begin();
+    ManualTransaction begin() @safe;
 }
