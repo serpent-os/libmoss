@@ -26,7 +26,7 @@ public struct MemoryDriver
     /**
      * noop
      */
-    void init(const(string) uri) @safe
+    void connect(const(string) uri) @safe
     {
     }
 

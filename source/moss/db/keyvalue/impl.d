@@ -38,7 +38,7 @@ package final class DatabaseImpl(D) : Database
         /* Init the driver now. Abort if all goes wrong */
         assumeWontThrow(() @trusted {
             driver.refCountedStore.ensureInitialized();
-            driver.refCountedPayload.init(uri);
+            driver.connect(uri);
         }());
     }
 
