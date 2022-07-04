@@ -23,7 +23,7 @@ import std.experimental.typecons : wrap;
  */
 public interface Driver
 {
-    void init(in string uri) @safe;
+    void init(const(string) uri) @safe;
     void close() @safe;
 }
 

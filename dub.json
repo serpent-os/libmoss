@@ -15,5 +15,9 @@
 		"moss-core": {
 			"path": "../moss-core"
 		}
-	}
+	},
+	"dflags": [
+		"-preview=dip1000",
+		"-preview=in"
+	]
 }
