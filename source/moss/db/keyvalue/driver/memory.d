@@ -26,14 +26,14 @@ public struct MemoryDriver
     /**
      * noop
      */
-    void init(in string uri)
+    void init(in string uri) @safe
     {
     }
 
     /**
      * noop
      */
-    void close()
+    void close() @safe
     {
     }
 }
