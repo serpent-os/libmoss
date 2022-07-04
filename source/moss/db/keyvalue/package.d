@@ -40,9 +40,9 @@ public final class Database
     /**
      * Connect the driver to the database
      */
-    DatabaseErrorCode connect() @safe
+    DatabaseReturn connect() @safe
     {
-        return DatabaseErrorCode.None;
+        return DatabaseReturn(DatabaseError(DatabaseErrorCode.UnsupportedDriver, "onoes"));
     }
 
 private:
@@ -55,5 +55,5 @@ private:
 {
     auto db = new Database("memory://memoryDriver");
     auto result = db.connect();
-    assert(result == 0);
+    assert(result.isNull, result.get.message);
 }
