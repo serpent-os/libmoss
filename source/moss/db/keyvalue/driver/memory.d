@@ -15,25 +15,24 @@
 
 module moss.db.keyvalue.driver.memory;
 
+public import moss.db.keyvalue.driver;
+
 /**
  * Implementation using an associative array :)
  */
-public struct MemoryDriver
+public final class MemoryDriver : Driver
 {
-    /* no copies pls */
-    @disable this(MemoryDriver other);
-
     /**
      * noop
      */
-    void connect(const(string) uri) @safe
+    override void connect(const(string) uri) @safe
     {
     }
 
     /**
      * noop
      */
-    void close() @safe
+    override void close() @safe
     {
     }
 }

@@ -19,7 +19,7 @@ import moss.db.keyvalue;
 import moss.db.keyvalue.errors;
 import moss.db.keyvalue.driver;
 import std.exception : assumeWontThrow;
-import std.typecons : RefCounted, RefCountedAutoInitialize;
+import std.traits : isFinal;
 
 /**
  * A Database is a managed resource
@@ -27,19 +27,13 @@ import std.typecons : RefCounted, RefCountedAutoInitialize;
 package final class DatabaseImpl(D) : Database
 {
 
-    static assert(isDriver!D, D.stringof ~ " does not seem to be a valid driver");
-
     /**
      * Construct a new DatabaseImpl using the
      * given input URI
      */
     this(string uri) @safe nothrow
     {
-        /* Init the driver now. Abort if all goes wrong */
-        assumeWontThrow(() @trusted {
-            driver.refCountedStore.ensureInitialized();
-            driver.connect(uri);
-        }());
+        driver = new D();
     }
 
     ~this()
@@ -63,7 +57,5 @@ package final class DatabaseImpl(D) : Database
 
 private:
 
-    alias RCDriver = RefCounted!(DriverImpl, RefCountedAutoInitialize.no);
-    alias DriverImpl = D;
-    RCDriver driver;
+    Driver driver;
 }
