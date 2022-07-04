@@ -17,29 +17,6 @@ module moss.db.keyvalue;
 import moss.db.keyvalue.driver;
 import moss.db.keyvalue.errors;
 
-public alias ViewHandler = void delegate(in ReadableView view) @safe nothrow;
-public alias UpdateHandler = void delegate(scope WritableView view) @safe nothrow;
-
-public interface ReadableView
-{
-
-}
-
-public interface WritableView
-{
-
-}
-
-public interface Readable
-{
-    DatabaseErrorCode view(ViewHandler viewHandler) @safe nothrow;
-}
-
-public interface Writable
-{
-    DatabaseErrorCode update(UpdateHandler updateHandler) @safe nothrow;
-}
-
 /**
  * KeyValue database, driver backed
  */
