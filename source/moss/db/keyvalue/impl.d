@@ -17,6 +17,7 @@ module moss.db.keyvalue.impl;
 
 import moss.db.keyvalue : Database;
 import moss.db.keyvalue.driver;
+import std.typecons : RefCounted, RefCountedAutoInitialize;
 
 /**
  * A Database is a managed resource
@@ -32,10 +33,21 @@ package final class DatabaseImpl(D) : Database
      */
     this(string uri)
     {
+        /* Init the driver now */
+        driver.refCountedStore.ensureInitialized();
+        driver.refCountedPayload.init(uri);
+    }
+
+    ~this()
+    {
+        /* Ensure correct cleanup */
+        driver.close();
+        driver.destroy();
     }
 
 private:
 
+    alias RCDriver = RefCounted!(DriverImpl, RefCountedAutoInitialize.no);
     alias DriverImpl = D;
-    DriverImpl driver;
+    RCDriver driver;
 }

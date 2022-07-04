@@ -20,4 +20,20 @@ module moss.db.keyvalue.driver.memory;
  */
 public struct MemoryDriver
 {
+    /* no copies pls */
+    @disable this(MemoryDriver other);
+
+    /**
+     * noop
+     */
+    void init(in string uri)
+    {
+    }
+
+    /**
+     * noop
+     */
+    void close()
+    {
+    }
 }
