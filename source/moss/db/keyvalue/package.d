@@ -14,9 +14,10 @@
  */
 
 module moss.db.keyvalue;
-import std.string : split;
+import std.string : split, format;
 import std.exception : enforce;
 import moss.db.keyvalue.impl;
+import moss.db.keyvalue.errors;
 
 /**
  * We hide a lot of dirty internals to support multiple driver
@@ -24,32 +25,50 @@ import moss.db.keyvalue.impl;
  */
 public interface Database
 {
-    public static Database open(in string uri)
+    /**
+     * Open a database from the given URI
+     */
+    public static SumType!(Database, DatabaseError) open(in string uri)
     in
     {
         assert(uri !is null, "URI cannot be null");
     }
     do
     {
+        Database newDatabase = null;
+        string scheme = "(unspecified)";
+
         /* We need to split this into a URL to validate it.. */
         auto splits = uri.split(":");
-        enforce(splits.length > 0, "Database.open(): URI MUST includ the scheme (i.e. rocksdb://");
-        auto scheme = splits[0];
+        if (splits.length < 1)
+        {
+            goto no_db;
+        }
+        scheme = splits[0];
 
         switch (scheme)
         {
         case "memory":
             import moss.db.keyvalue.driver.memory;
 
-            return new DatabaseImpl!MemoryDriver(uri);
+            newDatabase = new DatabaseImpl!MemoryDriver(uri);
+            break;
         default:
-            throw new Exception("onoes: " ~ uri);
+            newDatabase = null;
         }
+
+    no_db:
+        if (newDatabase !is null)
+        {
+            return SumType!(Database, DatabaseError)(newDatabase);
+        }
+        return SumType!(Database, DatabaseError)(DatabaseError(DatabaseErrorCode.UnsupportedDriver,
+                format!"No drivers found to match scheme '%s'"(scheme)));
     }
 }
 
 unittest
 {
-    auto db = Database.open("memory://memoryDriver");
-    assert(db !is null, "Could not open RocksDB database!");
+    auto dbResult = Database.open("memory://memoryDriver");
+    Database db = dbResult.tryMatch!((Database db) => db);
 }
