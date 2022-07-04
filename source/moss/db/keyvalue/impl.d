@@ -49,15 +49,15 @@ package final class DatabaseImpl(D) : Database
         driver.destroy();
     }
 
-    override DatabaseErrorCode view(void delegate(in ReadableView view) @safe nothrow viewHandler) @safe nothrow const
+    override DatabaseErrorCode view(ViewHandler viewHandler) @safe nothrow const
     {
         viewHandler(this);
         return DatabaseErrorCode.None;
     }
 
-    override DatabaseErrorCode update(void delegate(scope WritableView view) @safe nothrow viewHandler) @safe nothrow
+    override DatabaseErrorCode update(UpdateHandler updateHandler) @safe nothrow
     {
-        viewHandler(this);
+        updateHandler(this);
         return DatabaseErrorCode.None;
     }
 

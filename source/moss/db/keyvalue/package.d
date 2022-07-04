@@ -19,6 +19,9 @@ import std.exception : enforce;
 import moss.db.keyvalue.impl;
 import moss.db.keyvalue.errors;
 
+public alias ViewHandler = void delegate(in ReadableView view) @safe nothrow;
+public alias UpdateHandler = void delegate(scope WritableView view) @safe nothrow;
+
 public interface ReadableView
 {
 
@@ -31,12 +34,12 @@ public interface WritableView
 
 public interface Readable
 {
-    DatabaseErrorCode view(void delegate(in ReadableView view) @safe nothrow viewHandler) @safe nothrow;
+    DatabaseErrorCode view(ViewHandler viewHandler) @safe nothrow;
 }
 
 public interface Writable
 {
-    DatabaseErrorCode update(void delegate(scope WritableView view) @safe nothrow viewHandler) @safe nothrow;
+    DatabaseErrorCode update(UpdateHandler updateHandler) @safe nothrow;
 }
 
 /**
