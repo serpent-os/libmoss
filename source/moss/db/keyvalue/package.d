@@ -38,6 +38,10 @@ public interface Database
 
         switch (scheme)
         {
+        case "memory":
+            import moss.db.keyvalue.driver.memory;
+
+            return new DatabaseImpl!MemoryDriver(uri);
         default:
             throw new Exception("onoes: " ~ uri);
         }
@@ -46,6 +50,6 @@ public interface Database
 
 unittest
 {
-    auto db = Database.open("rocksdb://myDB.db");
+    auto db = Database.open("memory://memoryDriver");
     assert(db !is null, "Could not open RocksDB database!");
 }

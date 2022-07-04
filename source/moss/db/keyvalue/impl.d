@@ -15,11 +15,16 @@
 
 module moss.db.keyvalue.impl;
 
+import moss.db.keyvalue : Database;
+import moss.db.keyvalue.driver;
+
 /**
  * A Database is a managed resource
  */
 package final class DatabaseImpl(D) : Database
 {
+
+    static assert(isDriver!D, D.stringof ~ " does not seem to be a valid driver");
 
     /**
      * Construct a new DatabaseImpl using the
