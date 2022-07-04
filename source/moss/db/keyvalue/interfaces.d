@@ -59,6 +59,7 @@ public interface Transaction : Readable, Writable
 {
     /**
      * Retrieve a bucket from the transaction
+     * Note that the bucket only persists in the current *scope*
      */
     DatabaseError bucket(in ubyte[] prefix, void delegate(scope Bucket) @safe bucketCall) @safe;
 }
