@@ -25,7 +25,7 @@ public interface Readable
     /**
      * Retrieve current value indicated by key
      */
-    DatabaseError get(in ubyte[] key, out ubyte[] value) @safe;
+    DatabaseReturn get(in ubyte[] key, out ubyte[] value) @safe;
 }
 
 /**
@@ -36,12 +36,12 @@ public interface Writable
     /**
      * Set `key` to `value`
      */
-    DatabaseError set(in ubyte[] key, in ubyte[] value) @safe;
+    DatabaseReturn set(in ubyte[] key, in ubyte[] value) @safe;
 
     /**
      * Remove key / value pair from storage
      */
-    DatabaseError removeKey(in ubyte[] key) @safe;
+    DatabaseReturn removeKey(in ubyte[] key) @safe;
 }
 
 /**
@@ -52,7 +52,7 @@ public interface Bucket : Readable, Writable
     /**
      * Remove this bucket and all children
      */
-    DatabaseError remove() @safe;
+    DatabaseReturn remove() @safe;
 }
 
 /**
@@ -64,7 +64,7 @@ public interface Transaction : Readable, Writable
      * Retrieve a bucket from the transaction
      * Note that the bucket only persists in the current *scope*
      */
-    DatabaseError bucket(in ubyte[] prefix, void delegate(scope Bucket) @safe bucketCall) @safe;
+    DatabaseReturn bucket(in ubyte[] prefix, void delegate(scope Bucket) @safe bucketCall) @safe;
 }
 
 /**
@@ -76,12 +76,12 @@ public interface ManualTransaction : Transaction
     /**
      * Try to commit the transaction
      */
-    DatabaseError commit() @safe;
+    DatabaseReturn commit() @safe;
 
     /**
      * Try to rollback the transaction
      */
-    DatabaseError rollback() @safe;
+    DatabaseReturn rollback() @safe;
 }
 
 /**
@@ -92,17 +92,17 @@ public interface GenericDatabase
     /**
      * Access a bucket in the DB
      */
-    DatabaseError bucket(in ubyte[] prefix, void delegate(scope Bucket) @safe bucketCall) const @safe;
+    DatabaseReturn bucket(in ubyte[] prefix, void delegate(scope Bucket) @safe bucketCall) const @safe;
 
     /**
      * Start read only transaction of the DB
      */
-    DatabaseError view(void delegate(in Transaction tx) @safe) const @safe;
+    DatabaseReturn view(void delegate(in Transaction tx) @safe) const @safe;
 
     /**
      * Start read-write transaction of the DB
      */
-    DatabaseError update(void delegate(scope Transaction tx) @safe) @safe;
+    DatabaseReturn update(void delegate(scope Transaction tx) @safe) @safe;
 
     /**
      * Start a new transaction that is manually controlled.

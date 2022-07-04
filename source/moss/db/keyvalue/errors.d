@@ -15,7 +15,7 @@
 
 module moss.db.keyvalue.errors;
 
-public import std.sumtype;
+public import std.typecons : Nullable;
 public import std.stdint : uint8_t;
 
 /**
@@ -32,6 +32,31 @@ public enum DatabaseErrorCode : uint8_t
  */
 public struct DatabaseError
 {
+    /**
+     * Encountered error code.
+     */
     DatabaseErrorCode code;
+
+    /**
+     * Error message, if any
+     */
     string message;
+
+    /**
+     * Return our error string in hooman form
+     */
+    pure string toString() const @safe @nogc nothrow
+    {
+        return message;
+    }
 }
+
+/**
+ * Simply allowing testing err.isNull() golang style.
+ */
+public alias DatabaseReturn = Nullable!(DatabaseError, DatabaseError.init);
+
+/**
+ * NoDatabaseError = success.
+ */
+public static enum NoDatabaseError = DatabaseReturn(DatabaseError.init);
