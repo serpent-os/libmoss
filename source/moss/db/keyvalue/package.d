@@ -28,7 +28,7 @@ public interface Database
     /**
      * Open a database from the given URI
      */
-    public static SumType!(Database, DatabaseError) open(in string uri)
+    public static SumType!(Database, DatabaseError) open(in string uri) @safe
     in
     {
         assert(uri !is null, "URI cannot be null");

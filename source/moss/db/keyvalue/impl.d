@@ -17,6 +17,7 @@ module moss.db.keyvalue.impl;
 
 import moss.db.keyvalue : Database;
 import moss.db.keyvalue.driver;
+import std.exception : assumeWontThrow;
 import std.typecons : RefCounted, RefCountedAutoInitialize;
 
 /**
@@ -31,11 +32,13 @@ package final class DatabaseImpl(D) : Database
      * Construct a new DatabaseImpl using the
      * given input URI
      */
-    this(string uri)
+    this(string uri) @safe nothrow
     {
-        /* Init the driver now */
-        driver.refCountedStore.ensureInitialized();
-        driver.refCountedPayload.init(uri);
+        /* Init the driver now. Abort if all goes wrong */
+        assumeWontThrow(() @trusted {
+            driver.refCountedStore.ensureInitialized();
+            driver.refCountedPayload.init(uri);
+        }());
     }
 
     ~this()
