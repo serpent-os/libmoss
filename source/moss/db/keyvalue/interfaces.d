@@ -41,7 +41,7 @@ public interface Writable
     /**
      * Remove key / value pair from storage
      */
-    DatabaseError remove(in ubyte[] key) @safe;
+    DatabaseError removeKey(in ubyte[] key) @safe;
 }
 
 /**
@@ -49,7 +49,10 @@ public interface Writable
  */
 public interface Bucket : Readable, Writable
 {
-
+    /**
+     * Remove this bucket and all children
+     */
+    DatabaseError remove() @safe;
 }
 
 /**
