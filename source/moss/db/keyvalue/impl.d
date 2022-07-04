@@ -15,7 +15,8 @@
 
 module moss.db.keyvalue.impl;
 
-import moss.db.keyvalue : Database;
+import moss.db.keyvalue;
+import moss.db.keyvalue.errors;
 import moss.db.keyvalue.driver;
 import std.exception : assumeWontThrow;
 import std.typecons : RefCounted, RefCountedAutoInitialize;
@@ -46,6 +47,18 @@ package final class DatabaseImpl(D) : Database
         /* Ensure correct cleanup */
         driver.close();
         driver.destroy();
+    }
+
+    override DatabaseErrorCode view(void delegate(in ReadableView view) @safe nothrow viewHandler) @safe nothrow const
+    {
+        viewHandler(this);
+        return DatabaseErrorCode.None;
+    }
+
+    override DatabaseErrorCode update(void delegate(scope WritableView view) @safe nothrow viewHandler) @safe nothrow
+    {
+        viewHandler(this);
+        return DatabaseErrorCode.None;
     }
 
 private:

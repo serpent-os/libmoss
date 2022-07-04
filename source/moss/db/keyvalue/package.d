@@ -19,11 +19,31 @@ import std.exception : enforce;
 import moss.db.keyvalue.impl;
 import moss.db.keyvalue.errors;
 
+public interface ReadableView
+{
+
+}
+
+public interface WritableView
+{
+
+}
+
+public interface Readable
+{
+    DatabaseErrorCode view(void delegate(in ReadableView view) @safe nothrow viewHandler) @safe nothrow;
+}
+
+public interface Writable
+{
+    DatabaseErrorCode update(void delegate(scope WritableView view) @safe nothrow viewHandler) @safe nothrow;
+}
+
 /**
  * We hide a lot of dirty internals to support multiple driver
  * implementations in an agnostic fashion
  */
-public interface Database
+public interface Database : Readable, Writable, ReadableView, WritableView
 {
     /**
      * Open a database from the given URI
@@ -71,4 +91,21 @@ unittest
 {
     auto dbResult = Database.open("memory://memoryDriver");
     Database db = dbResult.tryMatch!((Database db) => db);
+    import std.stdio : writeln;
+
+    /* Try RO */
+    db.view((in view) {
+        debug
+        {
+            writeln("Reading view");
+        }
+    });
+
+    /* Try RW */
+    db.update((view) {
+        debug
+        {
+            writeln("Mutating view");
+        }
+    });
 }
