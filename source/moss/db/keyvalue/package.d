@@ -14,9 +14,7 @@
  */
 
 module moss.db.keyvalue;
-import std.string : split, format;
-import std.exception : enforce;
-import moss.db.keyvalue.impl;
+import moss.db.keyvalue.driver;
 import moss.db.keyvalue.errors;
 
 public alias ViewHandler = void delegate(in ReadableView view) @safe nothrow;
@@ -43,72 +41,42 @@ public interface Writable
 }
 
 /**
- * We hide a lot of dirty internals to support multiple driver
- * implementations in an agnostic fashion
+ * KeyValue database, driver backed
  */
-public interface Database : Readable, Writable, ReadableView, WritableView
+public final class Database
 {
+    @disable this();
+
+    invariant ()
+    {
+        assert(uri !is null);
+    }
+
     /**
-     * Open a database from the given URI
+     * Construct new Database from the given URI
      */
-    public static SumType!(Database, DatabaseError) open(const(string) uri) @safe
-    in
+    this(const(string) uri) @safe @nogc nothrow
     {
-        assert(uri !is null, "URI cannot be null");
+        this.uri = uri;
     }
-    do
+
+    /**
+     * Connect the driver to the database
+     */
+    DatabaseErrorCode connect() @safe
     {
-        Database newDatabase = null;
-        string scheme = "(unspecified)";
-
-        /* We need to split this into a URL to validate it.. */
-        auto splits = uri.split(":");
-        if (splits.length < 1)
-        {
-            goto no_db;
-        }
-        scheme = splits[0];
-
-        switch (scheme)
-        {
-        case "memory":
-            import moss.db.keyvalue.driver.memory;
-
-            newDatabase = new DatabaseImpl!MemoryDriver(uri);
-            break;
-        default:
-            newDatabase = null;
-        }
-
-    no_db:
-        if (newDatabase !is null)
-        {
-            return SumType!(Database, DatabaseError)(newDatabase);
-        }
-        return SumType!(Database, DatabaseError)(DatabaseError(DatabaseErrorCode.UnsupportedDriver,
-                format!"No drivers found to match scheme '%s'"(scheme)));
+        return DatabaseErrorCode.None;
     }
+
+private:
+
+    string uri;
+    Driver driver;
 }
 
-unittest
+@safe unittest
 {
-    auto dbResult = Database.open("memory://memoryDriver");
-    Database db = dbResult.tryMatch!((Database db) => db);
-    import std.stdio : writeln;
-
-    /* Try RO */
-    db.view((in view) {
-        debug
-        {
-            writeln("Reading view");
-        }
-    });
-
-    /* Try RW */
-    db.update((view) {
-        debug
-        {
-            writeln("Mutating view");
-        }
-    });
+    auto db = new Database("memory://memoryDriver");
+    auto result = db.connect();
+    assert(result == 0);
 }
