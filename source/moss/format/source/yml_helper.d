@@ -32,8 +32,8 @@ void setValue(T)(ref Node node, ref T value, YamlSchema schema)
 
     enforce(node.nodeID == NodeID.scalar, format!"Expected %s for %s"(T.stringof, node.tag));
 
-    trace(format!"Function %s parsing node: '%s' with value: '%s' via schema: '%s'"(__FUNCTION__,
-            node, value, schema));
+    trace(format!"Function %s parsing node:\n  '- %s\n  '- via schema: %s"(__FUNCTION__,
+            node, schema));
 
     static if (is(T == int64_t))
     {
@@ -50,9 +50,10 @@ void setValue(T)(ref Node node, ref T value, YamlSchema schema)
     else
     {
         value = node.as!string;
+        trace(format!"  '- parsed '%s' as type <%s>"(value, T.stringof));
         if (schema.acceptableValues.length < 1)
         {
-            trace(format!"'- schema '%s' has acceptableValues.length < 1"(schema));
+            trace("  '- (schema acceptableValues.length < 1, skipping)");
             return;
         }
 
@@ -61,7 +62,7 @@ void setValue(T)(ref Node node, ref T value, YamlSchema schema)
                 format!"setValue(): %s not a valid value for %s. Acceptable values: %s"(value,
                     schema.name, schema.acceptableValues));
     }
-    trace(format!"'- value '%s' parsed as type '%s'"(value, T.stringof));
+    trace(format!"  '- parsed '%s' as type <%s>"(value, T.stringof));
 }
 
 /**
@@ -69,47 +70,45 @@ void setValue(T)(ref Node node, ref T value, YamlSchema schema)
  */
 void setValueArray(T)(ref Node node, ref T value)
 {
-
     /* We can support a single value *or* a list. */
     enforce(node.nodeID != NodeID.mapping, format!"Expected %s for %s"(T.stringof, node.tag));
 
-    trace(format!"Function %s parsing node: '%s' with value: '%s'"(__FUNCTION__, node, value));
+    trace(format!"Function %s parsing node:\n  '- %s"(__FUNCTION__, node));
 
     switch (node.nodeID)
     {
         static if (is(T == string) || is(T == string[]))
         {
     case NodeID.scalar:
-            trace(format!"  '- parsing '%s' as string scalar"(node));
             value ~= node.as!string;
+            trace(format!"  '- parsed '%s' as <string>"(node.as!string));
             break;
     case NodeID.sequence:
             trace("  '- parsing sequence as string scalars:");
             foreach (ref Node v; node)
             {
-                trace(format!"    '- parsing '%s' as string scalar"(node));
                 value ~= v.as!string;
+                trace(format!"    '- parsed '%s' as <string>"(v.as!string));
             }
             break;
         }
         else
         {
     case NodeID.scalar:
-            auto v = node.as!(typeof(value[0]));
-            trace(format!"  '- parsing '%s' as '%s'"(node, node.as!(typeof(value[0]))));
             value ~= node.as!(typeof(value[0]));
+            trace(format!"  '- parsed '%s' as <%s>"(node, node.as!(typeof(value[0]))));
             break;
     case NodeID.sequence:
-            trace(format!"  '- parsing sequence:"(node));
+            trace("  '- parsing sequence:");
             foreach (ref Node v; node)
             {
-                trace(format!"  '- parsing '%s' as '%s'"(node, node.as!(typeof(value[0]))));
-                value ~= v.as(typeof(value[0]));
+                value ~= v.as!(typeof(value[0]));
+                trace(format!"    '- parsed '%s' as <%s>"(v, typeof(value[0])));
             }
             break;
         }
     default:
-        trace("  '- parsing done.");
+        trace(format!"  '- node.nodeID %s not parsed?"(node.nodeID));
         break;
     }
 }
