@@ -97,19 +97,3 @@ public interface Transaction
      */
     ImmutableDatum get(in Bucket bucket, in ImmutableDatum key) const return @safe;
 }
-
-/**
- * Database has minimal API contracts except for Transaction entry
- */
-public interface Database
-{
-    /**
-     * Access a read-only view of the DB via a scoped lambda
-     */
-    void view(scope void delegate(in Transaction tx) @safe viewDg) @safe;
-
-    /**
-     * Access a read-write view of the DB via a scoped lambda.
-     */
-    void update(scope void delegate(scope Transaction tx) @safe updateDg) @safe;
-}
