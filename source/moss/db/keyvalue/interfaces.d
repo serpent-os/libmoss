@@ -59,3 +59,41 @@ public interface BucketIterator
      */
     pure void popFront() @safe nothrow return @nogc;
 }
+
+/**
+ * All interactions with our DB APIs require some form
+ * of transaction. In the event of an issue we'll peel
+ * back the transaction.
+ */
+public interface Transaction
+{
+    /**
+     * Construct a bucket identity
+     */
+    pure Bucket bucket(in string name) const return @safe;
+
+    /**
+     * Set a key in bucket to value (RW view only)
+     */
+    void set(in Bucket bucket, in ImmutableDatum key, in ImmutableDatum value) return @safe;
+
+    /**
+     * Remove a key/value pair from a bucket
+     */
+    void remove(in Bucket bucket, in ImmutableDatum key) return @safe;
+
+    /**
+     * Return a BucketIterator
+     */
+    BucketIterator iterator(in Bucket bucket) return @safe;
+
+    /**
+     * Remove a bucket and all children nodes
+     */
+    void removeBucket(in Bucket bucket) return @safe;
+
+    /**
+     * Retrieve a value from the bucket key (RO/RW views)
+     */
+    ImmutableDatum get(in Bucket bucket, in ImmutableDatum key) const return @safe;
+}
