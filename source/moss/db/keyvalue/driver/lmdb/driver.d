@@ -106,6 +106,18 @@ public final class LMDBDriver : Driver
         return new LMDBTransaction(this);
     }
 
+package:
+
+    /**
+     * Expose native environment handle
+     *
+     * Returns: MDB_env pointer
+     */
+    pragma(inline, true) pure MDB_env* environment() @safe @nogc nothrow
+    {
+        return env;
+    }
+
 private:
 
     /* MDB environment */
