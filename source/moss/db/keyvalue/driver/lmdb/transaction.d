@@ -100,15 +100,26 @@ public:
         return null;
     }
 
+    /**
+     * Commit, via mdb_txn_commit
+     */
     override Nullable!(DatabaseError, DatabaseError.init) commit() return @safe
     {
-        return Nullable!(DatabaseError, DatabaseError.init)(DatabaseError(
-                DatabaseErrorCode.Unimplemented, "Transaction.commit(): unimplemented"));
+        immutable rc = () @trusted { return mdb_txn_commit(txn); }();
+        if (rc != 0)
+        {
+            return Nullable!(DatabaseError, DatabaseError.init)(
+                    DatabaseError(DatabaseErrorCode.Transaction, lmdbStr(rc)));
+        }
+        return NoDatabaseError;
     }
 
+    /**
+     * Abort the TXN
+     */
     override void drop() return @safe
     {
-
+        () @trusted { mdb_txn_abort(txn); txn = null; }();
     }
 
 private:
