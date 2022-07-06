@@ -17,6 +17,8 @@ module moss.db.keyvalue.driver.lmdb;
 
 public import moss.db.keyvalue.driver;
 import moss.db.keyvalue.errors;
+import moss.db.keyvalue.interfaces;
+
 import std.conv : octal;
 import std.string : toStringz;
 
@@ -40,8 +42,22 @@ public final class LMDBDriver : Driver
      * Params:
      *      uri = Resource locator string
      */
-    override DatabaseResult connect(const(string) uri) @safe nothrow
+    override DatabaseResult connect(const(string) uri, DatabaseFlags flags) @safe nothrow
     {
+        int cFlags;
+
+        /* Create */
+        if ((flags & DatabaseFlags.CreateIfNotExists) == DatabaseFlags.CreateIfNotExists)
+        {
+            cFlags |= MDB_CREATE;
+        }
+
+        /* Read-only? */
+        if ((flags & DatabaseFlags.ReadOnly) == DatabaseFlags.ReadOnly)
+        {
+            cFlags |= MDB_RDONLY;
+        }
+
         /* Create environment first */
         int rc = () @trusted { return mdb_env_create(&env); }();
         if (rc != 0)
@@ -49,12 +65,9 @@ public final class LMDBDriver : Driver
             return DatabaseResult(DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
         }
 
-        /* Always create, we'll explicitly sync */
-        static int flags = MDB_CREATE | MDB_NOSYNC;
-
         /* Open 0600 connection to the DB */
         rc = () @trusted {
-            return mdb_env_open(env, uri.toStringz, flags, octal!600);
+            return mdb_env_open(env, uri.toStringz, cFlags, octal!600);
         }();
         if (rc != 0)
         {

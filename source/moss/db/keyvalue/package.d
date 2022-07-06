@@ -46,7 +46,7 @@ public final class Database
      * Params:
      *      uri = Resource locator
      */
-    static SumType!(Database, DatabaseError) open(string uri) @safe
+    static SumType!(Database, DatabaseError) open(string uri, DatabaseFlags flags = DatabaseFlags.None) @safe
     {
         auto splits = uri.split(":");
         immutable(string) scheme = splits.length > 1 ? splits[0] : "[unspecified]";
@@ -88,7 +88,7 @@ public final class Database
         }
 
         /* Try to connect now */
-        auto err = driver.connect(remainder);
+        auto err = driver.connect(remainder, flags);
         if (!err.isNull)
         {
             return SumType!(Database, DatabaseError)(err.get);

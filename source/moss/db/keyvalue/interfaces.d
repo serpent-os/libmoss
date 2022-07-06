@@ -20,6 +20,27 @@ public import moss.db.keyvalue.errors;
 public import std.typecons : Tuple;
 
 /**
+ * Flags to pass to drivers
+ */
+public enum DatabaseFlags
+{
+    /**
+     * Default flags are just "read-only"
+     */
+    None = 1 << 0,
+
+    /**
+     * Only open in read only mode - do not attempt creation
+     */
+    ReadOnly = 1 << 2,
+
+    /**
+     * Create the DB if it doesn't already exist.
+     */
+    CreateIfNotExists = 1 << 2,
+}
+
+/**
  * A "Bucket" is merely a referential identifier for
  * a compartment of storage in the database and offers
  * no direct API itself.
