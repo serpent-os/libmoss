@@ -27,6 +27,7 @@ public enum DatabaseErrorCode : uint8_t
     None = 0,
     UnsupportedDriver,
     Unimplemented,
+    ConnectionFailed,
 }
 
 /**

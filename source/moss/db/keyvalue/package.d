@@ -92,10 +92,14 @@ public final class Database
                     format!"No driver found supporting scheme: '%s'"(scheme)));
         }
 
-        /* TODO: Check connect actually works */
-        auto db = new Database(driver);
-        driver.connect(remainder);
-        return SumType!(Database, DatabaseError)(db);
+        /* Try to connect now */
+        auto err = driver.connect(remainder);
+        if (!err.isNull)
+        {
+            return SumType!(Database, DatabaseError)(err.get);
+        }
+
+        return SumType!(Database, DatabaseError)(new Database(driver));
     }
 
     /**

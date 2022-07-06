@@ -15,12 +15,14 @@
 
 module moss.db.keyvalue.driver;
 
+import moss.db.keyvalue.errors;
+
 /**
  * All Drivers conform to this interface but are local resource
  * handles.
  */
 public interface Driver
 {
-    void connect(const(string) uri) @safe;
+    DatabaseResult connect(const(string) uri) @safe;
     void close() @safe;
 }

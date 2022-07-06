@@ -16,6 +16,7 @@
 module moss.db.keyvalue.driver.memory;
 
 public import moss.db.keyvalue.driver;
+import moss.db.keyvalue.errors;
 
 /**
  * Implementation using an associative array :)
@@ -28,8 +29,9 @@ public final class MemoryDriver : Driver
      * Params:
      *      uri = Resource locator string
      */
-    override void connect(const(string) uri) @safe
+    override DatabaseResult connect(const(string) uri) @safe
     {
+        return NoDatabaseError;
     }
 
     /**

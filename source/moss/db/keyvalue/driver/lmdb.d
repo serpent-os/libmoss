@@ -16,8 +16,18 @@
 module moss.db.keyvalue.driver.lmdb;
 
 public import moss.db.keyvalue.driver;
+import moss.db.keyvalue.errors;
+import std.conv : octal;
+import std.string : toStringz;
 
 import lmdb;
+
+static private string lmdbStr(int rcCode) @trusted nothrow @nogc
+{
+    import std.string : fromStringz;
+
+    return cast(string) mdb_strerror(rcCode).fromStringz;
+}
 
 /**
  * Implementation using LMDB
@@ -30,11 +40,28 @@ public final class LMDBDriver : Driver
      * Params:
      *      uri = Resource locator string
      */
-    override void connect(const(string) uri) @safe
+    override DatabaseResult connect(const(string) uri) @safe
     {
         /* Create environment first */
-        immutable int rc = () @trusted { return mdb_env_create(&env); }();
-        assert(rc == 0);
+        int rc = () @trusted { return mdb_env_create(&env); }();
+        if (rc != 0)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
+        }
+
+        /* Always create, we'll explicitly sync */
+        static int flags = MDB_CREATE | MDB_NOSYNC;
+
+        /* Open 0600 connection to the DB */
+        rc = () @trusted {
+            return mdb_env_open(env, uri.toStringz, flags, octal!600);
+        }();
+        if (rc != 0)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
+        }
+
+        return NoDatabaseError;
     }
 
     /**
