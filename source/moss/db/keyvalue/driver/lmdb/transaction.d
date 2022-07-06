@@ -5,7 +5,7 @@
  */
 
 /**
- * moss.db.keyvalue.driver.lmdb
+ * moss.db.keyvalue.driver.lmdb.transaction
  *
  * LMDB Transactions
  *
