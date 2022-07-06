@@ -17,7 +17,7 @@ module moss.db.keyvalue.driver.lmdb;
 
 public import moss.db.keyvalue.driver;
 
-import cdb = lmdb;
+import lmdb;
 
 /**
  * Implementation using LMDB
@@ -32,6 +32,9 @@ public final class LMDBDriver : Driver
      */
     override void connect(const(string) uri) @safe
     {
+        /* Create environment first */
+        immutable int rc = () @trusted { return mdb_env_create(&env); }();
+        assert(rc == 0);
     }
 
     /**
@@ -40,5 +43,16 @@ public final class LMDBDriver : Driver
      */
     override void close() @safe
     {
+        if (env is null)
+        {
+            return;
+        }
+
+        () @trusted { mdb_env_close(env); }();
     }
+
+private:
+
+    /* MDB environment */
+    MDB_env* env;
 }
