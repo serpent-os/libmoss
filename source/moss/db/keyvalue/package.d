@@ -72,11 +72,6 @@ public final class Database
         /* Map to the correct driver. */
         switch (scheme)
         {
-        case "memory":
-            import moss.db.keyvalue.driver.memory : MemoryDriver;
-
-            driver = new MemoryDriver();
-            break;
         case "lmdb":
             import moss.db.keyvalue.driver.lmdb : LMDBDriver;
 
