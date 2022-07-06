@@ -25,6 +25,7 @@ import std.string : toStringz;
 import lmdb;
 
 import moss.db.keyvalue.driver.lmdb : lmdbStr;
+import moss.db.keyvalue.driver.lmdb.transaction;
 
 /**
  * Implementation using LMDB
@@ -94,7 +95,7 @@ public final class LMDBDriver : Driver
      */
     override Transaction readOnlyTransaction() @safe
     {
-        return null;
+        return new LMDBTransaction(this);
     }
 
     /**
@@ -102,7 +103,7 @@ public final class LMDBDriver : Driver
      */
     override Transaction readWriteTransaction() @safe
     {
-        return null;
+        return new LMDBTransaction(this);
     }
 
 private:
