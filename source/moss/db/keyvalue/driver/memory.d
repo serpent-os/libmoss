@@ -23,14 +23,18 @@ public import moss.db.keyvalue.driver;
 public final class MemoryDriver : Driver
 {
     /**
-     * noop
+     * Connect
+     *
+     * Params:
+     *      uri = Resource locator string
      */
     override void connect(const(string) uri) @safe
     {
     }
 
     /**
-     * noop
+     * Close
+     *
      */
     override void close() @safe
     {
