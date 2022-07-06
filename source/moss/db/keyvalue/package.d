@@ -49,26 +49,18 @@ public final class Database
     static SumType!(Database, DatabaseError) open(string uri,
             DatabaseFlags flags = DatabaseFlags.None) @safe
     {
-        auto splits = uri.split(":");
+        auto splits = uri.split("://");
         immutable(string) scheme = splits.length > 1 ? splits[0] : "[unspecified]";
         Driver driver;
 
-        if (splits.length < 2 || uri.length < scheme.length + 3)
+        if (splits.length < 2 || uri.length < scheme.length + 4)
         {
             return SumType!(Database, DatabaseError)(DatabaseError(DatabaseErrorCode.UnsupportedDriver,
                     "Unsupported scheme URI: Missing \":\" split"));
         }
 
         /* Initialise with the remainder, minus any // */
-        auto remainder = uri[scheme.length + 1 .. $];
-        if (!remainder.startsWith("//"))
-        {
-            return SumType!(Database, DatabaseError)(DatabaseError(DatabaseErrorCode.UnsupportedDriver,
-                    "Unsupported scheme URI: Missing \"//\""));
-        }
-
-        /* Drop "//" from prefix */
-        remainder = remainder[2 .. $];
+        auto remainder = uri[splits[0].length + 3 .. $];
 
         /* Map to the correct driver. */
         switch (scheme)

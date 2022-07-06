@@ -32,19 +32,14 @@ public enum DatabaseFlags
     /**
      * Only open in read only mode - do not attempt creation
      */
-    ReadOnly = 1 << 2,
-
-    /**
-     * Create the DB if it doesn't already exist.
-     */
-    CreateIfNotExists = 1 << 2,
+    ReadOnly = 1 << 1,
 
     /**
      * Disable automatic fsync/fdatasync style calls
      *
      * Note: Requires manual flushing
      */
-    DisableSync = 1 << 3,
+    DisableSync = 1 << 2,
 }
 
 /**

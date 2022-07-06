@@ -37,20 +37,15 @@ static private string lmdbStr(int rcCode) @trusted nothrow @nogc
 public final class LMDBDriver : Driver
 {
     /**
-     * Connect
+     * Open LMDB environment + open from a given path
      *
      * Params:
      *      uri = Resource locator string
      */
     override DatabaseResult connect(const(string) uri, DatabaseFlags flags) @safe nothrow
     {
-        int cFlags;
-
-        /* Create */
-        if ((flags & DatabaseFlags.CreateIfNotExists) == DatabaseFlags.CreateIfNotExists)
-        {
-            cFlags |= MDB_CREATE;
-        }
+        /* no env dir */
+        int cFlags = MDB_NOSUBDIR;
 
         /* Read-only? */
         if ((flags & DatabaseFlags.ReadOnly) == DatabaseFlags.ReadOnly)
