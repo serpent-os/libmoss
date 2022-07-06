@@ -41,6 +41,8 @@ public final class LMDBDriver : Driver
      *
      * Params:
      *      uri = Resource locator string
+     *      flags = Flags that affect opening
+     * Returns: A nullable error
      */
     override DatabaseResult connect(const(string) uri, DatabaseFlags flags) @safe nothrow
     {
