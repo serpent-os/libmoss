@@ -44,12 +44,16 @@ public:
         return Bucket.init;
     }
 
-    override void set(in Bucket bucket, in ImmutableDatum key, in ImmutableDatum value) return @safe
+    override Nullable!(DatabaseError, DatabaseError.init) set(in Bucket bucket,
+            in ImmutableDatum key, in ImmutableDatum value) return @safe
     {
+        return NoDatabaseError;
     }
 
-    override void remove(in Bucket bucket, in ImmutableDatum key) return @safe
+    override Nullable!(DatabaseError, DatabaseError.init) remove(in Bucket bucket,
+            in ImmutableDatum key) return @safe
     {
+        return NoDatabaseError;
 
     }
 
@@ -58,8 +62,9 @@ public:
         return null;
     }
 
-    override void removeBucket(in Bucket bucket) return @safe
+    override Nullable!(DatabaseError, DatabaseError.init) removeBucket(in Bucket bucket) return @safe
     {
+        return NoDatabaseError;
     }
 
     override ImmutableDatum get(in Bucket bucket, in ImmutableDatum key) const return @safe

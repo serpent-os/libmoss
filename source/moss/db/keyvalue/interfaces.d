@@ -98,12 +98,13 @@ public interface Transaction
     /**
      * Set a key in bucket to value (RW view only)
      */
-    void set(in Bucket bucket, in ImmutableDatum key, in ImmutableDatum value) return @safe;
+    Nullable!(DatabaseError, DatabaseError.init) set(in Bucket bucket,
+            in ImmutableDatum key, in ImmutableDatum value) return @safe;
 
     /**
      * Remove a key/value pair from a bucket
      */
-    void remove(in Bucket bucket, in ImmutableDatum key) return @safe;
+    Nullable!(DatabaseError, DatabaseError.init) remove(in Bucket bucket, in ImmutableDatum key) return @safe;
 
     /**
      * Return a BucketIterator
@@ -113,7 +114,7 @@ public interface Transaction
     /**
      * Remove a bucket and all children nodes
      */
-    void removeBucket(in Bucket bucket) return @safe;
+    Nullable!(DatabaseError, DatabaseError.init) removeBucket(in Bucket bucket) return @safe;
 
     /**
      * Retrieve a value from the bucket key (RO/RW views)

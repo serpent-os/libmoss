@@ -96,14 +96,12 @@ public final class Database
      * Params:
      *      viewDg = Delegate that will be called with a `scope const ref` Transaction
      */
-    Nullable!(DatabaseError, DatabaseError.init) view(
-            scope void delegate(in Transaction tx) @safe viewDg) @safe
+    Nullable!(DatabaseError, DatabaseError.init) view(scope Nullable!(DatabaseError,
+            DatabaseError.init) delegate(in Transaction tx) @safe viewDg) @safe
     {
         auto tx = driver.readOnlyTransaction();
         assert(tx !is null, "Driver returned NULL RO Transaction");
-        viewDg(tx);
-        return Nullable!(DatabaseError, DatabaseError.init)(DatabaseError(
-                DatabaseErrorCode.Unimplemented, ".view() not yet implemented"));
+        return viewDg(tx);
     }
 
     /**
@@ -112,14 +110,12 @@ public final class Database
      * Params:
      *      updateDg = Delegate that will be called with a `scope` Transaction
      */
-    Nullable!(DatabaseError, DatabaseError.init) update(
-            scope void delegate(scope Transaction tx) @safe updateDg) @safe
+    Nullable!(DatabaseError, DatabaseError.init) update(scope Nullable!(DatabaseError,
+            DatabaseError.init) delegate(scope Transaction tx) @safe updateDg) @safe
     {
         auto tx = driver.readWriteTransaction();
         assert(tx !is null, "Driver returned NULL RW Transaction");
-        updateDg(tx);
-        return Nullable!(DatabaseError, DatabaseError.init)(DatabaseError(
-                DatabaseErrorCode.Unimplemented, ".view() not yet implemented"));
+        return updateDg(tx);
     }
 
     /**
@@ -170,6 +166,7 @@ private:
         tx.set(bk, "name".representation, "john".representation);
         tx.set(bk2, "name".representation, "not-john".representation);
         didUpdate = true;
+        return NoDatabaseError;
     });
     assert(err.isNull, "error in update");
     assert(didUpdate, "Update lambda not run");
@@ -185,6 +182,7 @@ private:
         auto val2 = tx.get(bk, "name".representation);
         assert(val2 == "not-john".representation);
         didView = true;
+        return NoDatabaseError;
     });
     assert(err2.isNull, "error in view");
     assert(didView, "View lambda not run");
