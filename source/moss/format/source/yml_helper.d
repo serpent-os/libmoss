@@ -20,8 +20,8 @@ import dyaml;
 import moss.format.source.schema;
 import std.exception : enforce;
 import std.experimental.logger;
+import std.format : format;
 import std.stdint;
-import std.string : format;
 
 /**
  * Set value appropriately.
@@ -62,7 +62,7 @@ void setValue(T)(ref Node node, ref T value, YamlSchema schema)
                 format!"setValue(): %s not a valid value for %s. Acceptable values: %s"(value,
                     schema.name, schema.acceptableValues));
     }
-    trace(format!"  '- parsed '%s' as type <%s>"(value, T.stringof));
+    trace(format!"  '- parsed '%s' as <%s>"(value, T.stringof));
 }
 
 /**
