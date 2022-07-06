@@ -5,9 +5,9 @@
  */
 
 /**
- * moss.db.keyvalue.driver.memory
+ * moss.db.keyvalue.driver.lmdb
  *
- * Memory backed driver (for development ONLY)
+ * Key Value DB implemented using LMDB
  *
  * Authors: Copyright © 2020-2022 Serpent OS Developers
  * License: Zlib
