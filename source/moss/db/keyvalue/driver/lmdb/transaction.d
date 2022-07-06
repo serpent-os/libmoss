@@ -73,14 +73,15 @@ public:
     override Nullable!(DatabaseError, DatabaseError.init) set(in Bucket bucket,
             in ImmutableDatum key, in ImmutableDatum value) return @safe
     {
-        return NoDatabaseError;
+        return Nullable!(DatabaseError, DatabaseError.init)(DatabaseError(
+                DatabaseErrorCode.Unimplemented, "Transaction.set(): Not yet implemented"));
     }
 
     override Nullable!(DatabaseError, DatabaseError.init) remove(in Bucket bucket,
             in ImmutableDatum key) return @safe
     {
-        return NoDatabaseError;
-
+        return Nullable!(DatabaseError, DatabaseError.init)(DatabaseError(DatabaseErrorCode.Unimplemented,
+                "Transaction.remove(): Not yet implemented"));
     }
 
     override BucketIterator iterator(in Bucket bucket) return @safe
@@ -90,7 +91,8 @@ public:
 
     override Nullable!(DatabaseError, DatabaseError.init) removeBucket(in Bucket bucket) return @safe
     {
-        return NoDatabaseError;
+        return Nullable!(DatabaseError, DatabaseError.init)(DatabaseError(DatabaseErrorCode.Unimplemented,
+                "Transaction.removeBucket(): Not yet implemented"));
     }
 
     override ImmutableDatum get(in Bucket bucket, in ImmutableDatum key) const return @safe
