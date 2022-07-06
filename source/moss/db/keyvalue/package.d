@@ -59,6 +59,11 @@ public final class Database
 
             driver = new MemoryDriver();
             break;
+        case "lmdb":
+            import moss.db.keyvalue.driver.lmdb : LMDBDriver;
+
+            driver = new LMDBDriver();
+            break;
         default:
             driver = null;
         }
@@ -123,8 +128,7 @@ private:
 @safe unittest
 {
     Database db;
-    Database.open("memory://memorydriver").match!((d) => db = d,
-            (DatabaseError e) => assert(0, e.message));
+    Database.open("lmdb://myDB").match!((d) => db = d, (DatabaseError e) => assert(0, e.message));
     scope (exit)
     {
         db.close();
