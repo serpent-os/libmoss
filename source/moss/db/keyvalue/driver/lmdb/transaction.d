@@ -65,11 +65,6 @@ package class LMDBTransaction : ExplicitTransaction
 
 public:
 
-    override pure Bucket bucket(in string name) const return @safe
-    {
-        return Bucket.init;
-    }
-
     override Nullable!(DatabaseError, DatabaseError.init) set(in Bucket bucket,
             in ImmutableDatum key, in ImmutableDatum value) return @safe
     {

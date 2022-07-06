@@ -88,57 +88,60 @@ public interface BucketIterator
  * of transaction. In the event of an issue we'll peel
  * back the transaction.
  */
-public interface Transaction
+public abstract class Transaction
 {
     /**
      * Reset/initialise the Transaction
      */
-    Nullable!(DatabaseError, DatabaseError.init) reset() return @safe;
+    abstract Nullable!(DatabaseError, DatabaseError.init) reset() return @safe;
 
     /**
      * Construct a bucket identity
      */
-    pure Bucket bucket(in string name) const return @safe;
+    pure final Bucket bucket(in string name) const return @safe
+    {
+        return Bucket.init;
+    }
 
     /**
      * Set a key in bucket to value (RW view only)
      */
-    Nullable!(DatabaseError, DatabaseError.init) set(in Bucket bucket,
+    abstract Nullable!(DatabaseError, DatabaseError.init) set(in Bucket bucket,
             in ImmutableDatum key, in ImmutableDatum value) return @safe;
 
     /**
      * Remove a key/value pair from a bucket
      */
-    Nullable!(DatabaseError, DatabaseError.init) remove(in Bucket bucket, in ImmutableDatum key) return @safe;
+    abstract Nullable!(DatabaseError, DatabaseError.init) remove(in Bucket bucket, in ImmutableDatum key) return @safe;
 
     /**
      * Return a BucketIterator
      */
-    BucketIterator iterator(in Bucket bucket) return @safe;
+    abstract BucketIterator iterator(in Bucket bucket) return @safe;
 
     /**
      * Remove a bucket and all children nodes
      */
-    Nullable!(DatabaseError, DatabaseError.init) removeBucket(in Bucket bucket) return @safe;
+    abstract Nullable!(DatabaseError, DatabaseError.init) removeBucket(in Bucket bucket) return @safe;
 
     /**
      * Retrieve a value from the bucket key (RO/RW views)
      */
-    ImmutableDatum get(in Bucket bucket, in ImmutableDatum key) const return @safe;
+    abstract ImmutableDatum get(in Bucket bucket, in ImmutableDatum key) const return @safe;
 }
 
 /**
  * ExplicitTransactions come from `begin()` API and drivers
  */
-public interface ExplicitTransaction : Transaction
+public abstract class ExplicitTransaction : Transaction
 {
     /**
      * Request commit() for the transaction
      */
-    Nullable!(DatabaseError, DatabaseError.init) commit() return @safe;
+    abstract Nullable!(DatabaseError, DatabaseError.init) commit() return @safe;
 
     /**
      * Request the transaction is aborted
      */
-    void drop() return @safe;
+    abstract void drop() return @safe;
 }
