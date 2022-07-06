@@ -95,6 +95,7 @@ public final class Database
      *
      * Params:
      *      viewDg = Delegate that will be called with a `scope const ref` Transaction
+     * Returns: potentially null error
      */
     Nullable!(DatabaseError, DatabaseError.init) view(scope Nullable!(DatabaseError,
             DatabaseError.init) delegate(in Transaction tx) @safe viewDg) @safe
@@ -111,6 +112,7 @@ public final class Database
      *
      * Params:
      *      updateDg = Delegate that will be called with a `scope` Transaction
+     * Returns: Potentially null error
      */
     Nullable!(DatabaseError, DatabaseError.init) update(scope Nullable!(DatabaseError,
             DatabaseError.init) delegate(scope Transaction tx) @safe updateDg) @safe
@@ -157,13 +159,13 @@ private:
         db.close();
     }
 
-    bool didUpdate = false;
-    bool didView = false;
+    bool didUpdate;
+    bool didView;
 
     /**
      * Add entries for validation
      */
-    auto err = db.update((scope tx) @safe {
+    immutable err = db.update((scope tx) @safe {
         import std.string : representation;
 
         /* TODO: Use mossEncode */
@@ -179,7 +181,7 @@ private:
     assert(err.isNull, err.get.message);
     assert(didUpdate, "Update lambda not run");
 
-    auto err2 = db.view((in tx) @safe {
+    immutable err2 = db.view((in tx) @safe {
         import std.string : representation;
 
         auto bk = tx.bucket([1]);
