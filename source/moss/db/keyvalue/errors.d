@@ -28,6 +28,9 @@ public enum DatabaseErrorCode : uint8_t
     UnsupportedDriver,
     Unimplemented,
     ConnectionFailed,
+    InternalDriver,
+    Transaction,
+    KeyNotFound
 }
 
 /**
