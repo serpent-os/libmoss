@@ -91,6 +91,11 @@ public interface BucketIterator
 public interface Transaction
 {
     /**
+     * Reset/initialise the Transaction
+     */
+    Nullable!(DatabaseError, DatabaseError.init) reset() return @safe;
+
+    /**
      * Construct a bucket identity
      */
     pure Bucket bucket(in string name) const return @safe;

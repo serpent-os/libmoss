@@ -19,6 +19,7 @@ public import moss.db.keyvalue.driver;
 import moss.db.keyvalue.errors;
 import moss.db.keyvalue.interfaces;
 import moss.db.keyvalue.driver.lmdb.driver : LMDBDriver;
+import moss.db.keyvalue.driver.lmdb : lmdbStr;
 
 import lmdb;
 
@@ -35,6 +36,31 @@ package class LMDBTransaction : ExplicitTransaction
     this(LMDBDriver parentDriver) @safe @nogc nothrow
     {
         this.parentDriver = parentDriver;
+    }
+
+    /**
+     * Reset this transaction ready for use.
+     */
+    override Nullable!(DatabaseError, DatabaseError.init) reset() return @safe
+    {
+        if (txn !is null)
+        {
+            () @trusted { mdb_txn_reset(txn); }();
+            return NoDatabaseError;
+        }
+
+        /* Read-only transaction? */
+        immutable cFlags = (parentDriver.databaseFlags & DatabaseFlags.ReadOnly) == DatabaseFlags.ReadOnly
+            ? MDB_RDONLY : 0;
+        immutable rc = () @trusted {
+            return mdb_txn_begin(parentDriver.environment, null, cFlags, &txn);
+        }();
+        if (rc != 0)
+        {
+            return Nullable!(DatabaseError, DatabaseError.init)(
+                    DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
+        }
+        return NoDatabaseError;
     }
 
 public:
@@ -86,4 +112,5 @@ public:
 private:
 
     LMDBDriver parentDriver;
+    MDB_txn* txn;
 }

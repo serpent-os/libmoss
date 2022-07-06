@@ -102,7 +102,12 @@ public final class Database
     {
         auto tx = driver.readOnlyTransaction();
         assert(tx !is null, "Driver returned NULL RO Transaction");
-        auto ret = viewDg(tx);
+        auto ret = tx.reset();
+        if (!ret.isNull)
+        {
+            return ret;
+        }
+        ret = viewDg(tx);
         tx.drop();
         return ret;
     }
@@ -119,7 +124,12 @@ public final class Database
     {
         auto tx = driver.readWriteTransaction();
         assert(tx !is null, "Driver returned NULL RW Transaction");
-        auto ret = updateDg(tx);
+        auto ret = tx.reset();
+        if (!ret.isNull)
+        {
+            return ret;
+        }
+        ret = updateDg(tx);
         if (!ret.isNull)
         {
             tx.drop();

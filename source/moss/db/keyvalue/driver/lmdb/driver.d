@@ -44,6 +44,7 @@ public final class LMDBDriver : Driver
     {
         /* no env dir */
         int cFlags = MDB_NOSUBDIR;
+        this.flags = flags;
 
         /* Read-only? */
         if ((flags & DatabaseFlags.ReadOnly) == DatabaseFlags.ReadOnly)
@@ -118,8 +119,17 @@ package:
         return env;
     }
 
+    /**
+     * Expose flags to transactions
+     */
+    pragma(inline, true) pure @property auto databaseFlags() @safe @nogc nothrow
+    {
+        return flags;
+    }
+
 private:
 
     /* MDB environment */
     MDB_env* env;
+    DatabaseFlags flags;
 }
