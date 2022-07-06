@@ -113,7 +113,7 @@ package:
      *
      * Returns: MDB_env pointer
      */
-    pragma(inline, true) pure MDB_env* environment() @safe @nogc nothrow
+    pragma(inline, true) pure @property MDB_env* environment() @safe @nogc nothrow
     {
         return env;
     }
