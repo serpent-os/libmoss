@@ -101,7 +101,9 @@ public final class Database
     {
         auto tx = driver.readOnlyTransaction();
         assert(tx !is null, "Driver returned NULL RO Transaction");
-        return viewDg(tx);
+        auto ret = viewDg(tx);
+        tx.drop();
+        return ret;
     }
 
     /**
@@ -115,7 +117,13 @@ public final class Database
     {
         auto tx = driver.readWriteTransaction();
         assert(tx !is null, "Driver returned NULL RW Transaction");
-        return updateDg(tx);
+        auto ret = updateDg(tx);
+        if (!ret.isNull)
+        {
+            tx.drop();
+            return ret;
+        }
+        return tx.commit();
     }
 
     /**
@@ -168,7 +176,7 @@ private:
         didUpdate = true;
         return NoDatabaseError;
     });
-    assert(err.isNull, "error in update");
+    assert(err.isNull, err.get.message);
     assert(didUpdate, "Update lambda not run");
 
     auto err2 = db.view((in tx) @safe {
@@ -184,6 +192,6 @@ private:
         didView = true;
         return NoDatabaseError;
     });
-    assert(err2.isNull, "error in view");
+    assert(err2.isNull, err.get.message);
     assert(didView, "View lambda not run");
 }

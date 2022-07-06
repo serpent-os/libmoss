@@ -25,7 +25,7 @@ import lmdb;
 /**
  * LMDB Transaction implementation.
  */
-package class LMDBTransaction : Transaction
+package class LMDBTransaction : ExplicitTransaction
 {
     @disable this();
 
@@ -70,6 +70,17 @@ public:
     override ImmutableDatum get(in Bucket bucket, in ImmutableDatum key) const return @safe
     {
         return null;
+    }
+
+    override Nullable!(DatabaseError, DatabaseError.init) commit() return @safe
+    {
+        return Nullable!(DatabaseError, DatabaseError.init)(DatabaseError(
+                DatabaseErrorCode.Unimplemented, "Transaction.commit(): unimplemented"));
+    }
+
+    override void drop() return @safe
+    {
+
     }
 
 private:

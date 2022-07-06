@@ -121,3 +121,19 @@ public interface Transaction
      */
     ImmutableDatum get(in Bucket bucket, in ImmutableDatum key) const return @safe;
 }
+
+/**
+ * ExplicitTransactions come from `begin()` API and drivers
+ */
+public interface ExplicitTransaction : Transaction
+{
+    /**
+     * Request commit() for the transaction
+     */
+    Nullable!(DatabaseError, DatabaseError.init) commit() return @safe;
+
+    /**
+     * Request the transaction is aborted
+     */
+    void drop() return @safe;
+}

@@ -32,12 +32,12 @@ public interface Driver
     /**
      * Construct a *new* read-only transaction.
      */
-    Transaction readOnlyTransaction() @safe;
+    ExplicitTransaction readOnlyTransaction() @safe;
 
     /**
      * Construct a *new* read-write transaction
      */
-    Transaction readWriteTransaction() @safe;
+    ExplicitTransaction readWriteTransaction() @safe;
 
     /**
      * Close all resources

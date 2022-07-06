@@ -93,7 +93,7 @@ public final class LMDBDriver : Driver
     /**
      * Construct a new LMDB specific RO transaction
      */
-    override Transaction readOnlyTransaction() @safe
+    override ExplicitTransaction readOnlyTransaction() @safe
     {
         return new LMDBTransaction(this);
     }
@@ -101,7 +101,7 @@ public final class LMDBDriver : Driver
     /**
      * Construct a new LMDB specific RW transaction
      */
-    override Transaction readWriteTransaction() @safe
+    override ExplicitTransaction readWriteTransaction() @safe
     {
         return new LMDBTransaction(this);
     }
