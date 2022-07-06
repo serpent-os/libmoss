@@ -198,9 +198,9 @@ private:
         auto bk2 = tx.bucket([1, 1]);
 
         auto val1 = tx.get(bk, "name".representation);
-        assert(val1 == "john".representation);
+        assert(val1 == "john".representation, "not john");
         auto val2 = tx.get(bk, "name".representation);
-        assert(val2 == "not-john".representation);
+        assert(val2 == "not-john".representation, "Not not-john");
         didView = true;
         return NoDatabaseError;
     });
