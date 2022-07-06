@@ -99,6 +99,9 @@ public final class Database
     Nullable!(DatabaseError, DatabaseError.init) view(
             scope void delegate(in Transaction tx) @safe viewDg) @safe
     {
+        auto tx = driver.readOnlyTransaction();
+        assert(tx !is null, "Driver returned NULL RO Transaction");
+        viewDg(tx);
         return Nullable!(DatabaseError, DatabaseError.init)(DatabaseError(
                 DatabaseErrorCode.Unimplemented, ".view() not yet implemented"));
     }
@@ -112,6 +115,9 @@ public final class Database
     Nullable!(DatabaseError, DatabaseError.init) update(
             scope void delegate(scope Transaction tx) @safe updateDg) @safe
     {
+        auto tx = driver.readWriteTransaction();
+        assert(tx !is null, "Driver returned NULL RW Transaction");
+        updateDg(tx);
         return Nullable!(DatabaseError, DatabaseError.init)(DatabaseError(
                 DatabaseErrorCode.Unimplemented, ".view() not yet implemented"));
     }
