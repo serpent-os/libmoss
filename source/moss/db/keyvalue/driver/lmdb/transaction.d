@@ -41,7 +41,7 @@ package class LMDBTransaction : ExplicitTransaction
     /**
      * Reset this transaction ready for use.
      */
-    override Nullable!(DatabaseError, DatabaseError.init) reset() return @safe
+    override DatabaseResult reset() return @safe
     {
         if (txn !is null)
         {
@@ -57,25 +57,22 @@ package class LMDBTransaction : ExplicitTransaction
         }();
         if (rc != 0)
         {
-            return Nullable!(DatabaseError, DatabaseError.init)(
-                    DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
         }
         return NoDatabaseError;
     }
 
 public:
 
-    override Nullable!(DatabaseError, DatabaseError.init) set(in Bucket bucket,
-            in ImmutableDatum key, in ImmutableDatum value) return @safe
+    override DatabaseResult set(in Bucket bucket, in ImmutableDatum key, in ImmutableDatum value) return @safe
     {
-        return Nullable!(DatabaseError, DatabaseError.init)(DatabaseError(
-                DatabaseErrorCode.Unimplemented, "Transaction.set(): Not yet implemented"));
+        return DatabaseResult(DatabaseError(DatabaseErrorCode.Unimplemented,
+                "Transaction.set(): Not yet implemented"));
     }
 
-    override Nullable!(DatabaseError, DatabaseError.init) remove(in Bucket bucket,
-            in ImmutableDatum key) return @safe
+    override DatabaseResult remove(in Bucket bucket, in ImmutableDatum key) return @safe
     {
-        return Nullable!(DatabaseError, DatabaseError.init)(DatabaseError(DatabaseErrorCode.Unimplemented,
+        return DatabaseResult(DatabaseError(DatabaseErrorCode.Unimplemented,
                 "Transaction.remove(): Not yet implemented"));
     }
 
@@ -84,9 +81,9 @@ public:
         return null;
     }
 
-    override Nullable!(DatabaseError, DatabaseError.init) removeBucket(in Bucket bucket) return @safe
+    override DatabaseResult removeBucket(in Bucket bucket) return @safe
     {
-        return Nullable!(DatabaseError, DatabaseError.init)(DatabaseError(DatabaseErrorCode.Unimplemented,
+        return DatabaseResult(DatabaseError(DatabaseErrorCode.Unimplemented,
                 "Transaction.removeBucket(): Not yet implemented"));
     }
 

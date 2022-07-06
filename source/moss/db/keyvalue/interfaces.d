@@ -93,7 +93,7 @@ public abstract class Transaction
     /**
      * Reset/initialise the Transaction
      */
-    abstract Nullable!(DatabaseError, DatabaseError.init) reset() return @safe;
+    abstract DatabaseResult reset() return @safe;
 
     /**
      * Construct a bucket identity
@@ -106,13 +106,12 @@ public abstract class Transaction
     /**
      * Set a key in bucket to value (RW view only)
      */
-    abstract Nullable!(DatabaseError, DatabaseError.init) set(in Bucket bucket,
-            in ImmutableDatum key, in ImmutableDatum value) return @safe;
+    abstract DatabaseResult set(in Bucket bucket, in ImmutableDatum key, in ImmutableDatum value) return @safe;
 
     /**
      * Remove a key/value pair from a bucket
      */
-    abstract Nullable!(DatabaseError, DatabaseError.init) remove(in Bucket bucket, in ImmutableDatum key) return @safe;
+    abstract DatabaseResult remove(in Bucket bucket, in ImmutableDatum key) return @safe;
 
     /**
      * Return a BucketIterator
@@ -122,7 +121,7 @@ public abstract class Transaction
     /**
      * Remove a bucket and all children nodes
      */
-    abstract Nullable!(DatabaseError, DatabaseError.init) removeBucket(in Bucket bucket) return @safe;
+    abstract DatabaseResult removeBucket(in Bucket bucket) return @safe;
 
     /**
      * Retrieve a value from the bucket key (RO/RW views)
@@ -138,7 +137,7 @@ public abstract class ExplicitTransaction : Transaction
     /**
      * Request commit() for the transaction
      */
-    abstract Nullable!(DatabaseError, DatabaseError.init) commit() return @safe;
+    abstract DatabaseResult commit() return @safe;
 
     /**
      * Request the transaction is aborted
