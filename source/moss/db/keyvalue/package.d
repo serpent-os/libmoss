@@ -18,6 +18,7 @@ import moss.db.keyvalue.driver;
 import moss.db.keyvalue.errors;
 import moss.db.keyvalue.interfaces;
 import std.string : split, format;
+import moss.core.encoding;
 
 /**
  * KeyValue database, driver backed
@@ -120,4 +121,38 @@ private:
     {
         db.close();
     }
+
+    bool didUpdate = false;
+    bool didView = false;
+
+    /**
+     * Add entries for validation
+     */
+    db.update((scope tx) @safe {
+        import std.string : representation;
+
+        /* TODO: Use mossEncode */
+        /* Ensure rocksdb will not match 1 against 1, 1 */
+        auto bk = tx.bucket([1]);
+        auto bk2 = tx.bucket([1, 1]);
+
+        tx.set(bk, "name".representation, "john".representation);
+        tx.set(bk2, "name".representation, "not-john".representation);
+        didUpdate = true;
+    });
+    assert(didUpdate, "Update lambda not run");
+
+    db.view((in tx) @safe {
+        import std.string : representation;
+
+        auto bk = tx.bucket([1]);
+        auto bk2 = tx.bucket([1, 1]);
+
+        auto val1 = tx.get(bk, "name".representation);
+        assert(val1 == "john".representation);
+        auto val2 = tx.get(bk, "name".representation);
+        assert(val2 == "not-john".representation);
+        didView = true;
+    });
+    assert(didView, "View lambda not run");
 }
