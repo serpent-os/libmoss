@@ -20,6 +20,8 @@ import moss.db.keyvalue.interfaces;
 import std.string : split, format;
 import moss.core.encoding;
 
+public import std.typecons : Nullable;
+
 /**
  * KeyValue database, driver backed
  */
@@ -75,11 +77,12 @@ public final class Database
      *
      * Params:
      *      viewDg = Delegate that will be called with a `scope const ref` Transaction
-     *
      */
-    void view(scope void delegate(in Transaction tx) @safe viewDg) @safe
+    Nullable!(DatabaseError, DatabaseError.init) view(
+            scope void delegate(in Transaction tx) @safe viewDg) @safe
     {
-
+        return Nullable!(DatabaseError, DatabaseError.init)(DatabaseError(
+                DatabaseErrorCode.Unimplemented, ".view() not yet implemented"));
     }
 
     /**
@@ -88,14 +91,19 @@ public final class Database
      * Params:
      *      updateDg = Delegate that will be called with a `scope` Transaction
      */
-    void update(scope void delegate(scope Transaction tx) @safe updateDg) @safe
+    Nullable!(DatabaseError, DatabaseError.init) update(
+            scope void delegate(scope Transaction tx) @safe updateDg) @safe
     {
-
+        return Nullable!(DatabaseError, DatabaseError.init)(DatabaseError(
+                DatabaseErrorCode.Unimplemented, ".view() not yet implemented"));
     }
 
+    /**
+     * Permanently close this connection
+     */
     void close() @safe
     {
-
+        driver.close();
     }
 
 private:
@@ -128,7 +136,7 @@ private:
     /**
      * Add entries for validation
      */
-    db.update((scope tx) @safe {
+    auto err = db.update((scope tx) @safe {
         import std.string : representation;
 
         /* TODO: Use mossEncode */
@@ -140,9 +148,10 @@ private:
         tx.set(bk2, "name".representation, "not-john".representation);
         didUpdate = true;
     });
+    assert(err.isNull, "error in update");
     assert(didUpdate, "Update lambda not run");
 
-    db.view((in tx) @safe {
+    auto err2 = db.view((in tx) @safe {
         import std.string : representation;
 
         auto bk = tx.bucket([1]);
@@ -154,5 +163,6 @@ private:
         assert(val2 == "not-john".representation);
         didView = true;
     });
+    assert(err2.isNull, "error in view");
     assert(didView, "View lambda not run");
 }

@@ -17,6 +17,7 @@ module moss.db.keyvalue.errors;
 
 public import std.sumtype;
 public import std.stdint : uint8_t;
+public import std.typecons : Nullable;
 
 /**
  * Error code. 0 = good.
@@ -25,6 +26,7 @@ public enum DatabaseErrorCode : uint8_t
 {
     None = 0,
     UnsupportedDriver,
+    Unimplemented,
 }
 
 /**
@@ -50,3 +52,9 @@ public struct DatabaseError
         return message;
     }
 }
+
+public alias DatabaseResult = Nullable!(DatabaseError, DatabaseError.init);
+/**
+ * Returned when we have no error
+ */
+public enum NoDatabaseError = DatabaseResult(DatabaseError.init);
