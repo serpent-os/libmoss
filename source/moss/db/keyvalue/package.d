@@ -17,6 +17,7 @@ module moss.db.keyvalue;
 import moss.db.keyvalue.driver;
 import moss.db.keyvalue.errors;
 import moss.db.keyvalue.interfaces;
+import std.string : split, format;
 
 /**
  * KeyValue database, driver backed
@@ -27,23 +28,45 @@ public final class Database
 
     invariant ()
     {
-        assert(uri !is null);
+        assert(driver !is null);
     }
 
     /**
-     * Construct new Database from the given URI
+     * Open a database for the given URI
+     *
+     * The scheme portion of the URI is abused to map to an internal
+     * driver. So a `rocksdb://` or `memory://` URI is mappped to
+     * the correct handling driver. Note that two slashes in the host
+     * portion of the scheme are stripped, thus `:///home` points to `/home`.
+     *
+     * Params:
+     *      uri = Resource locator
      */
-    this(const(string) uri) @safe @nogc nothrow
+    static SumType!(Database, DatabaseError) open(string uri) @safe
     {
-        this.uri = uri;
-    }
+        auto splits = uri.split(":");
+        immutable(string) scheme = splits.length > 1 ? splits[0] : "[unspecified]";
+        Driver driver;
 
-    /**
-     * Connect the driver to the database
-     */
-    DatabaseResult connect() @safe
-    {
-        return DatabaseResult(DatabaseError(DatabaseErrorCode.UnsupportedDriver, "onoes"));
+        /* Map to the correct driver. */
+        switch (scheme)
+        {
+        case "memory":
+            import moss.db.keyvalue.driver.memory : MemoryDriver;
+
+            driver = new MemoryDriver();
+            break;
+        default:
+            driver = null;
+        }
+
+        if (driver is null)
+        {
+            return SumType!(Database, DatabaseError)(DatabaseError(DatabaseErrorCode.UnsupportedDriver,
+                    format!"No driver found supporting scheme: '%s'"(scheme)));
+        }
+
+        return SumType!(Database, DatabaseError)(new Database(driver));
     }
 
     /**
@@ -69,7 +92,20 @@ public final class Database
 
     }
 
+    void close() @safe
+    {
+
+    }
+
 private:
+
+    /**
+     * Construct a new Database that owns the given driver.
+     */
+    this(Driver driver) @safe @nogc nothrow
+    {
+        this.driver = driver;
+    }
 
     string uri;
     Driver driver;
@@ -77,7 +113,11 @@ private:
 
 @safe unittest
 {
-    auto db = new Database("memory://memoryDriver");
-    auto result = db.connect();
-    assert(result.isNull, result.get.message);
+    Database db;
+    Database.open("memory://memorydriver").match!((d) => db = d,
+            (DatabaseError e) => assert(0, e.message));
+    scope (exit)
+    {
+        db.close();
+    }
 }
