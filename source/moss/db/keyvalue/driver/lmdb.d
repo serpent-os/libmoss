@@ -40,7 +40,7 @@ public final class LMDBDriver : Driver
      * Params:
      *      uri = Resource locator string
      */
-    override DatabaseResult connect(const(string) uri) @safe
+    override DatabaseResult connect(const(string) uri) @safe nothrow
     {
         /* Create environment first */
         int rc = () @trusted { return mdb_env_create(&env); }();
@@ -68,7 +68,7 @@ public final class LMDBDriver : Driver
      * Close
      *
      */
-    override void close() @safe
+    override void close() @safe @nogc nothrow
     {
         if (env is null)
         {
