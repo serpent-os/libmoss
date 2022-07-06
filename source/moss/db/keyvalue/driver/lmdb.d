@@ -58,6 +58,12 @@ public final class LMDBDriver : Driver
             cFlags |= MDB_RDONLY;
         }
 
+        /* no sync ? */
+        if ((flags & DatabaseFlags.DisableSync) == DatabaseFlags.DisableSync)
+        {
+            cFlags |= MDB_NOSYNC;
+        }
+
         /* Create environment first */
         int rc = () @trusted { return mdb_env_create(&env); }();
         if (rc != 0)

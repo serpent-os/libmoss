@@ -46,7 +46,8 @@ public final class Database
      * Params:
      *      uri = Resource locator
      */
-    static SumType!(Database, DatabaseError) open(string uri, DatabaseFlags flags = DatabaseFlags.None) @safe
+    static SumType!(Database, DatabaseError) open(string uri,
+            DatabaseFlags flags = DatabaseFlags.None) @safe
     {
         auto splits = uri.split(":");
         immutable(string) scheme = splits.length > 1 ? splits[0] : "[unspecified]";

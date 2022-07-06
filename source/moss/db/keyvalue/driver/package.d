@@ -18,7 +18,6 @@ module moss.db.keyvalue.driver;
 import moss.db.keyvalue.errors;
 import moss.db.keyvalue.interfaces;
 
-
 /**
  * All Drivers conform to this interface but are local resource
  * handles.

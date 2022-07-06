@@ -38,6 +38,13 @@ public enum DatabaseFlags
      * Create the DB if it doesn't already exist.
      */
     CreateIfNotExists = 1 << 2,
+
+    /**
+     * Disable automatic fsync/fdatasync style calls
+     *
+     * Note: Requires manual flushing
+     */
+    DisableSync = 1 << 3,
 }
 
 /**
