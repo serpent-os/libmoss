@@ -58,7 +58,7 @@ package class LMDBTransaction : ExplicitTransaction
         if (rc != 0)
         {
             return Nullable!(DatabaseError, DatabaseError.init)(
-                    DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
+                    DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
         }
         return NoDatabaseError;
     }
