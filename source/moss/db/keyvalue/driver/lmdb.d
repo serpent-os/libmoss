@@ -94,6 +94,22 @@ public final class LMDBDriver : Driver
         () @trusted { mdb_env_close(env); }();
     }
 
+    /**
+     * Construct a new LMDB specific RO transaction
+     */
+    override Transaction readOnlyTransaction() @safe
+    {
+        return null;
+    }
+
+    /**
+     * Construct a new LMDB specific RW transaction
+     */
+    override Transaction readWriteTransaction() @safe
+    {
+        return null;
+    }
+
 private:
 
     /* MDB environment */
