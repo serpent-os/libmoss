@@ -98,7 +98,7 @@ public abstract class Transaction
     /**
      * Construct a bucket identity
      */
-    pure final Bucket bucket(in string name) const return @safe
+    pure final Bucket bucket(in ImmutableDatum name) const return @safe
     {
         return Bucket.init;
     }
