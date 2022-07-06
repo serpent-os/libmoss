@@ -19,6 +19,7 @@ import moss.db.keyvalue.errors;
 import moss.db.keyvalue.interfaces;
 import std.string : split, format;
 import moss.core.encoding;
+import std.string : startsWith;
 
 public import std.typecons : Nullable;
 
@@ -51,6 +52,23 @@ public final class Database
         immutable(string) scheme = splits.length > 1 ? splits[0] : "[unspecified]";
         Driver driver;
 
+        if (splits.length < 2 || uri.length < scheme.length + 3)
+        {
+            return SumType!(Database, DatabaseError)(DatabaseError(DatabaseErrorCode.UnsupportedDriver,
+                    "Unsupported scheme URI: Missing \":\" split"));
+        }
+
+        /* Initialise with the remainder, minus any // */
+        auto remainder = uri[scheme.length + 1 .. $];
+        if (!remainder.startsWith("//"))
+        {
+            return SumType!(Database, DatabaseError)(DatabaseError(DatabaseErrorCode.UnsupportedDriver,
+                    "Unsupported scheme URI: Missing \"//\""));
+        }
+
+        /* Drop "//" from prefix */
+        remainder = remainder[2 .. $];
+
         /* Map to the correct driver. */
         switch (scheme)
         {
@@ -74,7 +92,10 @@ public final class Database
                     format!"No driver found supporting scheme: '%s'"(scheme)));
         }
 
-        return SumType!(Database, DatabaseError)(new Database(driver));
+        /* TODO: Check connect actually works */
+        auto db = new Database(driver);
+        driver.connect(remainder);
+        return SumType!(Database, DatabaseError)(db);
     }
 
     /**
