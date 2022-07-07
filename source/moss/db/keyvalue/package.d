@@ -206,11 +206,15 @@ private:
 
         debug
         {
-            import std.stdio : writeln;
+            import std.stdio : writefln;
 
             foreach (entry, val; tx.iterator(bk))
             {
-                writeln(cast(string) entry.key.dup, " = ", cast(string) val.dup);
+                string keyName;
+                string value;
+                keyName.mossDecode(entry.key);
+                value.mossDecode(val);
+                writefln("[%s] %s = %s", entry.prefix.dup, keyName, value);
             }
         }
 
