@@ -117,9 +117,9 @@ package final class LMDBIterator : BucketIterator
         }();
 
         auto dbEntry = () @trusted {
-            auto db = DatabaseEntry();
-            db.mossDecode(cast(ImmutableDatum) keyData);
-            return db;
+            auto dbe = DatabaseEntry();
+            dbe.mossDecode(cast(ImmutableDatum) keyData);
+            return dbe;
         }();
 
         /* Bucket has changed - nothing to show. */
