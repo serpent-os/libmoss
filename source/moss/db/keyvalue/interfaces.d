@@ -109,6 +109,12 @@ public abstract class Transaction
         return Bucket.init;
     }
 
+    /** Ditto */
+    pure final Bucket bucket(B)(in B name) const return @safe if (isMossEncodable!B)
+    {
+        return bucket(name.mossEncode);
+    }
+
     /**
      * Set a key in bucket to value (RW view only)
      */
