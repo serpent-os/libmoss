@@ -187,6 +187,12 @@ private:
         tx.set(bk2, "name", "not-john");
         tx.set(bk2, "name2", "not-jimothy");
         didUpdate = true;
+
+        auto bk3 = tx.bucket("numbers");
+        for (int i = 0; i < 1000; i++)
+        {
+            tx.set(bk3, i, i);
+        }
         return NoDatabaseError;
     });
     assert(err.isNull, err.get.message);
@@ -197,6 +203,7 @@ private:
 
         auto bk = tx.bucket([1]);
         auto bk2 = tx.bucket([1, 1]);
+        auto bk3 = tx.bucket("numbers");
 
         string val1 = tx.get!(string, string)(bk, "name");
         assert(val1 == "john", "not john");
@@ -208,13 +215,15 @@ private:
         {
             import std.stdio : writefln;
 
-            foreach (entry, val; tx.iterator(bk))
+            foreach (entry, val; tx.iterator(bk3))
             {
-                string keyName;
-                string value;
+                int keyName;
+                int value;
+                string bucket;
                 keyName.mossDecode(entry.key);
                 value.mossDecode(val);
-                writefln("[%s] %s = %s", entry.prefix.dup, keyName, value);
+                bucket.mossDecode(entry.prefix);
+                writefln("[%s] %s = %s", bucket, keyName, value);
             }
         }
 
