@@ -19,7 +19,7 @@ public import moss.db.keyvalue.driver;
 import moss.db.keyvalue.errors;
 import moss.db.keyvalue.interfaces;
 import moss.db.keyvalue.driver.lmdb.driver : LMDBDriver;
-import moss.db.keyvalue.driver.lmdb : lmdbStr;
+import moss.db.keyvalue.driver.lmdb : lmdbStr, encodeKey;
 import moss.db.keyvalue.driver.lmdb.iterator;
 import std.exception : assumeUnique;
 import lmdb;
@@ -184,30 +184,6 @@ public:
     }
 
 private:
-
-    /**
-     * Helper to encode a key to its bucket
-     */
-    MDB_val encodeKey(in Bucket bucket, in ImmutableDatum key) return @safe const
-    {
-        uint16_t bucketLength = cast(uint16_t) bucket.prefix.length;
-        uint16_t keyLength = cast(uint16_t) key.length;
-        Entry entry = Entry(EntryType.Key, bucketLength, keyLength, [0, 0, 0]);
-        ubyte[] rawData;
-        rawData ~= entry.mossEncode;
-        if (bucketLength > 0)
-        {
-            rawData ~= bucket.prefix;
-        }
-        if (keyLength > 0)
-        {
-            rawData ~= key;
-        }
-
-        return () @trusted {
-            return MDB_val(cast(size_t) rawData.length, cast(void*)&rawData[0]);
-        }();
-    }
 
     LMDBDriver parentDriver;
     MDB_txn* txn;
