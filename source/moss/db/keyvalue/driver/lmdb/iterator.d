@@ -19,6 +19,7 @@ public import moss.db.keyvalue.interfaces;
 import moss.db.keyvalue.driver.lmdb : lmdbStr, encodeKey;
 import moss.db.keyvalue.driver.lmdb.transaction : LMDBTransaction;
 import lmdb;
+import std.typecons : Nullable;
 
 /**
  * LMDB specific implementation of a bucket iterator
@@ -64,7 +65,7 @@ package final class LMDBIterator : BucketIterator
      */
     override pure bool empty() @safe nothrow return @nogc
     {
-        if (keyCurrent is null || valCurrent is null)
+        if (keyCurrent.isNull || valCurrent is null)
         {
             return true;
         }
@@ -77,7 +78,8 @@ package final class LMDBIterator : BucketIterator
     override pure KeyValuePair front() @safe nothrow return @nogc
     {
         return () @trusted {
-            return KeyValuePair(cast(ImmutableDatum) keyCurrent, cast(ImmutableDatum) valCurrent);
+            return KeyValuePair(cast(ImmutableDatum) keyCurrent.get.key,
+                    cast(ImmutableDatum) valCurrent);
         }();
     }
 
@@ -101,37 +103,34 @@ package final class LMDBIterator : BucketIterator
 
         if (rc != 0)
         {
-            keyCurrent = null;
+            keyCurrent = DatabaseEntry.init;
             valCurrent = null;
             return;
         }
 
         /* Set key/value */
-        keyCurrent = () @trusted {
+        auto keyData = () @trusted {
             return cast(Datum) dbKey.mv_data[0 .. dbKey.mv_size];
         }();
         valCurrent = () @trusted {
             return cast(Datum) dbVal.mv_data[0 .. dbVal.mv_size];
         }();
 
-        Entry entry;
-        ImmutableDatum entryBytes = () @trusted {
-            return cast(ImmutableDatum) keyCurrent[0 .. Entry.sizeof];
+        auto dbEntry = () @trusted {
+            auto db = DatabaseEntry();
+            db.mossDecode(cast(ImmutableDatum) keyData);
+            return db;
         }();
-        ImmutableDatum remainder = () @trusted {
-            return cast(ImmutableDatum) keyCurrent[Entry.sizeof .. $];
-        }();
-        entry.mossDecode(entryBytes);
-
-        ImmutableDatum bucketID = remainder[0 .. entry.bucketLength];
-        ImmutableDatum keyID = remainder[entry.bucketLength .. entry.bucketLength + entry.keyLength];
 
         /* Bucket has changed - nothing to show. */
-        if (bucketID != bucketPrefix)
+        if (dbEntry.prefix != bucketPrefix)
         {
+            keyCurrent = DatabaseEntry.init;
             valCurrent = null;
-            keyCurrent = null;
+            return;
         }
+
+        keyCurrent = dbEntry;
     }
 
 private:
@@ -140,7 +139,7 @@ private:
     Datum bucketPrefix;
     MDB_cursor* cursor;
 
-    Datum keyCurrent;
+    Nullable!(DatabaseEntry, DatabaseEntry.init) keyCurrent;
     Datum valCurrent;
     bool canSet;
 }
