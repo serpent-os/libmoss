@@ -127,13 +127,11 @@ public:
         }();
         if (rc != 0)
         {
-            //return DatabaseResult(DatabaseError(DatabaseErrorCode.KeyNotFound, lmdbStr(rc)));
             return null;
         }
-        auto result = () @trusted {
+        return () @trusted {
             return cast(ImmutableDatum) dbVal.mv_data[0 .. dbVal.mv_size];
         }();
-        return result;
     }
 
     /**
