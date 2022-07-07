@@ -160,7 +160,7 @@ private:
     Driver driver;
 }
 
-@safe unittest
+@("Fairly standard unittest") @safe unittest
 {
     Database db;
     Database.open("lmdb://myDB", DatabaseFlags.CreateIfNotExists)
