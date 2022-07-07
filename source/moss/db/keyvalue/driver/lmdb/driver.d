@@ -27,6 +27,9 @@ import lmdb;
 import moss.db.keyvalue.driver.lmdb : lmdbStr;
 import moss.db.keyvalue.driver.lmdb.transaction;
 
+import moss.core.ioutil : IOUtil;
+import moss.core.ioutil : CError;
+
 /**
  * Implementation using LMDB
  */
@@ -40,11 +43,44 @@ public final class LMDBDriver : Driver
      *      flags = Flags that affect opening
      * Returns: A nullable error
      */
-    override DatabaseResult connect(const(string) uri, DatabaseFlags flags) @safe nothrow
+    override DatabaseResult connect(const(string) uri, DatabaseFlags flags) @safe
     {
         /* no env dir */
-        int cFlags = MDB_NOSUBDIR;
+        int cFlags = 0;
         this.flags = flags;
+        import std.file : exists;
+
+        if ((flags & DatabaseFlags.CreateIfNotExists) == DatabaseFlags.CreateIfNotExists)
+        {
+            debug
+            {
+                import std.stdio : writeln;
+
+                writeln("connect to: ", uri);
+            }
+            /* Make the database if it doesn't exist */
+            if (!uri.exists)
+            {
+                auto result = () @trusted {
+                    return IOUtil.mkdir(uri, octal!755, true);
+                }();
+                CError err;
+                result.match!((bool b) {}, (CError err2) { err = err2; });
+                if (err != CError.init)
+                {
+                    return () @trusted {
+                        return DatabaseResult(DatabaseError(DatabaseErrorCode.InternalDriver,
+                                cast(string) err.toString));
+                    }();
+                }
+                debug
+                {
+                    import std.stdio : writeln;
+
+                    writeln("done");
+                }
+            }
+        }
 
         /* Read-only? */
         if ((flags & DatabaseFlags.ReadOnly) == DatabaseFlags.ReadOnly)
