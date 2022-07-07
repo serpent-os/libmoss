@@ -85,8 +85,20 @@ public:
 
     override DatabaseResult set(in Bucket bucket, in ImmutableDatum key, in ImmutableDatum value) return @safe
     {
-        return DatabaseResult(DatabaseError(DatabaseErrorCode.Unimplemented,
-                "Transaction.set(): Not yet implemented"));
+        MDB_val dbKey = encodeKey(bucket, key);
+        MDB_val dbVal = () @trusted {
+            return MDB_val(cast(size_t) value.length, cast(void*)&value[0]);
+        }();
+
+        /* try to write it */
+        auto rc = () @trusted { return mdb_put(txn, dbi, &dbKey, &dbVal, 0); }();
+
+        /* hit an error */
+        if (rc != 0)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
+        }
+        return NoDatabaseError;
     }
 
     override DatabaseResult remove(in Bucket bucket, in ImmutableDatum key) return @safe
@@ -134,6 +146,30 @@ public:
     }
 
 private:
+
+    /**
+     * Helper to encode a key to its bucket
+     */
+    MDB_val encodeKey(in Bucket bucket, in ImmutableDatum key) return @safe 
+    {
+        uint16_t bucketLength = cast(uint16_t) bucket.prefix.length;
+        uint16_t keyLength = cast(uint16_t) key.length;
+        Entry entry = Entry(EntryType.Key, bucketLength, keyLength, [0, 0, 0]);
+        ubyte[] rawData;
+        rawData ~= entry.mossEncode;
+        if (bucketLength > 0)
+        {
+            rawData ~= bucket.prefix;
+        }
+        if (keyLength > 0)
+        {
+            rawData ~= key;
+        }
+
+        return () @trusted {
+            return MDB_val(cast(size_t) rawData.length, cast(void*)&rawData[0]);
+        }();
+    }
 
     LMDBDriver parentDriver;
     MDB_txn* txn;

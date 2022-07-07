@@ -21,6 +21,7 @@ public import moss.db.keyvalue.errors;
 public import std.typecons : Tuple;
 import std.conv : to;
 public import std.stdint : uint8_t, uint16_t;
+import std.exception : assumeUnique;
 
 /**
  * Defines the type of every record key (entry)
@@ -63,6 +64,19 @@ align(1):
          * Pad the struct to 8
          */
     ubyte[3] __padding__;
+
+    /**
+     * Encode an entry automatically
+     */
+    pure ImmutableDatum mossEncode() @trusted
+    {
+        ubyte[] data;
+        data ~= cast(Datum) type.mossEncode;
+        data ~= cast(Datum) bucketLength.mossEncode;
+        data ~= cast(Datum) keyLength.mossEncode;
+        data ~= __padding__;
+        return assumeUnique(data);
+    }
 }
 
 static assert(Entry.sizeof == 8,
@@ -105,7 +119,7 @@ public enum DatabaseFlags
 public struct Bucket
 {
     /**
-     * Bucket identifier
+     * Bucket identifier (encoded)
      */
     ImmutableDatum prefix;
 }
@@ -152,9 +166,9 @@ public abstract class Transaction
     /**
      * Construct a bucket identity
      */
-    pure final Bucket bucket(in ImmutableDatum name) const return @safe
+    pure final Bucket bucket(scope return ImmutableDatum name) const return @safe
     {
-        return Bucket.init;
+        return Bucket(name);
     }
 
     /** Ditto */
