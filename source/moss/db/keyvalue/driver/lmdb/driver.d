@@ -89,7 +89,7 @@ public final class LMDBDriver : Driver
 
         /* Open 0600 connection to the DB */
         rc = () @trusted {
-            return mdb_env_open(env, uri.toStringz, cFlags, octal!600);
+            return mdb_env_open(env, uri.toStringz, cFlags, octal!644);
         }();
         if (rc != 0)
         {
