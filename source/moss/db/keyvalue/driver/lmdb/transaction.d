@@ -101,10 +101,18 @@ public:
         return NoDatabaseError;
     }
 
+    /**
+     * Remove a key from the bucket if it exists
+     */
     override DatabaseResult remove(in Bucket bucket, in ImmutableDatum key) return @safe
     {
-        return DatabaseResult(DatabaseError(DatabaseErrorCode.Unimplemented,
-                "Transaction.remove(): Not yet implemented"));
+        MDB_val dbKey = encodeKey(bucket, key);
+        auto rc = () @trusted { return mdb_del(txn, dbi, &dbKey, null); }();
+        if (rc != 0)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.KeyNotFound, lmdbStr(rc)));
+        }
+        return NoDatabaseError;
     }
 
     override BucketIterator iterator(in Bucket bucket) return @safe
@@ -118,6 +126,9 @@ public:
                 "Transaction.removeBucket(): Not yet implemented"));
     }
 
+    /**
+     * Retrieve a buckets key from the database
+     */
     override ImmutableDatum get(in Bucket bucket, in ImmutableDatum key) const return @safe
     {
         MDB_val dbKey = encodeKey(bucket, key);
