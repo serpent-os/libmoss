@@ -19,6 +19,54 @@ public import moss.core.encoding : ImmutableDatum, Datum, isMossEncodable,
     isMossDecodable, mossEncode, mossDecode;
 public import moss.db.keyvalue.errors;
 public import std.typecons : Tuple;
+import std.conv : to;
+public import std.stdint : uint8_t, uint16_t;
+
+/**
+ * Defines the type of every record key (entry)
+ */
+public enum EntryType : uint8_t
+{
+    /**
+     * Entry is just a bucket
+     */
+    Bucket = 0,
+
+    /**
+     * Entry is a key
+     */
+    Key = 1,
+}
+
+/**
+ * Mostly used for internal (de/se)rialisation
+ */
+public struct Entry
+{
+align(1):
+    /**
+         * Type
+         */
+    EntryType type;
+
+    /**
+         * Bucket ID length, follows
+         */
+    uint16_t bucketLength;
+
+    /**
+         * Key ID length, follows bucketLength
+         */
+    uint16_t keyLength;
+
+    /**
+         * Pad the struct to 8
+         */
+    ubyte[3] __padding__;
+}
+
+static assert(Entry.sizeof == 8,
+        "Entry.sizeof() != 8 bytes, instead it is " ~ Entry.sizeof.to!string ~ " bytes");
 
 /**
  * Flags to pass to drivers
