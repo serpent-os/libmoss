@@ -48,16 +48,35 @@ package class LMDBTransaction : ExplicitTransaction
             () @trusted { mdb_txn_reset(txn); }();
             return NoDatabaseError;
         }
+        int cFlagsTxn;
+        int cFlags;
 
-        /* Read-only transaction? */
-        immutable cFlags = (parentDriver.databaseFlags & DatabaseFlags.ReadOnly) == DatabaseFlags.ReadOnly
-            ? MDB_RDONLY : 0;
-        immutable rc = () @trusted {
-            return mdb_txn_begin(parentDriver.environment, null, cFlags, &txn);
+        if ((parentDriver.databaseFlags & DatabaseFlags.ReadOnly) == DatabaseFlags.ReadOnly)
+        {
+            cFlags = MDB_RDONLY;
+            cFlagsTxn = MDB_RDONLY;
+        }
+
+        if (
+            (parentDriver.databaseFlags & DatabaseFlags.CreateIfNotExists) == DatabaseFlags
+                .CreateIfNotExists)
+        {
+            cFlags |= MDB_CREATE;
+        }
+
+        auto rc = () @trusted {
+            return mdb_txn_begin(parentDriver.environment, null, cFlagsTxn, &txn);
         }();
         if (rc != 0)
         {
             return DatabaseResult(DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
+        }
+
+        /* Open the default table (no multitable stuff) */
+        rc = () @trusted { return mdb_dbi_open(txn, null, cFlags, &dbi); }();
+        if (rc != 0)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
         }
         return NoDatabaseError;
     }
@@ -118,4 +137,5 @@ private:
 
     LMDBDriver parentDriver;
     MDB_txn* txn;
+    MDB_dbi dbi;
 }

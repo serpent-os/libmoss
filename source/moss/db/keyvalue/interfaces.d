@@ -40,6 +40,11 @@ public enum DatabaseFlags
      * Note: Requires manual flushing
      */
     DisableSync = 1 << 2,
+
+    /**
+     * Create database if it doesn't exist
+     */
+    CreateIfNotExists = 1 << 3,
 }
 
 /**

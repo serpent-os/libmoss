@@ -163,7 +163,8 @@ private:
 @safe unittest
 {
     Database db;
-    Database.open("lmdb://myDB").match!((d) => db = d, (DatabaseError e) => assert(0, e.message));
+    Database.open("lmdb://myDB", DatabaseFlags.CreateIfNotExists)
+        .match!((d) => db = d, (DatabaseError e) => assert(0, e.message));
     scope (exit)
     {
         db.close();
