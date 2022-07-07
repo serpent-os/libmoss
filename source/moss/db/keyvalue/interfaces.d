@@ -25,7 +25,7 @@ public import std.stdint : uint8_t, uint16_t;
 /**
  * Defines the type of every record key (entry)
  */
-public enum EntryType : uint8_t
+extern (C) public enum EntryType : uint8_t
 {
     /**
      * Entry is just a bucket
@@ -41,7 +41,7 @@ public enum EntryType : uint8_t
 /**
  * Mostly used for internal (de/se)rialisation
  */
-public struct Entry
+extern (C) public struct Entry
 {
 align(1):
     /**
