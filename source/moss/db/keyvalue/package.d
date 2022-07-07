@@ -183,7 +183,9 @@ private:
         auto bk2 = tx.bucket([1, 1]);
 
         tx.set(bk, "name", "john");
+        tx.set(bk, "name2", "jimothy");
         tx.set(bk2, "name", "not-john");
+        tx.set(bk2, "name2", "not-jimothy");
         didUpdate = true;
         return NoDatabaseError;
     });
@@ -206,9 +208,9 @@ private:
         {
             import std.stdio : writeln;
 
-            foreach (key, val; tx.iterator(bk))
+            foreach (entry, val; tx.iterator(bk))
             {
-                writeln(key.dup, " ", val.dup);
+                writeln(cast(string) entry.key.dup, " = ", cast(string) val.dup);
             }
         }
 

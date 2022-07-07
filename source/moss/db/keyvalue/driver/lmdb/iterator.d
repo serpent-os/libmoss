@@ -75,10 +75,10 @@ package final class LMDBIterator : BucketIterator
     /**
      * Front pair of the range
      */
-    override pure KeyValuePair front() @safe nothrow return @nogc
+    override pure EntryValuePair front() @safe nothrow return @nogc
     {
         return () @trusted {
-            return KeyValuePair(cast(ImmutableDatum) keyCurrent.get.key,
+            return EntryValuePair(cast(immutable(DatabaseEntry)) keyCurrent.get,
                     cast(ImmutableDatum) valCurrent);
         }();
     }

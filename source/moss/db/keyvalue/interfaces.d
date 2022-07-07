@@ -124,6 +124,10 @@ public struct DatabaseEntry
     {
         assert(rawBytes.length > Entry.sizeof);
     }
+    out
+    {
+        assert(this.prefix !is null);
+    }
     do
     {
         Entry entry;
@@ -196,7 +200,8 @@ public interface BucketIterator
     /**
      * All iterations are performed with key and value in lockstep
      */
-    static alias KeyValuePair = Tuple!(ImmutableDatum, "key", ImmutableDatum, "value");
+    static alias EntryValuePair = Tuple!(immutable(DatabaseEntry), "entry",
+            ImmutableDatum, "value");
 
     /**
      * Does this range have more to yield
@@ -206,7 +211,7 @@ public interface BucketIterator
     /**
      * Front pair of the range
      */
-    pure KeyValuePair front() @safe nothrow return @nogc;
+    pure EntryValuePair front() @safe nothrow return @nogc;
 
     /**
      * Pop the front elemnt and move it along
