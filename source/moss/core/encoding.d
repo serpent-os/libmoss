@@ -15,7 +15,7 @@
  */
 module moss.core.encoding;
 
-import std.traits : isFloatingPoint, isIntegral, isNumeric, isBoolean;
+import std.traits : isFloatingPoint, isIntegral, isNumeric, isBoolean, OriginalType;
 
 public alias Datum = ubyte[];
 
@@ -30,9 +30,9 @@ public alias ImmutableDatum = immutable(Datum);
  * It must implement the "mossEncode()" function, which must in turn return
  * a "ImmutableDatum" (immutable(ubyte[])) value.
  */
-auto isMossEncodable(T)()
+auto isMossEncodable(T)() @safe
 {
-    static if (is(typeof({ T val = void; return val.mossEncode(); }()) E == ImmutableDatum))
+    static if (is(OriginalType!(typeof({ T val = void; return val.mossEncode(); }())) E == ImmutableDatum))
     {
         return true;
     }
@@ -45,7 +45,7 @@ auto isMossEncodable(T)()
 /**
  * Is the input type decodable?
  */
-auto isMossDecodable(T)()
+auto isMossDecodable(T)() @safe
 {
     /* Ensure we have a usable interface, i.e. ".mossDecode(scope ImmutableDatum)" */
     static if (is(typeof({
@@ -67,7 +67,7 @@ auto isMossDecodable(T)()
  * Helper to build the correct debug string when failing to find the correct
  * encoder interface.
  */
-auto stringifyNonEncodableType(T)()
+pure auto stringifyNonEncodableType(T)() @safe nothrow
 {
     return "" ~ T.stringof ~ " is not encodable. Implement the mossEncode() interface";
 }
@@ -76,7 +76,7 @@ auto stringifyNonEncodableType(T)()
  * Helper to build the correct debug string when failing to find the correct
  * decoder interface
  */
-auto stringifyNonDecodableType(T)()
+pure auto stringifyNonDecodableType(T)() @safe nothrow
 {
     return "" ~ T.stringof ~ " is not decodable. Implement the mossDecode() interface";
 }
@@ -84,7 +84,7 @@ auto stringifyNonDecodableType(T)()
 /**
  * Automatically encode string to C string with nul terminator
  */
-pure public ImmutableDatum mossEncode(T)(in T s) if (is(T == string))
+pure public ImmutableDatum mossEncode(T)(in T s) @trusted if (is(T == string))
 {
     import std.string : toStringz;
     import core.stdc.string : strlen;
@@ -98,7 +98,7 @@ pure public ImmutableDatum mossEncode(T)(in T s) if (is(T == string))
  * Automatically encode all non floating point numericals to big endian representation
  * when they're more than one byte in size
  */
-pure public ImmutableDatum mossEncode(T)(in T i)
+pure public ImmutableDatum mossEncode(T)(in T i) @trusted
         if (!isFloatingPoint!T && (isNumeric!T || isBoolean!T))
 {
     import std.bitmanip : nativeToBigEndian;
@@ -117,7 +117,8 @@ pure public ImmutableDatum mossEncode(T)(in T i)
 /**
  * Automatically convert a stored nul-terminated string into a valid D string
  */
-pure void mossDecode(T)(out T dest, in ImmutableDatum rawBytes) if (is(T == string))
+pure void mossDecode(T)(out T dest, in ImmutableDatum rawBytes) @trusted
+        if (is(T == string))
 {
     import std.string : fromStringz;
     import std.exception : enforce;
@@ -129,7 +130,7 @@ pure void mossDecode(T)(out T dest, in ImmutableDatum rawBytes) if (is(T == stri
  * Automatically decode all non floating point numericals from big endian representation
  * when they're more than one byte in size.
  */
-pure void mossDecode(T)(out T dest, in ImmutableDatum rawBytes)
+pure void mossDecode(T)(out T dest, in ImmutableDatum rawBytes) @trusted
         if (!isFloatingPoint!T && (isNumeric!T || isBoolean!T))
 {
     import std.bitmanip : bigEndianToNative;

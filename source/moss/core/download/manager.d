@@ -100,7 +100,7 @@ public:
         auto writeStore = writable[0];
 
         import std.experimental.logger;
-        import std.string: format;
+        import std.string : format;
 
         info(format!"Using cache: %s"(writeStore.directory));
 

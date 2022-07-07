@@ -532,6 +532,7 @@ private:
         catch (Exception ex)
         {
             import std.experimental.logger;
+
             error(ex.message);
             printUsage();
             return 1;
@@ -554,6 +555,7 @@ private:
             catch (Exception ex)
             {
                 import std.experimental.logger;
+
                 error(ex.message);
                 printUsage();
                 return true;
