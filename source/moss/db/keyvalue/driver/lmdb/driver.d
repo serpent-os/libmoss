@@ -45,39 +45,25 @@ public final class LMDBDriver : Driver
      */
     override DatabaseResult connect(const(string) uri, DatabaseFlags flags) @safe
     {
-        /* no env dir */
         int cFlags = 0;
         this.flags = flags;
         import std.file : exists;
 
         if ((flags & DatabaseFlags.CreateIfNotExists) == DatabaseFlags.CreateIfNotExists)
         {
-            debug
-            {
-                import std.stdio : writeln;
-
-                writeln("connect to: ", uri);
-            }
             /* Make the database if it doesn't exist */
             if (!uri.exists)
             {
                 auto result = () @trusted {
                     return IOUtil.mkdir(uri, octal!755, true);
                 }();
-                CError err;
-                result.match!((bool b) {}, (CError err2) { err = err2; });
+                auto err = result.match!((bool b) => CError.init, (CError err) => err);
                 if (err != CError.init)
                 {
                     return () @trusted {
                         return DatabaseResult(DatabaseError(DatabaseErrorCode.InternalDriver,
                                 cast(string) err.toString));
                     }();
-                }
-                debug
-                {
-                    import std.stdio : writeln;
-
-                    writeln("done");
                 }
             }
         }
