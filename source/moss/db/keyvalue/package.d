@@ -245,7 +245,7 @@ private:
     immutable err3 = db.update((scope tx) @safe {
         return tx.removeBucket(tx.bucket("numbers"));
     });
-
+    assert(err.isNull, err.message);
     immutable err4 = db.view((in tx) @safe {
         auto bk = tx.bucket([1]);
         auto bk2 = tx.bucket([1, 1]);
@@ -257,5 +257,4 @@ private:
 
         return NoDatabaseError;
     });
-    assert(err3.isNull);
 }
