@@ -20,7 +20,7 @@ import moss.db.keyvalue.errors;
 import moss.db.keyvalue.interfaces;
 import moss.db.keyvalue.driver.lmdb.driver : LMDBDriver;
 import moss.db.keyvalue.driver.lmdb : lmdbStr;
-
+import std.exception : assumeUnique;
 import lmdb;
 
 /**
@@ -120,7 +120,20 @@ public:
 
     override ImmutableDatum get(in Bucket bucket, in ImmutableDatum key) const return @safe
     {
-        return null;
+        MDB_val dbKey = encodeKey(bucket, key);
+        MDB_val dbVal;
+        immutable rc = () @trusted {
+            return mdb_get(cast(MDB_txn*) txn, cast(MDB_dbi) dbi, &dbKey, &dbVal);
+        }();
+        if (rc != 0)
+        {
+            //return DatabaseResult(DatabaseError(DatabaseErrorCode.KeyNotFound, lmdbStr(rc)));
+            return null;
+        }
+        auto result = () @trusted {
+            return cast(ImmutableDatum) dbVal.mv_data[0 .. dbVal.mv_size];
+        }();
+        return result;
     }
 
     /**
@@ -150,7 +163,7 @@ private:
     /**
      * Helper to encode a key to its bucket
      */
-    MDB_val encodeKey(in Bucket bucket, in ImmutableDatum key) return @safe 
+    MDB_val encodeKey(in Bucket bucket, in ImmutableDatum key) return @safe const
     {
         uint16_t bucketLength = cast(uint16_t) bucket.prefix.length;
         uint16_t keyLength = cast(uint16_t) key.length;

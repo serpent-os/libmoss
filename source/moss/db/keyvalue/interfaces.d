@@ -210,6 +210,17 @@ public abstract class Transaction
      * Retrieve a value from the bucket key (RO/RW views)
      */
     abstract ImmutableDatum get(in Bucket bucket, in ImmutableDatum key) const return @safe;
+
+    /**
+     * Accept generic encoding when not using datums
+     */
+    final immutable(V) get(K, V)(in Bucket bucket, in K key) const return @safe
+            if (isMossEncodable!K && isMossDecodable!V)
+    {
+        V inr;
+        inr.mossDecode(get(bucket, key.mossEncode));
+        return inr;
+    }
 }
 
 /**

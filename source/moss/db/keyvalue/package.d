@@ -196,10 +196,10 @@ private:
         auto bk = tx.bucket([1]);
         auto bk2 = tx.bucket([1, 1]);
 
-        auto val1 = tx.get(bk, "name".representation);
-        assert(val1 == "john".representation, "not john");
-        auto val2 = tx.get(bk, "name".representation);
-        assert(val2 == "not-john".representation, "Not not-john");
+        string val1 = tx.get!(string, string)(bk, "name");
+        assert(val1 == "john", "not john");
+        string val2 = tx.get!(string, string)(bk2, "name");
+        assert(val2 == "not-john", "Not not-john");
         didView = true;
         return NoDatabaseError;
     });
