@@ -184,8 +184,8 @@ private:
         auto bk = tx.bucket([1]);
         auto bk2 = tx.bucket([1, 1]);
 
-        tx.set(bk, "name".representation, "john".representation);
-        tx.set(bk2, "name".representation, "not-john".representation);
+        tx.set(bk, "name", "john");
+        tx.set(bk2, "name", "not-john");
         didUpdate = true;
         return NoDatabaseError;
     });

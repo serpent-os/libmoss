@@ -15,7 +15,8 @@
 
 module moss.db.keyvalue.interfaces;
 
-public import moss.core.encoding : ImmutableDatum, Datum;
+public import moss.core.encoding : ImmutableDatum, Datum, isMossEncodable,
+    isMossDecodable, mossEncode, mossDecode;
 public import moss.db.keyvalue.errors;
 public import std.typecons : Tuple;
 
@@ -112,6 +113,15 @@ public abstract class Transaction
      * Set a key in bucket to value (RW view only)
      */
     abstract DatabaseResult set(in Bucket bucket, in ImmutableDatum key, in ImmutableDatum value) return @safe;
+
+    /**
+     * Accept generic encoding when not using datums
+     */
+    final DatabaseResult set(K, V)(in Bucket bucket, in K key, in V val) return @safe
+            if (isMossEncodable!K && isMossEncodable!V)
+    {
+        return set(bucket, key.mossEncode, val.mossEncode);
+    }
 
     /**
      * Remove a key/value pair from a bucket
