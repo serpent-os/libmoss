@@ -16,7 +16,7 @@
 module moss.db.keyvalue.driver.lmdb.iterator;
 
 public import moss.db.keyvalue.interfaces;
-import moss.db.keyvalue.driver.lmdb : lmdbStr;
+import moss.db.keyvalue.driver.lmdb : lmdbStr, encodeKey;
 import moss.db.keyvalue.driver.lmdb.transaction : LMDBTransaction;
 import lmdb;
 
@@ -53,6 +53,9 @@ package final class LMDBIterator : BucketIterator
             return DatabaseResult(DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
         }
 
+        canSet = true;
+        popFront();
+
         return NoDatabaseError;
     }
 
@@ -61,7 +64,11 @@ package final class LMDBIterator : BucketIterator
      */
     override pure bool empty() @safe nothrow return @nogc
     {
-        return true;
+        if (keyCurrent is null || valCurrent is null)
+        {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -69,21 +76,71 @@ package final class LMDBIterator : BucketIterator
      */
     override pure KeyValuePair front() @safe nothrow return @nogc
     {
-        return KeyValuePair(null, null);
+        return () @trusted {
+            return KeyValuePair(cast(ImmutableDatum) keyCurrent, cast(ImmutableDatum) valCurrent);
+        }();
     }
 
     /**
      * Pop the front elemnt and move it along
      */
-    override pure void popFront() @safe nothrow return @nogc
+    override void popFront() return @safe
     {
+        immutable nextMode = canSet ? MDB_cursor_op.setRange : MDB_cursor_op.next;
+        MDB_val dbKey;
+        MDB_val dbVal;
 
+        auto rc = () @trusted {
+            if (canSet)
+            {
+                dbKey = encodeKey(Bucket(cast(ImmutableDatum) bucketPrefix), []);
+            }
+            return mdb_cursor_get(cursor, &dbKey, &dbVal, nextMode);
+        }();
+        canSet = false;
+
+        if (rc != 0)
+        {
+            keyCurrent = null;
+            valCurrent = null;
+            return;
+        }
+
+        /* Set key/value */
+        keyCurrent = () @trusted {
+            return cast(Datum) dbKey.mv_data[0 .. dbKey.mv_size];
+        }();
+        valCurrent = () @trusted {
+            return cast(Datum) dbVal.mv_data[0 .. dbVal.mv_size];
+        }();
+
+        Entry entry;
+        ImmutableDatum entryBytes = () @trusted {
+            return cast(ImmutableDatum) keyCurrent[0 .. Entry.sizeof];
+        }();
+        ImmutableDatum remainder = () @trusted {
+            return cast(ImmutableDatum) keyCurrent[Entry.sizeof .. $];
+        }();
+        entry.mossDecode(entryBytes);
+
+        ImmutableDatum bucketID = remainder[0 .. entry.bucketLength];
+        ImmutableDatum keyID = remainder[entry.bucketLength .. entry.bucketLength + entry.keyLength];
+
+        /* Bucket has changed - nothing to show. */
+        if (bucketID != bucketPrefix)
+        {
+            valCurrent = null;
+            keyCurrent = null;
+        }
     }
 
 private:
 
     LMDBTransaction parentTransaction;
-    Bucket bucket;
     Datum bucketPrefix;
     MDB_cursor* cursor;
+
+    Datum keyCurrent;
+    Datum valCurrent;
+    bool canSet;
 }

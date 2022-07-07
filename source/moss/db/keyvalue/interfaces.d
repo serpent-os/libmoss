@@ -77,6 +77,22 @@ align(1):
         data ~= __padding__;
         return assumeUnique(data);
     }
+
+    /**
+     * Decode an entry
+     */
+    void mossDecode(in ImmutableDatum rawBytes) @safe
+    {
+        assert(rawBytes.length == Entry.sizeof);
+        ulong offset = 0;
+        type.mossDecode(rawBytes[0 .. EntryType.sizeof]);
+        auto bbytes = rawBytes[EntryType.sizeof .. EntryType.sizeof + uint16_t.sizeof];
+        bucketLength.mossDecode(bbytes);
+        bbytes = rawBytes[EntryType.sizeof + uint16_t.sizeof .. EntryType.sizeof
+            + uint16_t.sizeof + uint16_t.sizeof];
+        keyLength.mossDecode(bbytes);
+
+    }
 }
 
 static assert(Entry.sizeof == 8,
@@ -148,7 +164,7 @@ public interface BucketIterator
     /**
      * Pop the front elemnt and move it along
      */
-    pure void popFront() @safe nothrow return @nogc;
+    void popFront() return @safe;
 }
 
 /**
