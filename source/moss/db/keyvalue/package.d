@@ -240,4 +240,22 @@ private:
     });
     assert(err2.isNull, err.get.message);
     assert(didView, "View lambda not run");
+
+    /* Delete the numbers bucket */
+    immutable err3 = db.update((scope tx) @safe {
+        return tx.removeBucket(tx.bucket("numbers"));
+    });
+
+    immutable err4 = db.view((in tx) @safe {
+        auto bk = tx.bucket([1]);
+        auto bk2 = tx.bucket([1, 1]);
+
+        string val1 = tx.get!(string, string)(bk, "name");
+        assert(val1 == "john", "not john");
+        string val2 = tx.get!(string, string)(bk2, "name");
+        assert(val2 == "not-john", "Not not-john");
+
+        return NoDatabaseError;
+    });
+    assert(err3.isNull);
 }

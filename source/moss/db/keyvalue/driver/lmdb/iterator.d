@@ -133,6 +133,30 @@ package final class LMDBIterator : BucketIterator
         keyCurrent = dbEntry;
     }
 
+    /**
+     * Walk all entries in a bucket and empty it
+     */
+    DatabaseResult wipeBucket() return @safe
+    {
+        foreach (entry, val; this)
+        {
+            auto rc = () @trusted { return mdb_cursor_del(cursor, 0); }();
+            debug
+            {
+                import std.stdio : writeln;
+
+                string name;
+                name.mossDecode(entry.key);
+                writeln("DELETING ", name, " WITH VAL: ", val.dup);
+            }
+            if (rc != 0)
+            {
+                return DatabaseResult(DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
+            }
+        }
+        return NoDatabaseError;
+    }
+
 private:
 
     LMDBTransaction parentTransaction;

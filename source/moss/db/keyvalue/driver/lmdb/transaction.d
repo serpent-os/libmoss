@@ -128,8 +128,9 @@ public:
 
     override DatabaseResult removeBucket(in Bucket bucket) return @safe
     {
-        return DatabaseResult(DatabaseError(DatabaseErrorCode.Unimplemented,
-                "Transaction.removeBucket(): Not yet implemented"));
+        auto iter = new LMDBIterator(this);
+        iter.reset(bucket);
+        return iter.wipeBucket();
     }
 
     /**
