@@ -179,8 +179,6 @@ private:
     immutable err = db.update((scope tx) @safe {
         import std.string : representation;
 
-        /* TODO: Use mossEncode */
-        /* Ensure rocksdb will not match 1 against 1, 1 */
         auto bk = tx.bucket([1]);
         auto bk2 = tx.bucket([1, 1]);
 
