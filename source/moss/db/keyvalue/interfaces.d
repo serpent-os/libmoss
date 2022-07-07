@@ -99,6 +99,53 @@ static assert(Entry.sizeof == 8,
         "Entry.sizeof() != 8 bytes, instead it is " ~ Entry.sizeof.to!string ~ " bytes");
 
 /**
+ * Concrete encapsulation of a database entry
+ */
+public struct DatabaseEntry
+{
+    /**
+     * Bucket identifier
+     */
+    Datum prefix;
+
+    /**
+     * Actual key
+     */
+    Datum key;
+
+    /**
+     * Decode from a byte stream.
+     *
+     * Params:
+     *      rawBytes = Input stream
+     */
+    void mossDecode(in ImmutableDatum rawBytes) @safe
+    in
+    {
+        assert(rawBytes.length > Entry.sizeof);
+    }
+    do
+    {
+        Entry entry;
+        ImmutableDatum entryBytes = () @trusted {
+            return cast(ImmutableDatum) rawBytes[0 .. Entry.sizeof];
+        }();
+        ImmutableDatum remainder = () @trusted {
+            return cast(ImmutableDatum) rawBytes[Entry.sizeof .. $];
+        }();
+        entry.mossDecode(entryBytes);
+
+        ImmutableDatum bucketID = remainder[0 .. entry.bucketLength];
+        ImmutableDatum keyID = remainder[entry.bucketLength .. entry.bucketLength + entry.keyLength];
+
+        () @trusted {
+            this.prefix = cast(Datum) bucketID;
+            this.key = cast(Datum) keyID;
+        }();
+    }
+}
+
+/**
  * Flags to pass to drivers
  */
 public enum DatabaseFlags
