@@ -87,6 +87,13 @@ public final class LMDBDriver : Driver
             return DatabaseResult(DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
         }
 
+        /* Set the map page size */
+        rc = () @trusted { return mdb_env_set_mapsize(env, 1000 * 1024 * 1024 * 10); }();
+        if (rc != 0)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
+        }
+
         /* Open 0600 connection to the DB */
         rc = () @trusted {
             return mdb_env_open(env, uri.toStringz, cFlags, octal!644);

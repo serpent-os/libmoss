@@ -176,6 +176,9 @@ private:
     /**
      * Add entries for validation
      */
+    import std.datetime.stopwatch;
+
+    auto w = StopWatch(AutoStart.yes);
     immutable err = db.update((scope tx) @safe {
         import std.string : representation;
 
@@ -189,12 +192,18 @@ private:
         didUpdate = true;
 
         auto bk3 = tx.bucket("numbers");
-        for (int i = 0; i < 1000; i++)
+        for (int i = 0; i < 100_000; i++)
         {
             tx.set(bk3, i, i);
         }
         return NoDatabaseError;
     });
+    debug
+    {
+        import std.stdio : writeln;
+
+        writeln(w.peek);
+    }
     assert(err.isNull, err.get.message);
     assert(didUpdate, "Update lambda not run");
 
