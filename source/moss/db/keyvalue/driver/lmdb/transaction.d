@@ -20,6 +20,7 @@ import moss.db.keyvalue.errors;
 import moss.db.keyvalue.interfaces;
 import moss.db.keyvalue.driver.lmdb.driver : LMDBDriver;
 import moss.db.keyvalue.driver.lmdb : lmdbStr;
+import moss.db.keyvalue.driver.lmdb.iterator;
 import std.exception : assumeUnique;
 import lmdb;
 
@@ -115,9 +116,14 @@ public:
         return NoDatabaseError;
     }
 
-    override BucketIterator iterator(in Bucket bucket) return @safe
+    /**
+     * Return a new iterator for the given bucket
+     */
+    override BucketIterator iterator(in Bucket bucket) const return @safe
     {
-        return null;
+        auto iter = new LMDBIterator(this);
+        iter.reset(bucket);
+        return iter;
     }
 
     override DatabaseResult removeBucket(in Bucket bucket) return @safe
@@ -165,6 +171,16 @@ public:
     override void drop() return @safe
     {
         () @trusted { mdb_txn_abort(txn); txn = null; }();
+    }
+
+    pure @property auto transaction() @safe @nogc nothrow const
+    {
+        return txn;
+    }
+
+    pure @property auto dbIndex() @safe @nogc nothrow const
+    {
+        return dbi;
     }
 
 private:

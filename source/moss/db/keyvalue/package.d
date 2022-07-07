@@ -201,6 +201,17 @@ private:
         string val2 = tx.get!(string, string)(bk2, "name");
         assert(val2 == "not-john", "Not not-john");
         didView = true;
+
+        debug
+        {
+            import std.stdio : writeln;
+
+            foreach (key, val; tx.iterator(bk))
+            {
+                writeln(key.dup, " ", val.dup);
+            }
+        }
+
         return NoDatabaseError;
     });
     assert(err2.isNull, err.get.message);

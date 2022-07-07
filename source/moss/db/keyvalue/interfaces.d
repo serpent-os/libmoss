@@ -199,7 +199,7 @@ public abstract class Transaction
     /**
      * Return a BucketIterator
      */
-    abstract BucketIterator iterator(in Bucket bucket) return @safe;
+    abstract BucketIterator iterator(in Bucket bucket) const return @safe;
 
     /**
      * Remove a bucket and all children nodes
