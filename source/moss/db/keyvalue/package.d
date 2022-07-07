@@ -97,7 +97,7 @@ public final class Database
      *      viewDg = Delegate that will be called with a `scope const ref` Transaction
      * Returns: potentially null error
      */
-    Nullable!(DatabaseError, DatabaseError.init) view(scope Nullable!(DatabaseError,
+    DatabaseResult view(scope Nullable!(DatabaseError,
             DatabaseError.init) delegate(in Transaction tx) @safe viewDg) @safe
     {
         auto tx = driver.readOnlyTransaction();
@@ -119,7 +119,7 @@ public final class Database
      *      updateDg = Delegate that will be called with a `scope` Transaction
      * Returns: Potentially null error
      */
-    Nullable!(DatabaseError, DatabaseError.init) update(scope Nullable!(DatabaseError,
+    DatabaseResult update(scope Nullable!(DatabaseError,
             DatabaseError.init) delegate(scope Transaction tx) @safe updateDg) @safe
     {
         auto tx = driver.readWriteTransaction();
