@@ -176,7 +176,7 @@ private:
     /**
      * Add entries for validation
      */
-    import std.datetime.stopwatch;
+    import std.datetime.stopwatch : StopWatch, AutoStart;
 
     auto w = StopWatch(AutoStart.yes);
     immutable err = db.update((scope tx) @safe {
