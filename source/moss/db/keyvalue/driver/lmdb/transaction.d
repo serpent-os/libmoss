@@ -83,8 +83,18 @@ package class LMDBTransaction : ExplicitTransaction
             return DatabaseResult(DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
         }
 
+        /* Meta table */
         rc = () @trusted {
             return mdb_dbi_open(txn, "meta".toStringz, cFlags, &dbiMeta);
+        }();
+        if (rc != 0)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
+        }
+
+        /* bucket table */
+        rc = () @trusted {
+            return mdb_dbi_open(txn, "bucketMap".toStringz, cFlags, &dbiBucketMap);
         }();
         if (rc != 0)
         {
@@ -213,4 +223,5 @@ private:
     MDB_txn* txn;
     MDB_dbi dbi;
     MDB_dbi dbiMeta;
+    MDB_dbi dbiBucketMap;
 }
