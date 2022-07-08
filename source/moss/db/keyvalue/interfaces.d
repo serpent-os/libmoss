@@ -192,6 +192,27 @@ public struct Bucket
 }
 
 /**
+ * Iterate buckets in a database
+ */
+public interface BucketIterator
+{
+    /**
+     * Anything left in this range?
+     */
+    pure bool empty() @safe nothrow return @nogc;
+
+    /**
+     * Bucket at the front of the range
+     */
+    pure Bucket front() @safe nothrow return @nogc;
+
+    /**
+     * Pop the front element and move it along
+     */
+    void popFront() return @safe;
+}
+
+/**
  * Simplistic interface. Iterators are owned by the
  * implementation and should *not* be destroyed.
  */
@@ -324,6 +345,27 @@ public abstract class Transaction
             k.mossDecode(t.entry.key);
             v.mossDecode(t.value);
             return RetType(k, v);
+        });
+    }
+
+    /**
+     * Iterate the buckets within the root namespace
+     */
+    abstract BucketIterator buckets() const return @safe;
+
+    /**
+     * Generics happy buckets() iterator with automatic name decoding.
+     */
+    final auto buckets(T)() const return @safe if (isMossDecodable!T)
+    {
+        import std.algorithm : map;
+
+        alias RetType = Tuple!(T, "name", Bucket, "bucket");
+
+        return buckets.map!((b) {
+            T bucketID;
+            bucketID.mossDecode(b.name);
+            return RetType(bucketID, b);
         });
     }
 

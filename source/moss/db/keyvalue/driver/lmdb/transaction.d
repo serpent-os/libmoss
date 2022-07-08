@@ -243,6 +243,14 @@ public:
     }
 
     /**
+     * Iterate just the buckets.
+     */
+    override BucketIterator buckets() const return @safe
+    {
+        return null;
+    }
+
+    /**
      * Consume a new writable iterator and wipe everything in the bucket
      */
     override DatabaseResult removeBucket(in Bucket bucket) return @safe
