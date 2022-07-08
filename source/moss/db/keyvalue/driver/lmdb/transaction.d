@@ -35,9 +35,10 @@ package class LMDBTransaction : ExplicitTransaction
     /**
      * Construct a driver with the given parent
      */
-    this(LMDBDriver parentDriver) @safe @nogc nothrow
+    this(LMDBDriver parentDriver, bool canWrite) @safe @nogc nothrow
     {
         this.parentDriver = parentDriver;
+        this.canWrite = canWrite;
     }
 
     /**
@@ -56,6 +57,10 @@ package class LMDBTransaction : ExplicitTransaction
         if ((parentDriver.databaseFlags & DatabaseFlags.ReadOnly) == DatabaseFlags.ReadOnly)
         {
             cFlags = MDB_RDONLY;
+            cFlagsTxn = MDB_RDONLY;
+        }
+        else if (!canWrite)
+        {
             cFlagsTxn = MDB_RDONLY;
         }
 
@@ -224,4 +229,5 @@ private:
     MDB_dbi dbi;
     MDB_dbi dbiMeta;
     MDB_dbi dbiBucketMap;
+    bool canWrite;
 }

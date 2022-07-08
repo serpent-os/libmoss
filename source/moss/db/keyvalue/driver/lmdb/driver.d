@@ -133,7 +133,7 @@ public final class LMDBDriver : Driver
      */
     override ExplicitTransaction readOnlyTransaction() @safe
     {
-        return new LMDBTransaction(this);
+        return new LMDBTransaction(this, false);
     }
 
     /**
@@ -141,7 +141,7 @@ public final class LMDBDriver : Driver
      */
     override ExplicitTransaction readWriteTransaction() @safe
     {
-        return new LMDBTransaction(this);
+        return new LMDBTransaction(this, true);
     }
 
 package:
