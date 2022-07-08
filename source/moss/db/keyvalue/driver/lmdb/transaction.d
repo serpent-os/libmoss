@@ -23,6 +23,7 @@ import moss.db.keyvalue.driver.lmdb : lmdbStr, encodeKey;
 import moss.db.keyvalue.driver.lmdb.iterator;
 import std.exception : assumeUnique;
 import lmdb;
+import std.string : toStringz;
 
 /**
  * LMDB Transaction implementation.
@@ -73,8 +74,18 @@ package class LMDBTransaction : ExplicitTransaction
             return DatabaseResult(DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
         }
 
-        /* Open the default table (no multitable stuff) */
-        rc = () @trusted { return mdb_dbi_open(txn, null, cFlags, &dbi); }();
+        /* Open the main data table */
+        rc = () @trusted {
+            return mdb_dbi_open(txn, "data".toStringz, cFlags, &dbi);
+        }();
+        if (rc != 0)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
+        }
+
+        rc = () @trusted {
+            return mdb_dbi_open(txn, "meta".toStringz, cFlags, &dbiMeta);
+        }();
         if (rc != 0)
         {
             return DatabaseResult(DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
@@ -189,4 +200,5 @@ private:
     LMDBDriver parentDriver;
     MDB_txn* txn;
     MDB_dbi dbi;
+    MDB_dbi dbiMeta;
 }
