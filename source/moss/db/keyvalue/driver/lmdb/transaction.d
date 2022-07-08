@@ -264,7 +264,6 @@ public:
         {
             return result;
         }
-        /* Now lets remove the bucket identity */
 
         /* create key/value pair with the new identity */
         auto key = () @trusted {
