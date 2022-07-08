@@ -169,6 +169,7 @@ private:
     {
         db.close();
         import std.file : rmdirRecurse;
+
         "myDB".rmdirRecurse();
     }
 
@@ -265,6 +266,53 @@ private:
             writefln("[bucket] \"%s\" = identity:[%d]", name.dup, bucket.identity);
         }
 
+        return NoDatabaseError;
+    });
+}
+
+@("Ensure GC reuse for bucket identities") @safe unittest
+{
+    import std.conv : to;
+
+    Database db;
+    Database.open("lmdb://myDB", DatabaseFlags.CreateIfNotExists)
+        .match!((d) => db = d, (DatabaseError e) => assert(0, e.message));
+    scope (exit)
+    {
+        db.close();
+        import std.file : rmdirRecurse;
+
+        "myDB".rmdirRecurse();
+    }
+
+    /* Create 5 identities. */
+    db.update((scope tx) {
+        foreach (i; 1 .. 6)
+        {
+            tx.createBucket(cast(int) i);
+        }
+
+        /* Iterate all the buckets */
+        auto buckets = tx.buckets!int;
+        int nBuckets = 0;
+        foreach (name, bucket; buckets)
+        {
+            ++nBuckets;
+            assert(bucket.identity == name, "Mismatched bucket index");
+        }
+
+        assert(nBuckets == 5, "Mismatched bucket count");
+
+        /* Remove bucket 3, ensure its gone */
+        auto bk3 = tx.bucket(3);
+        assert(!bk3.isNull, "Missing bucket prior to deletion");
+        auto result = tx.removeBucket(bk3);
+        assert(result.isNull);
+
+        /* lets create a new bucket.. */
+        auto newBucket = tx.createBucket(cast(int) 20).tryMatch!((Bucket b) => b);
+        assert(newBucket.identity == 3,
+            "newBucket should reuse identity 3, not " ~ newBucket.identity.to!string);
         return NoDatabaseError;
     });
 }
