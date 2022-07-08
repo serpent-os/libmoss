@@ -182,8 +182,8 @@ private:
     immutable err = db.update((scope tx) @safe {
         import std.string : representation;
 
-        auto bk = tx.createBucket([1]).tryMatch!((Bucket b) => b);
-        auto bk2 = tx.createBucket([1, 1]).tryMatch!((Bucket b) => b);
+        auto bk = tx.createBucketIfNotExists([1]).tryMatch!((Bucket b) => b);
+        auto bk2 = tx.createBucketIfNotExists([1, 1]).tryMatch!((Bucket b) => b);
 
         tx.set(bk, "name", "john");
         tx.set(bk, "name2", "jimothy");
@@ -191,7 +191,7 @@ private:
         tx.set(bk2, "name2", "not-jimothy");
         didUpdate = true;
 
-        auto bk3 = tx.createBucket("numbers lol").tryMatch!((Bucket b) => b);
+        auto bk3 = tx.createBucketIfNotExists("numbers lol").tryMatch!((Bucket b) => b);
         for (int i = 0; i < 100_000; i++)
         {
             tx.set(bk3, i, i);

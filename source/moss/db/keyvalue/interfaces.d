@@ -237,12 +237,40 @@ public abstract class Transaction
     abstract SumType!(DatabaseError, Bucket) createBucket(scope return ImmutableDatum name) return @safe;
 
     /**
+     * Encapsulate creation to not error
+     */
+    final SumType!(DatabaseError, Bucket) createBucketIfNotExists(scope return ImmutableDatum name) return @safe
+    {
+        auto result = createBucket(name);
+        auto err = result.match!((DatabaseError err2) => err2, (Bucket b) => DatabaseError.init);
+        if (err.code == DatabaseErrorCode.BucketExists)
+        {
+            auto bk = bucket(name);
+            if (bk.isNull)
+            {
+                return result;
+            }
+            return SumType!(DatabaseError, Bucket)(bk.get);
+        }
+        return result;
+    }
+
+    /**
      * Bucket identity with generics
      */
     final SumType!(DatabaseError, Bucket) createBucket(B)(in B name) return @safe
             if (isMossEncodable!B)
     {
         return createBucket(name.mossEncode);
+    }
+
+    /**
+     * Mostly error free, generic creation
+     */
+    final SumType!(DatabaseError, Bucket) createBucketIfNotExists(B)(in B name) return @safe
+            if (isMossEncodable!B)
+    {
+        return createBucketIfNotExists(name.mossEncode);
     }
 
     /**
