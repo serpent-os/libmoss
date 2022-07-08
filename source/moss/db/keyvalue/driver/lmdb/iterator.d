@@ -141,14 +141,6 @@ package final class LMDBIterator : BucketIterator
         foreach (entry, val; this)
         {
             auto rc = () @trusted { return mdb_cursor_del(cursor, 0); }();
-            debug
-            {
-                import std.stdio : writeln;
-
-                string name;
-                name.mossDecode(entry.key);
-                writeln("DELETING ", name, " WITH VAL: ", val.dup);
-            }
             if (rc != 0)
             {
                 return DatabaseResult(DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
