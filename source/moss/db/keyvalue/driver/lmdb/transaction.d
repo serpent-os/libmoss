@@ -173,6 +173,9 @@ public:
         return iter;
     }
 
+    /**
+     * Consume a new writable iterator and wipe everything in the bucket
+     */
     override DatabaseResult removeBucket(in Bucket bucket) return @safe
     {
         auto iter = new LMDBIterator(this);
