@@ -104,25 +104,6 @@ public:
         MDB_val dbVal = () @trusted {
             return MDB_val(cast(size_t) value.length, cast(void*)&value[0]);
         }();
-        bool identicalData;
-
-        /* Determine if this key already exists */
-        immutable keyAlreadyPresent = () @trusted {
-            MDB_val lKey = dbKey;
-            MDB_val lVal;
-            auto ret = mdb_get(txn, dbi, &lKey, &lVal) == 0;
-            if (ret)
-            {
-                identicalData = lKey == dbKey && lVal == dbVal;
-            }
-            return ret;
-        }();
-
-        /* Don't insert updated identical data, costly. */
-        if (identicalData)
-        {
-            return NoDatabaseError;
-        }
 
         /* try to write it */
         auto rc = () @trusted { return mdb_put(txn, dbi, &dbKey, &dbVal, 0); }();
