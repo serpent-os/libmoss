@@ -232,6 +232,20 @@ public abstract class Transaction
     abstract DatabaseResult reset() return @safe;
 
     /**
+     * Create a new bucket for use.
+     */
+    abstract SumType!(DatabaseError, Bucket) createBucket(scope return ImmutableDatum name) return @safe;
+
+    /**
+     * Bucket identity with generics
+     */
+    final SumType!(DatabaseError, Bucket) createBucket(B)(in B name) return @safe
+            if (isMossEncodable!B)
+    {
+        return createBucket(name.mossEncode);
+    }
+
+    /**
      * Construct a bucket identity
      */
     pure final Bucket bucket(scope return ImmutableDatum name) const return @safe

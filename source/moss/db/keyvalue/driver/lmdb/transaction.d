@@ -96,6 +96,15 @@ package class LMDBTransaction : ExplicitTransaction
 public:
 
     /**
+     * Create and store a bucket internally - assigning a unique identity
+     */
+    override SumType!(DatabaseError, Bucket) createBucket(scope return ImmutableDatum name) return @safe
+    {
+        return SumType!(DatabaseError, Bucket)(DatabaseError(DatabaseErrorCode.Unimplemented,
+                "LMDBTransaction.createBucket(): Not yet implemented"));
+    }
+
+    /**
      * Update or insert a key/value pair.
      */
     override DatabaseResult set(in Bucket bucket, in ImmutableDatum key, in ImmutableDatum value) return @safe
