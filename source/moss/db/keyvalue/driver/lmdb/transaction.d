@@ -370,6 +370,62 @@ private:
     }
 
     /**
+     * Obvious I got bored at this point?
+     */
+    SumType!(BucketIdentity, DatabaseError) stealIdentity() return @safe
+    {
+        MDB_cursor* cursor;
+        BucketIdentity stolenIdentity;
+
+        scope (exit)
+        {
+            () @trusted { mdb_cursor_close(cursor); }();
+        }
+
+        /* Try to open a cursor. */
+        auto rc = () @trusted {
+            return mdb_cursor_open(txn, dbiFreeList, &cursor);
+        }();
+
+        if (rc != 0)
+        {
+            return SumType!(BucketIdentity, DatabaseError)(
+                    DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
+        }
+
+        /* Grab the first record we come across */
+        MDB_val key;
+        MDB_val val;
+
+        /* Shift to first item in the list */
+        rc = () @trusted {
+            return mdb_cursor_get(cursor, &key, &val, MDB_cursor_op.first);
+        }();
+
+        /* Abuse bucket not found for "cant find one bruh" */
+        if (rc != 0)
+        {
+            return SumType!(BucketIdentity, DatabaseError)(
+                    DatabaseError(DatabaseErrorCode.BucketNotFound, lmdbStr(rc)));
+        }
+
+        /* Yoink - you'll do */
+        rc = () @trusted {
+            ImmutableDatum rawData = cast(ImmutableDatum) key.mv_data[0 .. key.mv_size];
+            stolenIdentity.mossDecode(rawData);
+            return mdb_cursor_del(cursor, 0);
+        }();
+        if (rc != 0)
+        {
+            return SumType!(BucketIdentity, DatabaseError)(
+                    DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
+        }
+
+        /* Thanks, return it. */
+        return SumType!(BucketIdentity, DatabaseError)(stolenIdentity);
+    }
+
+    /**
      * Grab the existing identity increment if it exists, otherwise
      * we set to 0.
      * Increment if it does, storing the latest.
@@ -379,6 +435,24 @@ private:
         BucketIdentity nextIdentity;
         MDB_val lookupVal;
         MDB_val storeVal;
+
+        DatabaseError err;
+        BucketIdentity stolenIdentity;
+        stealIdentity.match!((DatabaseError e) { err = e; }, (BucketIdentity identity) {
+            stolenIdentity = identity;
+        });
+
+        /* Something went wrong! */
+        if (err.code != DatabaseErrorCode.BucketNotFound && err.code != 0)
+        {
+            return SumType!(BucketIdentity, DatabaseError)(err);
+        }
+
+        /* This'll do, ta */
+        if (err == DatabaseError.init && stolenIdentity != 0)
+        {
+            return SumType!(BucketIdentity, DatabaseError)(stolenIdentity);
+        }
 
         MDB_val lookupKey = () @trusted {
             auto str = "next-available-bucket-index";
