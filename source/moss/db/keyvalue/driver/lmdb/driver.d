@@ -95,6 +95,13 @@ public final class LMDBDriver : Driver
             return DatabaseResult(DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
         }
 
+        /* We need 2 DBs - main and meta */
+        rc = () @trusted { return mdb_env_set_maxdbs(env, 2); }();
+        if (rc != 0)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
+        }
+
         /* Open 0600 connection to the DB */
         rc = () @trusted {
             return mdb_env_open(env, uri.toStringz, cFlags, octal!644);
