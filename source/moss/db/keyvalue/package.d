@@ -168,6 +168,8 @@ private:
     scope (exit)
     {
         db.close();
+        import std.file : rmdirRecurse;
+        "myDB".rmdirRecurse();
     }
 
     bool didUpdate;
@@ -244,7 +246,7 @@ private:
         auto bk = tx.bucket("1");
         auto bk2 = tx.bucket("11");
 
-        string val1 = tx.get!(string, string)(bk, "name");
+        auto val1 = tx.get!(string, string)(bk, "name");
         assert(val1 == "john", "not john");
         string val2 = tx.get!(string, string)(bk2, "name");
         assert(val2 == "not-john", "Not not-john");
