@@ -105,6 +105,15 @@ package class LMDBTransaction : ExplicitTransaction
         {
             return DatabaseResult(DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
         }
+
+        /* free list of old buckets */
+        rc = () @trusted {
+            return mdb_dbi_open(txn, "freeList".toStringz, cFlags, &dbiFreeList);
+        }();
+        if (rc != 0)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
+        }
         return NoDatabaseError;
     }
 
@@ -229,5 +238,6 @@ private:
     MDB_dbi dbi;
     MDB_dbi dbiMeta;
     MDB_dbi dbiBucketMap;
+    MDB_dbi dbiFreeList; /* Old bucket identities going free */
     bool canWrite;
 }

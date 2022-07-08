@@ -95,8 +95,8 @@ public final class LMDBDriver : Driver
             return DatabaseResult(DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
         }
 
-        /* "data", "meta", "bucketMap" */
-        rc = () @trusted { return mdb_env_set_maxdbs(env, 3); }();
+        /* "data", "meta", "bucketMap", "free list" */
+        rc = () @trusted { return mdb_env_set_maxdbs(env, 4); }();
         if (rc != 0)
         {
             return DatabaseResult(DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
