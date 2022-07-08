@@ -20,8 +20,15 @@ public import moss.core.encoding : ImmutableDatum, Datum, isMossEncodable,
 public import moss.db.keyvalue.errors;
 public import std.typecons : Tuple;
 import std.conv : to;
-public import std.stdint : uint8_t, uint16_t;
+public import std.stdint : uint8_t, uint16_t, uint32_t;
 import std.exception : assumeUnique;
+
+/**
+ * Each bucket name is mapped to an incrementing integer.
+ * Each implementation should recycle if possible, to prevent
+ * running out of bucket identities.
+ */
+public alias BucketIdentity = uint32_t;
 
 /**
  * Defines the type of every record key (entry)

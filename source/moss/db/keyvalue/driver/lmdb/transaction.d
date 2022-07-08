@@ -233,6 +233,63 @@ public:
 
 private:
 
+    /**
+     * Grab the existing identity increment if it exists, otherwise
+     * we set to 0.
+     * Increment if it does, storing the latest.
+     */
+    SumType!(BucketIdentity, DatabaseError) nextBucketIdentity() return @safe
+    {
+        BucketIdentity nextIdentity;
+        MDB_val lookupVal;
+        MDB_val storeVal;
+
+        MDB_val lookupKey = () @trusted {
+            auto str = "next-available-bucket-index";
+            return MDB_val(cast(size_t) str.length + 1, cast(void*) str.toStringz);
+        }();
+        auto rc = () @trusted {
+            return mdb_get(txn, dbiMeta, &lookupKey, &lookupVal);
+        }();
+
+        /* Not an error, just needs storing */
+        if (rc == MDB_NOTFOUND)
+        {
+            nextIdentity = 0;
+        }
+        else if (rc != 0)
+        {
+            /* Some genuine error.. */
+            return SumType!(BucketIdentity, DatabaseError)(
+                    DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
+        }
+        else
+        {
+            /* Retrieve the old value and increment by one */
+            ImmutableDatum storedValue = () @trusted {
+                return cast(ImmutableDatum) lookupVal.mv_data[0 .. lookupVal.mv_size];
+            }();
+            nextIdentity.mossDecode(storedValue);
+            nextIdentity++;
+        }
+
+        /* Stick it into the new value */
+        rc = () @trusted {
+            ImmutableDatum storage = nextIdentity.mossEncode();
+            storeVal.mv_data = cast(void*)&storage[0];
+            storeVal.mv_size = storage.length;
+            return mdb_put(txn, dbiMeta, &lookupKey, &storeVal, 0);
+        }();
+
+        if (rc != 0)
+        {
+            return SumType!(BucketIdentity, DatabaseError)(
+                    DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
+        }
+
+        return SumType!(BucketIdentity, DatabaseError)(nextIdentity);
+    }
+
     LMDBDriver parentDriver;
     MDB_txn* txn;
     MDB_dbi dbi;
