@@ -224,15 +224,9 @@ private:
         {
             import std.stdio : writefln;
 
-            foreach (entry, val; tx.iterator(bk3))
+            foreach (key, value; tx.iterator!(int, int)(bk3))
             {
-                int keyName;
-                int value;
-                string bucket;
-                keyName.mossDecode(entry.key);
-                value.mossDecode(val);
-                bucket.mossDecode(entry.prefix);
-                writefln("[%s] %s = %s", bucket, keyName, value);
+                writefln("%d = %d", key, value);
             }
         }
 

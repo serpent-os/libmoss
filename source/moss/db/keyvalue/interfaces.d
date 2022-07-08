@@ -291,6 +291,24 @@ public abstract class Transaction
     abstract BucketIterator iterator(in Bucket bucket) const return @safe;
 
     /**
+     * Generic happy iterator
+     */
+    final auto iterator(K, V)(in Bucket bucket) const return @safe
+            if (isMossDecodable!K && isMossDecodable!V)
+    {
+        import std.algorithm : map;
+
+        alias RetType = Tuple!(K, "key", V, "value");
+        return iterator(bucket).map!((t) {
+            K k;
+            V v;
+            k.mossDecode(t.entry.key);
+            v.mossDecode(t.value);
+            return RetType(k, v);
+        });
+    }
+
+    /**
      * Remove a bucket and all children nodes
      */
     abstract DatabaseResult removeBucket(in Bucket bucket) return @safe;
