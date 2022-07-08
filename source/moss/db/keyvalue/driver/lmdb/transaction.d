@@ -281,7 +281,7 @@ public:
             return DatabaseResult(DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
         }
 
-        return NoDatabaseError;
+        return shiftBucketToGraveyard(bucket);
     }
 
     /**
@@ -341,6 +341,33 @@ public:
     }
 
 private:
+
+    /**
+     * Stick the buckets identity into the garbage collection
+     */
+    DatabaseResult shiftBucketToGraveyard(in Bucket bucket) return @safe
+    {
+        MDB_val key = () @trusted {
+            auto encoded = bucket.identity.mossEncode;
+            return MDB_val(cast(size_t) encoded.length, cast(void*)&encoded[0]);
+        }();
+        /* OK fair enough its a useless value but its *something* ! */
+        MDB_val val = () @trusted {
+            auto encoded = true.mossEncode;
+            return MDB_val(cast(size_t) encoded.length, cast(void*)&encoded[0]);
+        }();
+
+        /* Stick it in the graveyard now */
+        auto rc = () @trusted {
+            return mdb_put(txn, dbiFreeList, &key, &val, 0);
+        }();
+        if (rc != 0)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
+        }
+
+        return NoDatabaseError;
+    }
 
     /**
      * Grab the existing identity increment if it exists, otherwise
