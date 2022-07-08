@@ -120,9 +120,9 @@ package class LMDBTransaction : ExplicitTransaction
 public:
 
     /**
-     * Create and store a bucket internally - assigning a unique identity
+     * Return a bucket reference if it exists in the DB
      */
-    override SumType!(DatabaseError, Bucket) createBucket(scope return ImmutableDatum name) return @safe
+    override Nullable!(Bucket, Bucket.init) bucket(scope return ImmutableDatum name) const return @safe
     {
         /* Buckets are a simple ubyte[] to uint32_t map. Trivial */
         MDB_val key = () @trusted {
@@ -130,11 +130,32 @@ public:
         }();
         MDB_val existingEntry;
 
-        /* See if we have this one already.. */
+        /* Find the bucket */
         auto rc = () @trusted {
-            return mdb_get(txn, dbiBucketMap, &key, &existingEntry);
+            return mdb_get(cast(MDB_txn*) txn, cast(MDB_dbi) dbiBucketMap, &key, &existingEntry);
         }();
-        if (rc == 0)
+        if (rc != 0)
+        {
+            return Nullable!(Bucket, Bucket.init)(Bucket.init);
+        }
+
+        /* voila, decode and return the bucket */
+        BucketIdentity currentIdentity;
+        () @trusted {
+            ImmutableDatum seq = cast(ImmutableDatum) existingEntry
+                .mv_data[0 .. existingEntry.mv_size];
+            currentIdentity.mossDecode(seq);
+        }();
+        return Nullable!(Bucket, Bucket.init)(Bucket(name, currentIdentity));
+    }
+
+    /**
+     * Create and store a bucket internally - assigning a unique identity
+     */
+    override SumType!(DatabaseError, Bucket) createBucket(scope return ImmutableDatum name) return @safe
+    {
+        auto oldBucket = bucket(name);
+        if (!oldBucket.isNull)
         {
             return SumType!(DatabaseError, Bucket)(DatabaseError(DatabaseErrorCode.BucketExists,
                     "Cannot create duplicate buckets"));
@@ -153,7 +174,27 @@ public:
             return SumType!(DatabaseError, Bucket)(error);
         }
 
-        return SumType!(DatabaseError, Bucket)( /*Bucket(identity)*/ Bucket.init);
+        /* create key/value pair with the new identity */
+        auto key = () @trusted {
+            return MDB_val(name.length, cast(void*)&name[0]);
+        }();
+        auto val = () @trusted {
+            auto encoded = identity.mossEncode();
+            return MDB_val(encoded.length, cast(void*)&encoded[0]);
+        }();
+
+        /* Store the new bucket. */
+        auto rc = () @trusted {
+            return mdb_put(txn, dbiBucketMap, &key, &val, 0);
+        }();
+        if (rc != 0)
+        {
+            return SumType!(DatabaseError, Bucket)(DatabaseError(DatabaseErrorCode.InternalDriver,
+                    lmdbStr(rc)));
+        }
+
+        /* boom, got ourselves a new bucket */
+        return SumType!(DatabaseError, Bucket)(Bucket(name, identity));
     }
 
     /**
@@ -208,7 +249,30 @@ public:
     {
         auto iter = new LMDBIterator(this);
         iter.reset(bucket);
-        return iter.wipeBucket();
+        auto result = iter.wipeBucket();
+        if (!result.isNull)
+        {
+            return result;
+        }
+        /* Now lets remove the bucket identity */
+
+        /* create key/value pair with the new identity */
+        auto key = () @trusted {
+            return MDB_val(bucket.name.length, cast(void*)&bucket.name[0]);
+        }();
+
+        /* Delete from the bucket map */
+        auto rc = () @trusted {
+            MDB_val val;
+            return mdb_del(txn, dbiBucketMap, &key, &val);
+        }();
+
+        if (rc != 0)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.InternalDriver, lmdbStr(rc)));
+        }
+
+        return NoDatabaseError;
     }
 
     /**
@@ -286,7 +350,8 @@ private:
         /* Not an error, just needs storing */
         if (rc == MDB_NOTFOUND)
         {
-            nextIdentity = 0;
+            /* MUST start at 1, otherwise == isNull */
+            nextIdentity = 1;
         }
         else if (rc != 0)
         {

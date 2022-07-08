@@ -45,7 +45,8 @@ package final class LMDBIterator : BucketIterator
     DatabaseResult reset(in Bucket bucket) @safe
     {
         auto rc = () @trusted {
-            this.bucketPrefix = cast(Datum) bucket.prefix;
+            this.bucketPrefix = cast(BucketIdentity) bucket.identity;
+            this.bucketName = cast(Datum) bucket.name;
             return mdb_cursor_open(cast(MDB_txn*) parentTransaction.transaction,
                     cast(MDB_dbi) parentTransaction.dbIndex, &cursor);
         }();
@@ -95,7 +96,8 @@ package final class LMDBIterator : BucketIterator
         auto rc = () @trusted {
             if (canSet)
             {
-                dbKey = encodeKey(Bucket(cast(ImmutableDatum) bucketPrefix), []);
+                dbKey = encodeKey(Bucket(cast(ImmutableDatum) bucketName, bucketPrefix), [
+                        ]);
             }
             return mdb_cursor_get(cursor, &dbKey, &dbVal, nextMode);
         }();
@@ -152,7 +154,8 @@ package final class LMDBIterator : BucketIterator
 private:
 
     LMDBTransaction parentTransaction;
-    Datum bucketPrefix;
+    BucketIdentity bucketPrefix;
+    Datum bucketName;
     MDB_cursor* cursor;
 
     Nullable!(DatabaseEntry, DatabaseEntry.init) keyCurrent;

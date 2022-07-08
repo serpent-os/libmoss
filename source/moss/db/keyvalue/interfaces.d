@@ -53,14 +53,9 @@ extern (C) public struct Entry
 {
 align(1):
     /**
-         * Type
+         * Bucket ID
          */
-    EntryType type;
-
-    /**
-         * Bucket ID length, follows
-         */
-    uint16_t bucketLength;
+    BucketIdentity bucketID;
 
     /**
          * Key ID length, follows bucketLength
@@ -70,7 +65,7 @@ align(1):
     /**
          * Pad the struct to 8
          */
-    ubyte[3] __padding__;
+    ubyte[2] __padding__;
 
     /**
      * Encode an entry automatically
@@ -78,8 +73,7 @@ align(1):
     pure ImmutableDatum mossEncode() @trusted
     {
         ubyte[] data;
-        data ~= cast(Datum) type.mossEncode;
-        data ~= cast(Datum) bucketLength.mossEncode;
+        data ~= cast(Datum) bucketID.mossEncode;
         data ~= cast(Datum) keyLength.mossEncode;
         data ~= __padding__;
         return assumeUnique(data);
@@ -91,12 +85,9 @@ align(1):
     void mossDecode(in ImmutableDatum rawBytes) @safe
     {
         assert(rawBytes.length == Entry.sizeof);
-        ulong offset = 0;
-        type.mossDecode(rawBytes[0 .. EntryType.sizeof]);
-        auto bbytes = rawBytes[EntryType.sizeof .. EntryType.sizeof + uint16_t.sizeof];
-        bucketLength.mossDecode(bbytes);
-        bbytes = rawBytes[EntryType.sizeof + uint16_t.sizeof .. EntryType.sizeof
-            + uint16_t.sizeof + uint16_t.sizeof];
+        auto bbytes = rawBytes[0 .. uint32_t.sizeof];
+        bucketID.mossDecode(bbytes);
+        bbytes = rawBytes[uint32_t.sizeof .. uint32_t.sizeof + uint16_t.sizeof];
         keyLength.mossDecode(bbytes);
 
     }
@@ -113,7 +104,7 @@ public struct DatabaseEntry
     /**
      * Bucket identifier
      */
-    Datum prefix;
+    BucketIdentity prefix;
 
     /**
      * Actual key
@@ -133,7 +124,7 @@ public struct DatabaseEntry
     }
     out
     {
-        assert(this.prefix !is null);
+        assert(this.prefix != 0);
     }
     do
     {
@@ -141,16 +132,13 @@ public struct DatabaseEntry
         ImmutableDatum entryBytes = () @trusted {
             return cast(ImmutableDatum) rawBytes[0 .. Entry.sizeof];
         }();
-        ImmutableDatum remainder = () @trusted {
+        ImmutableDatum keyID = () @trusted {
             return cast(ImmutableDatum) rawBytes[Entry.sizeof .. $];
         }();
         entry.mossDecode(entryBytes);
 
-        ImmutableDatum bucketID = remainder[0 .. entry.bucketLength];
-        ImmutableDatum keyID = remainder[entry.bucketLength .. entry.bucketLength + entry.keyLength];
-
         () @trusted {
-            this.prefix = cast(Datum) bucketID;
+            this.prefix = cast(BucketIdentity) entry.bucketID;
             this.key = cast(Datum) keyID;
         }();
     }
@@ -193,9 +181,14 @@ public enum DatabaseFlags
 public struct Bucket
 {
     /**
-     * Bucket identifier (encoded)
+     * Usable name for the bucket
      */
-    ImmutableDatum prefix;
+    ImmutableDatum name;
+
+    /**
+     * Bucket identifier (runtime lookup)
+     */
+    BucketIdentity identity;
 }
 
 /**
@@ -253,15 +246,13 @@ public abstract class Transaction
     }
 
     /**
-     * Construct a bucket identity
+     * Lookup an existing bucket
      */
-    pure final Bucket bucket(scope return ImmutableDatum name) const return @safe
-    {
-        return Bucket(name);
-    }
+    abstract Nullable!(Bucket, Bucket.init) bucket(scope return ImmutableDatum name) const return @safe;
 
     /** Ditto */
-    pure final Bucket bucket(B)(in B name) const return @safe if (isMossEncodable!B)
+    final Nullable!(Bucket, Bucket.init) bucket(B)(in B name) const return @safe
+            if (isMossEncodable!B)
     {
         return bucket(name.mossEncode);
     }

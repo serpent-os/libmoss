@@ -37,15 +37,10 @@ static package string lmdbStr(int rcCode) @trusted nothrow @nogc
     */
 static package MDB_val encodeKey(in Bucket bucket, in ImmutableDatum key) @safe
 {
-    uint16_t bucketLength = cast(uint16_t) bucket.prefix.length;
     uint16_t keyLength = cast(uint16_t) key.length;
-    Entry entry = Entry(EntryType.Key, bucketLength, keyLength, [0, 0, 0]);
+    Entry entry = Entry(bucket.identity, keyLength, [0, 0]);
     ubyte[] rawData;
     rawData ~= entry.mossEncode;
-    if (bucketLength > 0)
-    {
-        rawData ~= bucket.prefix;
-    }
     if (keyLength > 0)
     {
         rawData ~= key;

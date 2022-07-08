@@ -182,8 +182,8 @@ private:
     immutable err = db.update((scope tx) @safe {
         import std.string : representation;
 
-        auto bk = tx.bucket([1]);
-        auto bk2 = tx.bucket([1, 1]);
+        auto bk = tx.createBucket([1]).tryMatch!((Bucket b) => b);
+        auto bk2 = tx.createBucket([1, 1]).tryMatch!((Bucket b) => b);
 
         tx.set(bk, "name", "john");
         tx.set(bk, "name2", "jimothy");
@@ -191,7 +191,7 @@ private:
         tx.set(bk2, "name2", "not-jimothy");
         didUpdate = true;
 
-        auto bk3 = tx.bucket("numbers");
+        auto bk3 = tx.createBucket("numbers lol").tryMatch!((Bucket b) => b);
         for (int i = 0; i < 100_000; i++)
         {
             tx.set(bk3, i, i);
@@ -212,7 +212,7 @@ private:
 
         auto bk = tx.bucket([1]);
         auto bk2 = tx.bucket([1, 1]);
-        auto bk3 = tx.bucket("numbers");
+        auto bk3 = tx.bucket("numbers lol");
 
         string val1 = tx.get!(string, string)(bk, "name");
         assert(val1 == "john", "not john");
@@ -237,7 +237,7 @@ private:
 
     /* Delete the numbers bucket */
     immutable err3 = db.update((scope tx) @safe {
-        return tx.removeBucket(tx.bucket("numbers"));
+        return tx.removeBucket(tx.bucket("numbers lol").get);
     });
     assert(err.isNull, err.message);
     immutable err4 = db.view((in tx) @safe {
@@ -248,6 +248,15 @@ private:
         assert(val1 == "john", "not john");
         string val2 = tx.get!(string, string)(bk2, "name");
         assert(val2 == "not-john", "Not not-john");
+
+        foreach (key, val; tx.iterator!(string, string)(bk2))
+        {
+            writeln(key, " = ", val);
+        }
+
+        /* Really should be gone. */
+        auto numberbucket = tx.bucket("numbers lol");
+        assert(numberbucket.isNull);
 
         return NoDatabaseError;
     });
