@@ -195,7 +195,7 @@ public struct Bucket
  * Simplistic interface. Iterators are owned by the
  * implementation and should *not* be destroyed.
  */
-public interface BucketIterator
+public interface KeyValueIterator
 {
     /**
      * All iterations are performed with key and value in lockstep
@@ -305,9 +305,9 @@ public abstract class Transaction
     abstract DatabaseResult remove(in Bucket bucket, in ImmutableDatum key) return @safe;
 
     /**
-     * Return a BucketIterator
+     * Return a KeyValueIterator
      */
-    abstract BucketIterator iterator(in Bucket bucket) const return @safe;
+    abstract KeyValueIterator iterator(in Bucket bucket) const return @safe;
 
     /**
      * Generic happy iterator

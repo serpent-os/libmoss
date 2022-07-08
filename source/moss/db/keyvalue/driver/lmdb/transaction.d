@@ -235,7 +235,7 @@ public:
     /**
      * Return a new iterator for the given bucket
      */
-    override BucketIterator iterator(in Bucket bucket) const return @safe
+    override KeyValueIterator iterator(in Bucket bucket) const return @safe
     {
         auto iter = new LMDBIterator(this);
         iter.reset(bucket);

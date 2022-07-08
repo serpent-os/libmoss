@@ -22,9 +22,9 @@ import lmdb;
 import std.typecons : Nullable;
 
 /**
- * LMDB specific implementation of a bucket iterator
+ * LMDB specific implementation of a key value iterator
  */
-package final class LMDBIterator : BucketIterator
+package final class LMDBIterator : KeyValueIterator
 {
     @disable this();
 
