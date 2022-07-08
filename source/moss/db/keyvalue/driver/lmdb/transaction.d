@@ -95,11 +95,21 @@ package class LMDBTransaction : ExplicitTransaction
 
 public:
 
+    /**
+     * Update or insert a key/value pair.
+     */
     override DatabaseResult set(in Bucket bucket, in ImmutableDatum key, in ImmutableDatum value) return @safe
     {
         MDB_val dbKey = encodeKey(bucket, key);
         MDB_val dbVal = () @trusted {
             return MDB_val(cast(size_t) value.length, cast(void*)&value[0]);
+        }();
+
+        /* Determine if this key already exists */
+        immutable keyAlreadyPresent = () @trusted {
+            MDB_val lKey = dbKey;
+            MDB_val lVal;
+            return mdb_get(txn, dbi, &lKey, &lVal) == 0;
         }();
 
         /* try to write it */
