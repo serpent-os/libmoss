@@ -200,7 +200,7 @@ private:
     });
     debug
     {
-        import std.stdio : writeln;
+        import std.stdio : writeln, writefln;
 
         writeln(w.peek);
     }
@@ -258,11 +258,10 @@ private:
         auto numberbucket = tx.bucket("numbers lol");
         assert(numberbucket.isNull);
 
-        /*
         foreach (name, bucket; tx.buckets!string)
         {
-            writeln("[bucket] ", name.dup);
-        }*/
+            writefln("[bucket] \"%s\" = identity:[%d]", name.dup, bucket.identity);
+        }
 
         return NoDatabaseError;
     });

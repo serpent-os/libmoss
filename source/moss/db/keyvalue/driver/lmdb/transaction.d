@@ -20,6 +20,7 @@ import moss.db.keyvalue.errors;
 import moss.db.keyvalue.interfaces;
 import moss.db.keyvalue.driver.lmdb.driver : LMDBDriver;
 import moss.db.keyvalue.driver.lmdb : lmdbStr, encodeKey;
+import moss.db.keyvalue.driver.lmdb.bucket_iterator;
 import moss.db.keyvalue.driver.lmdb.iterator;
 import std.exception : assumeUnique;
 import lmdb;
@@ -161,7 +162,6 @@ public:
                     "Cannot create duplicate buckets"));
         }
 
-        auto result = nextBucketIdentity();
         BucketIdentity identity;
         DatabaseError error;
         nextBucketIdentity.match!((BucketIdentity id) { identity = id; }, (DatabaseError err) {
@@ -247,7 +247,9 @@ public:
      */
     override BucketIterator buckets() const return @safe
     {
-        return null;
+        auto iter = new LMDBBucketIterator(this);
+        iter.reset();
+        return iter;
     }
 
     /**
@@ -332,6 +334,11 @@ public:
     pure @property auto dbIndex() @safe @nogc nothrow const
     {
         return dbi;
+    }
+
+    pure @property auto bucketIndex() @safe @nogc nothrow const
+    {
+        return dbiBucketMap;
     }
 
 private:
