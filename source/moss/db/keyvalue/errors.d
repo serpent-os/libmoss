@@ -30,7 +30,9 @@ public enum DatabaseErrorCode : uint8_t
     ConnectionFailed,
     InternalDriver,
     Transaction,
-    KeyNotFound
+    KeyNotFound,
+    BucketNotFound,
+    BucketExists,
 }
 
 /**

@@ -124,8 +124,36 @@ public:
      */
     override SumType!(DatabaseError, Bucket) createBucket(scope return ImmutableDatum name) return @safe
     {
-        return SumType!(DatabaseError, Bucket)(DatabaseError(DatabaseErrorCode.Unimplemented,
-                "LMDBTransaction.createBucket(): Not yet implemented"));
+        /* Buckets are a simple ubyte[] to uint32_t map. Trivial */
+        MDB_val key = () @trusted {
+            return MDB_val(name.length, cast(void*)&name[0]);
+        }();
+        MDB_val existingEntry;
+
+        /* See if we have this one already.. */
+        auto rc = () @trusted {
+            return mdb_get(txn, dbiBucketMap, &key, &existingEntry);
+        }();
+        if (rc == 0)
+        {
+            return SumType!(DatabaseError, Bucket)(DatabaseError(DatabaseErrorCode.BucketExists,
+                    "Cannot create duplicate buckets"));
+        }
+
+        auto result = nextBucketIdentity();
+        BucketIdentity identity;
+        DatabaseError error;
+        nextBucketIdentity.match!((BucketIdentity id) { identity = id; }, (DatabaseError err) {
+            error = err;
+        });
+
+        /* Couldn't claim a bucket identity */
+        if (error != DatabaseError.init)
+        {
+            return SumType!(DatabaseError, Bucket)(error);
+        }
+
+        return SumType!(DatabaseError, Bucket)( /*Bucket(identity)*/ Bucket.init);
     }
 
     /**
