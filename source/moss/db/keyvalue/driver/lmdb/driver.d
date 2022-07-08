@@ -88,7 +88,8 @@ public final class LMDBDriver : Driver
         }
 
         /* Set the map page size */
-        rc = () @trusted { return mdb_env_set_mapsize(env, 1000 * 1024 * 1024 * 10); }();
+        enum ulong GiB = 1024 * 1024 * 1024;
+        rc = () @trusted { return mdb_env_set_mapsize(env, 8 * GiB); }();
         if (rc != 0)
         {
             return DatabaseResult(DatabaseError(DatabaseErrorCode.ConnectionFailed, lmdbStr(rc)));
