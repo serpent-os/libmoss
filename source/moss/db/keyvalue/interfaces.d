@@ -382,12 +382,17 @@ public abstract class Transaction
     /**
      * Accept generic encoding when not using datums
      */
-    final immutable(V) get(K, V)(in Bucket bucket, in K key) const return @safe
+    final Nullable!(immutable(V), V.init) get(V, K)(in Bucket bucket, in K key) const return @safe
             if (isMossEncodable!K && isMossDecodable!V)
     {
-        V inr;
-        inr.mossDecode(get(bucket, key.mossEncode));
-        return inr;
+        auto got = get(bucket, key.mossEncode);
+        V dec;
+        if (got is null)
+        {
+            return Nullable!(immutable(V), V.init)(V.init);
+        }
+        dec.mossDecode(got);
+        return Nullable!(immutable(V), V.init)(dec);
     }
 }
 

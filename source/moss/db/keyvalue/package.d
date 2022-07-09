@@ -217,9 +217,11 @@ private:
         auto bk2 = tx.bucket("11");
         auto bk3 = tx.bucket("numbers lol");
 
-        string val1 = tx.get!(string, string)(bk, "name");
+        auto val1 = tx.get!string(bk, "name");
+        assert(!val1.isNull);
         assert(val1 == "john", "not john");
-        string val2 = tx.get!(string, string)(bk2, "name");
+        auto val2 = tx.get!string(bk2, "name");
+        assert(!val2.isNull);
         assert(val2 == "not-john", "Not not-john");
         didView = true;
 
@@ -247,9 +249,11 @@ private:
         auto bk = tx.bucket("1");
         auto bk2 = tx.bucket("11");
 
-        auto val1 = tx.get!(string, string)(bk, "name");
+        auto val1 = tx.get!string(bk, "name");
+        assert(!val1.isNull);
         assert(val1 == "john", "not john");
-        string val2 = tx.get!(string, string)(bk2, "name");
+        auto val2 = tx.get!string(bk2, "name");
+        assert(!val2.isNull);
         assert(val2 == "not-john", "Not not-john");
 
         foreach (key, val; tx.iterator!(string, string)(bk2))
