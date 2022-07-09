@@ -17,8 +17,4 @@
 			"version": "d0d33eda733ce34ab82d68fc1f762b3899add4d5"
 		}
 	},
-	"dflags": [
-		"-preview=dip1000",
-		"-preview=in"
-	]
 }
