@@ -307,7 +307,7 @@ private unittest
 private unittest
 {
     import std.file : exists, isDir;
-    import std.stdio : writefln;
+    import std.stdio : writefln, stdout;
 
     auto result = IOUtil.createTemporaryDirectory("/tmp/ioutil.XXXXXX");
     string name = result.tryMatch!((string name) => name);
