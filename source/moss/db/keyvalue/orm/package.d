@@ -25,4 +25,5 @@ public import moss.db.keyvalue.orm.types;
     }
 
     static assert(isValidModel!User, "User should be a valid model");
+    static assert(modelName!User == "users", "Invalid model name, got: " ~ modelName!User);
 }

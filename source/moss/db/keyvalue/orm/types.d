@@ -48,6 +48,17 @@ struct Model
     string name;
 }
 
+static bool hasModelDecorator(M)()
+{
+    static if (hasUDA!(M, Model))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
 /**
  * Return true if a primary key was found.
  *
@@ -75,7 +86,7 @@ static bool hasPrimaryKey(M)()
  * Returns: true if model valid
  */
 static bool isValidModel(M)()
-        if (hasPrimaryKey!M && isEncodable!M && __traits(isPOD, M))
+        if (hasModelDecorator!M && hasPrimaryKey!M && isEncodable!M && __traits(isPOD, M))
 {
     return true;
 }
@@ -105,4 +116,44 @@ static bool isEncodable(M)()
         }
     }
     return ret;
+}
+
+/**
+ * Return the Model() for the Model type.
+ */
+private auto getModel(M)()
+{
+    static if (is(typeof(getUDAs!(M, Model)[0]) == Model))
+    {
+        return getUDAs!(M, Model)[0];
+    }
+    else
+    {
+        return Model();
+    }
+}
+
+/**
+ * Retrieve the model name (bucket name) for the model.
+ *
+ * Params:
+ *      M = Model
+ * Returns: Name to use for the model
+ */
+public static auto modelName(M)() @safe if (isValidModel!M)
+{
+    import std.string : toLower, endsWith;
+    import std.range : empty;
+
+    enum model = getModel!M;
+
+    static if (!model.name.empty)
+    {
+        enum name = model.name;
+    }
+    else
+    {
+        enum name = M.stringof.toLower();
+    }
+    return name.endsWith("s") ? name : name ~ "s";
 }
