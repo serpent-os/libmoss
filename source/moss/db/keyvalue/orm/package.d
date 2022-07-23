@@ -28,7 +28,7 @@ public import moss.db.keyvalue.orm.types;
  *      tx = Read-write transaction
  * Returns: A DatabaseResult sumtype, check for errors
  */
-public DatabaseResult save(M)(ref M obj, scope Transaction tx) @safe
+public DatabaseResult save(M)(scope ref M obj, scope Transaction tx) @safe
         if (isValidModel!M)
 {
     return NoDatabaseError;
