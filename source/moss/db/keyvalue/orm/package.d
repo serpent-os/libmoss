@@ -158,7 +158,7 @@ public DatabaseResult load(alias index = "", M, V)(scope return ref M obj,
     assert(err.isNull, err.message);
 
     Animal a;
-    auto err2 = db.update((scope tx) @safe { return a.load!"breed"(tx, "dog"); });
+    auto err2 = db.view((in tx) @safe { return a.load(tx, "dog"); });
     assert(err2.isNull, err2.message);
     assert(a.breed == "dog" && a.mostlyFriendly == true, "corrupt puppy");
     auto err3 = db.view((in tx) @safe { return a.load(tx, "chicken"); });
