@@ -55,7 +55,7 @@ struct Model
  *      M = Model to validate
  * Returns: true if model valid
  */
-static auto hasPrimaryKey(M)()
+static bool hasPrimaryKey(M)()
 {
     static if (getSymbolsByUDA!(M, PrimaryKey).length != 1)
     {
@@ -87,7 +87,7 @@ static bool isValidModel(M)()
  *      M = Model to validate
  * Returns: true if model valid
  */
-static auto isEncodable(M)()
+static bool isEncodable(M)()
 {
     bool ret = true;
     static foreach (field; __traits(allMembers, M))
