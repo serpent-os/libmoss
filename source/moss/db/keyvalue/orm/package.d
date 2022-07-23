@@ -17,7 +17,7 @@ module moss.db.keyvalue.orm;
 
 public import moss.db.keyvalue.orm.types;
 
-@("Basic ORM testing") @safe unittest
+@("Basic type testing") @safe unittest
 {
     @Model static struct User
     {
