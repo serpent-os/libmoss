@@ -22,16 +22,49 @@ public import moss.db.keyvalue.orm.types;
 /**
  * Save the object in the current transaction
  *
+ * TODO: Store indices!
+ *
  * Params:
  *      M = Model
  *      obj = Model object
  *      tx = Read-write transaction
  * Returns: A DatabaseResult sumtype, check for errors
  */
-public DatabaseResult save(M)(scope ref M obj, scope Transaction tx) @safe
+public DatabaseResult save(M)(scope return ref M obj, scope return Transaction tx) @safe
         if (isValidModel!M)
 {
-    return NoDatabaseError;
+    auto rowID = rowName(obj);
+
+    /* Ensure the *model bucket* exists */
+    immutable auto modelBucket = tx.bucket(modelName!M);
+    if (modelBucket.isNull)
+    {
+        return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
+                M.stringof ~ ".save(): Create the model first!"));
+    }
+
+    /**
+     * Now save all of the fields
+     */
+    return tx.createBucketIfNotExists(rowID)
+        .match!((DatabaseError err) => DatabaseResult(err), (Bucket itemBucket) {
+            /* Encode all the fields */
+            static foreach (field; __traits(allMembers, M))
+            {
+                {
+                    immutable auto key = field.mossEncode;
+                    immutable auto val = __traits(getMember, obj, field).mossEncode;
+
+                    DatabaseResult err = tx.set(itemBucket, key, val);
+                    if (!err.isNull)
+                    {
+                        return err;
+                    }
+                }
+            }
+
+            return NoDatabaseError;
+        });
 }
 
 @("Basic type testing") @safe unittest
@@ -48,4 +81,30 @@ public DatabaseResult save(M)(scope ref M obj, scope Transaction tx) @safe
     static assert(modelName!User == "users", "Invalid model name, got: " ~ modelName!User);
     immutable auto expRow = [46, 117, 115, 101, 114, 46, 0, 0, 0, 0, 2];
     assert(rowName(one) == expRow);
+}
+
+@("Basic unit testing..") @safe unittest
+{
+    import moss.db.keyvalue : Database;
+
+    Database db;
+    Database.open("lmdb://ormDB", DatabaseFlags.CreateIfNotExists)
+        .match!((d) => db = d, (DatabaseError e) => assert(0, e.message));
+    scope (exit)
+    {
+        db.close();
+        import std.file : rmdirRecurse;
+
+        "ormDB".rmdirRecurse();
+    }
+
+    @Model static struct Animal
+    {
+        @PrimaryKey string breed;
+        bool mostlyFriendly;
+    }
+
+    /* Try to save a user. */
+    auto dog = Animal("dog", true);
+    db.update((scope tx) @safe { return dog.save(tx); });
 }
