@@ -48,6 +48,13 @@ struct Model
     string name;
 }
 
+/**
+ * Determine model decorator presence
+ *
+ * Params:
+ *      M = Model to validate
+ * Returns: true if the model is decorated correctly
+ */
 static bool hasModelDecorator(M)()
 {
     static if (hasUDA!(M, Model))
