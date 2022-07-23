@@ -164,3 +164,49 @@ public static auto modelName(M)() @safe if (isValidModel!M)
     }
     return name.endsWith("s") ? name : name ~ "s";
 }
+
+/**
+ * Compute basename for each row
+ *
+ * If the model name is "user" (struct User, table users) then
+ * this will result in ".user." for the row base name, making
+ * room for the suffix.
+ *
+ * Params:
+ *      M = Model
+ * Returns: Moss encoded row base name
+ */
+public static auto rowBaseName(M)() @safe if (isValidModel!(M))
+{
+    import std.string : toLower, endsWith;
+    import std.range : empty;
+
+    enum model = getModel!M;
+
+    static if (!model.name.empty)
+    {
+        enum name = model.name;
+    }
+    else
+    {
+        enum name = M.stringof.toLower();
+    }
+
+    return ("." ~ name ~ ".").mossEncode();
+}
+
+/**
+ * Retrieve the row "name" for a model entry, i.e.
+ * .user.1
+ * This is already encoded as a bucket name correctly
+ *
+ * Params:
+ *      M = Model
+ *      obj = Model object to generate an ID for
+ * Returns: moss encoded row name
+ */
+public ImmutableDatum rowName(M)(in M obj) @safe if (isValidModel!M)
+{
+    mixin("auto pkey = obj." ~ getSymbolsByUDA!(M, PrimaryKey)[0].stringof ~ ";");
+    return rowBaseName!M ~ (pkey.mossEncode);
+}

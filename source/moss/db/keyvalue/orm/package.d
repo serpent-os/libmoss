@@ -24,6 +24,11 @@ public import moss.db.keyvalue.orm.types;
         @PrimaryKey int id;
     }
 
+    User one;
+    one.id = 2;
+
     static assert(isValidModel!User, "User should be a valid model");
     static assert(modelName!User == "users", "Invalid model name, got: " ~ modelName!User);
+    immutable auto expRow = [46, 117, 115, 101, 114, 46, 0, 0, 0, 0, 2];
+    assert(rowName(one) == expRow);
 }
