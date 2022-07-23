@@ -19,6 +19,8 @@ public import moss.db.keyvalue.errors;
 public import moss.db.keyvalue.interfaces;
 public import moss.db.keyvalue.orm.types;
 
+import std.traits;
+
 /**
  * Save the object in the current transaction
  *
@@ -67,6 +69,52 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
         });
 }
 
+/**
+ * Load all objects matching the given index
+ */
+public DatabaseResult load(alias index = "", M, V)(scope return ref M obj,
+        scope const ref Transaction tx, in return V lookup) @safe
+        if (isValidModel!M)
+{
+    import std.range : empty;
+    import std.conv : to;
+
+    obj = M.init;
+
+    enum pkey = getSymbolsByUDA!(M, PrimaryKey)[0].stringof;
+    enum searchColumn = index.empty ? pkey : index;
+    static assert(searchColumn == pkey, "Indexes outside primary keys aren't yet supported");
+
+    /**
+     * Perform lookup by primary key.
+     */
+    M searchObj;
+    mixin("searchObj." ~ pkey ~ " = lookup;");
+    auto bucketID = rowName(searchObj);
+    auto bucket = tx.bucket(bucketID);
+    if (bucket.isNull)
+    {
+        return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
+                M.stringof ~ ".load(" ~ searchColumn ~ "): Cannot find " ~ to!string(lookup)));
+    }
+
+    static foreach (field; __traits(allMembers, M))
+    {
+        {
+            immutable auto rawData = tx.get(bucket, field.mossEncode);
+            if (rawData is null)
+            {
+                obj = M.init;
+                return DatabaseResult(DatabaseError(DatabaseErrorCode.KeyNotFound,
+                        M.stringof ~ ".load(" ~ searchColumn ~ "): Key not found: " ~ field.idup));
+            }
+            mixin("obj." ~ field ~ ".mossDecode(rawData);");
+        }
+    }
+
+    return NoDatabaseError;
+}
+
 @("Basic type testing") @safe unittest
 {
     @Model static struct User
@@ -108,4 +156,11 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
     auto dog = Animal("dog", true);
     auto err = db.update((scope tx) @safe { return dog.save(tx); });
     assert(err.isNull, err.message);
+
+    Animal a;
+    auto err2 = db.update((scope tx) @safe { return a.load!"breed"(tx, "dog"); });
+    assert(err2.isNull, err2.message);
+    assert(a.breed == "dog" && a.mostlyFriendly == true, "corrupt puppy");
+    auto err3 = db.view((in tx) @safe { return a.load(tx, "chicken"); });
+    assert(!err3.isNull, "Should not find chickens!");
 }
