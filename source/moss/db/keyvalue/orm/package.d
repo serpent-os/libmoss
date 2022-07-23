@@ -106,5 +106,6 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
 
     /* Try to save a user. */
     auto dog = Animal("dog", true);
-    db.update((scope tx) @safe { return dog.save(tx); });
+    auto err = db.update((scope tx) @safe { return dog.save(tx); });
+    assert(err.isNull, err.message);
 }
