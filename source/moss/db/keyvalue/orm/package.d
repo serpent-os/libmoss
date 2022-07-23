@@ -22,10 +22,10 @@ public import moss.db.keyvalue.orm.types;
     @Model static struct User
     {
         @PrimaryKey int id;
+        string username;
     }
 
-    User one;
-    one.id = 2;
+    immutable auto one = User(2, "bobby");
 
     static assert(isValidModel!User, "User should be a valid model");
     static assert(modelName!User == "users", "Invalid model name, got: " ~ modelName!User);
