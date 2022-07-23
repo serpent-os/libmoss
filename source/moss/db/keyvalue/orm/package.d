@@ -70,26 +70,29 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
 }
 
 /**
- * Load all objects matching the given index
+ * Load an object by the primary key
+ *
+ * Params:
+ *      M = model
+ *      V = lookup value type
+ *      tx = Transaction
+ *      lookup = Primary key to lookup
+ * Returns: non null DatabaseResult if we failed to load it.
  */
-public DatabaseResult load(alias index = "", M, V)(scope return ref M obj,
+public DatabaseResult load(M, V)(scope return ref M obj,
         scope const ref Transaction tx, in return V lookup) @safe
         if (isValidModel!M)
 {
-    import std.range : empty;
+    obj = M.init;
     import std.conv : to;
 
-    obj = M.init;
-
-    enum pkey = getSymbolsByUDA!(M, PrimaryKey)[0].stringof;
-    enum searchColumn = index.empty ? pkey : index;
-    static assert(searchColumn == pkey, "Indexes outside primary keys aren't yet supported");
+    enum searchColumn = getSymbolsByUDA!(M, PrimaryKey)[0].stringof;
 
     /**
      * Perform lookup by primary key.
      */
     M searchObj;
-    mixin("searchObj." ~ pkey ~ " = lookup;");
+    mixin("searchObj." ~ searchColumn ~ " = lookup;");
     auto bucketID = rowName(searchObj);
     auto bucket = tx.bucket(bucketID);
     if (bucket.isNull)
