@@ -15,6 +15,9 @@
 
 module moss.db.keyvalue.orm.types;
 
+import std.traits;
+import moss.core.encoding;
+
 /**
  * UDA: Decorate a field as the primary key in a model
  */
@@ -43,4 +46,63 @@ struct Model
      * Override the table name
      */
     string name;
+}
+
+/**
+ * Return true if a primary key was found.
+ *
+ * Params:
+ *      M = Model to validate
+ * Returns: true if model valid
+ */
+static auto hasPrimaryKey(M)()
+{
+    static if (getSymbolsByUDA!(M, PrimaryKey).length != 1)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+/**
+ * Allow runtime/compile time checking
+ *
+ * Params:
+ *      M = Model to validate
+ * Returns: true if model valid
+ */
+static bool isValidModel(M)()
+        if (hasPrimaryKey!M && isEncodable!M && __traits(isPOD, M))
+{
+    return true;
+}
+
+/**
+ * Return true if we can encode this type
+ *
+ * Params:
+ *      M = Model to validate
+ * Returns: true if model valid
+ */
+static auto isEncodable(M)()
+{
+    bool ret = true;
+    static foreach (field; __traits(allMembers, M))
+    {
+        {
+            alias fieldType = OriginalType!(typeof(__traits(getMember, M, field)));
+            static if (!isMossEncodable!fieldType)
+            {
+                /* Let the dev know why this doesn't work */
+                pragma(msg,
+                        M.stringof ~ "." ~ field ~ ": Type (" ~ fieldType.stringof
+                        ~ ") is not mossEncodable");
+                ret = false;
+            }
+        }
+    }
+    return ret;
 }

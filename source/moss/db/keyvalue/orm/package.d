@@ -19,5 +19,10 @@ public import moss.db.keyvalue.orm.types;
 
 @("Basic ORM testing") @safe unittest
 {
-    assert(1 == 0, "not yet implemented");
+    @Model static struct User
+    {
+        @PrimaryKey int id;
+    }
+
+    static assert(isValidModel!User, "User should be a valid model");
 }
