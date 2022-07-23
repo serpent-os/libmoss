@@ -93,7 +93,7 @@ static bool hasPrimaryKey(M)()
  * Returns: true if model valid
  */
 static bool isValidModel(M)()
-        if (hasModelDecorator!M && hasPrimaryKey!M && isEncodable!M && __traits(isPOD, M))
+        if (hasModelDecorator!M && hasPrimaryKey!M && isEncodable!M && __traits(isPOD, M) && is(OriginalType!M == struct))
 {
     return true;
 }
