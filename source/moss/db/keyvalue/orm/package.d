@@ -15,7 +15,24 @@
 
 module moss.db.keyvalue.orm;
 
+public import moss.db.keyvalue.errors;
+public import moss.db.keyvalue.interfaces;
 public import moss.db.keyvalue.orm.types;
+
+/**
+ * Save the object in the current transaction
+ *
+ * Params:
+ *      M = Model
+ *      obj = Model object
+ *      tx = Read-write transaction
+ * Returns: A DatabaseResult sumtype, check for errors
+ */
+public DatabaseResult save(M)(ref M obj, scope Transaction tx) @safe
+        if (isValidModel!M)
+{
+    return NoDatabaseError;
+}
 
 @("Basic type testing") @safe unittest
 {
