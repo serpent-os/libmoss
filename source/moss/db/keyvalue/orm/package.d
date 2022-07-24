@@ -149,7 +149,7 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
                                 {
                                     immutable oldVal = __traits(getMember, oldObj, field)
                                         .mossEncode;
-                                    tx.remove(bucket, oldVal);
+                                    cast(void) tx.remove(bucket, oldVal);
                                 }
                                 /* Set the new index */
                                 auto e = tx.set(bucket, val, pkey.mossEncode);
