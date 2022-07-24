@@ -167,11 +167,16 @@ public DatabaseResult load(M, V)(scope return  out M obj,
 
 /**
  * List all items by model, without filtering to a specific index
+ *
+ * Params:
+ *      M = Model
+ *      tx = read-only transaction
+ * Returns: a (mapped) range of all items in the model
  */
 public auto list(M)(scope const ref Transaction tx) @safe if (isValidModel!M)
 {
     /* Grab the search type.. */
-    M obj;
+    static immutable(M) obj;
     enum searchColumn = getSymbolsByUDA!(M, PrimaryKey)[0].stringof;
     alias searchType = Unconst!(typeof(__traits(getMember, obj, searchColumn)));
 
