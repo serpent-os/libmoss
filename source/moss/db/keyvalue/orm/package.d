@@ -80,6 +80,17 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
 {
     auto rowID = rowName(obj);
     mixin("auto pkey = obj." ~ getSymbolsByUDA!(M, PrimaryKey)[0].stringof ~ ";");
+    Unconst!M oldObj = Unconst!M.init;
+    bool haveOldData;
+
+    /* Does it already exist? */
+    {
+        immutable err = oldObj.load(tx, pkey);
+        if (err.isNull)
+        {
+            haveOldData = true;
+        }
+    }
 
     /* Ensure the *model bucket* exists */
     immutable auto modelBucket = tx.bucket(modelName!M);
@@ -133,6 +144,14 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
                                     return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
                                         M.stringof ~ ".save(): Create the model first!"));
                                 }
+                                /* Remove the old index now */
+                                if (haveOldData)
+                                {
+                                    immutable oldVal = __traits(getMember, oldObj, field)
+                                        .mossEncode;
+                                    tx.remove(bucket, oldVal);
+                                }
+                                /* Set the new index */
                                 auto e = tx.set(bucket, val, pkey.mossEncode);
                                 if (!e.isNull)
                                 {
