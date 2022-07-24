@@ -125,6 +125,12 @@ public DatabaseResult load(M, V)(scope return  out M obj,
     import std.conv : to;
 
     enum searchColumn = getSymbolsByUDA!(M, PrimaryKey)[0].stringof;
+    alias searchType = Unconst!(typeof(__traits(getMember, obj, searchColumn)));
+
+    /* Ensure we're checking the key properly! */
+    static assert(is(searchType == Unconst!(typeof(lookup))),
+            M.stringof ~ ".load(" ~ searchColumn ~ "): Mismatched primaryKey type, expected "
+            ~ searchType.stringof ~ ", got " ~ V.stringof);
 
     /**
      * Perform lookup by primary key.
@@ -276,7 +282,7 @@ public DatabaseResult load(M, V)(scope return  out M obj,
     /* Ensure user 30 exists */
     {
         UserAccount account;
-        immutable err = db.view((tx) => account.load(tx, 30));
+        immutable err = db.view((tx) => account.load(tx, cast(uint64_t) 30));
         assert(err.isNull, err.message);
         assert(account.id == 30, "Invalid account number");
         assert(account.username == "User 30", "Invalid username");
