@@ -29,10 +29,22 @@ import std.traits;
  *      tx = Read-write transaction
  * Returns: nullable error
  */
-public DatabaseResult createModel(M)(scope return Transaction tx) @safe
+public DatabaseResult createModel(M...)(scope return Transaction tx) @safe
 {
-    return tx.createBucketIfNotExists(modelName!M)
-        .match!((DatabaseError err) => DatabaseResult(err), (Bucket bk) => NoDatabaseError);
+    static foreach (modelType; M)
+    {
+        {
+            auto err = tx.createBucketIfNotExists(modelName!modelType)
+                .match!((DatabaseError error) => DatabaseResult(error),
+                        (Bucket bk) => NoDatabaseError);
+            if (!err.isNull)
+            {
+                return err;
+            }
+        }
+    }
+
+    return NoDatabaseError;
 }
 
 /**
@@ -181,7 +193,7 @@ public DatabaseResult load(M, V)(scope return  out M obj,
     }
 
     {
-        immutable err = db.update((scope tx) => createModel!Animal(tx));
+        immutable err = db.update((scope tx) => tx.createModel!Animal());
         assert(err.isNull, err.message);
     }
 
@@ -205,5 +217,41 @@ public DatabaseResult load(M, V)(scope return  out M obj,
         Animal chicken;
         immutable err = db.view((tx) => chicken.load(tx, "chicken"));
         assert(!err.isNull, "look at all those chickens");
+    }
+}
+
+@("Mock users demo") @safe unittest
+{
+    import moss.db.keyvalue : Database;
+    import std.stdint : uint64_t;
+
+    Database db;
+    Database.open("lmdb://ormDB2", DatabaseFlags.CreateIfNotExists)
+        .match!((d) => db = d, (DatabaseError e) => assert(0, e.message));
+    scope (exit)
+    {
+        db.close();
+        import std.file : rmdirRecurse;
+
+        "ormDB2".rmdirRecurse();
+    }
+
+    @Model static struct UserAccount
+    {
+        @PrimaryKey uint64_t id;
+        @Indexed string username;
+        //Group[] groups;
+    }
+
+    @Model static struct Group
+    {
+        @PrimaryKey uint64_t id;
+        // UserAccount[] users;
+    }
+
+    /* Get our model in place */
+    {
+        immutable err = db.update((scope tx) => tx.createModel!(UserAccount, Group));
+        assert(err.isNull, err.message);
     }
 }
