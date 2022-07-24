@@ -19,6 +19,9 @@ public import moss.db.keyvalue.errors;
 public import moss.db.keyvalue.interfaces;
 public import moss.db.keyvalue.orm.types;
 
+import std.algorithm : filter, map;
+import std.array : array;
+
 import std.traits;
 
 /**
@@ -162,6 +165,28 @@ public DatabaseResult load(M, V)(scope return  out M obj,
     return NoDatabaseError;
 }
 
+/**
+ * List all items by model, without filtering to a specific index
+ */
+public auto list(M)(scope const ref Transaction tx) @safe if (isValidModel!M)
+{
+    /* Grab the search type.. */
+    M obj;
+    enum searchColumn = getSymbolsByUDA!(M, PrimaryKey)[0].stringof;
+    alias searchType = Unconst!(typeof(__traits(getMember, obj, searchColumn)));
+
+    auto bucket = tx.bucket(modelName!M);
+    assert(!bucket.isNull);
+    return tx.iterator(bucket).map!((t) {
+        searchType key;
+        key.mossDecode(t.entry.key);
+        M val;
+        auto err = val.load(tx, key);
+        assert(err.isNull);
+        return val;
+    });
+}
+
 @("Basic type testing") @safe unittest
 {
     @Model static struct User
@@ -286,5 +311,26 @@ public DatabaseResult load(M, V)(scope return  out M obj,
         assert(err.isNull, err.message);
         assert(account.id == 30, "Invalid account number");
         assert(account.username == "User 30", "Invalid username");
+    }
+
+    {
+
+        import std.range : take;
+
+        UserAccount[] accounts;
+        db.view((in tx) @safe {
+            accounts = tx.list!UserAccount
+                .filter!((u) => u.id < 30)
+                .take(10).array;
+            return NoDatabaseError;
+        });
+        assert(accounts.length == 10);
+        debug
+        {
+            import std.stdio : writeln;
+
+            writeln(accounts);
+        }
+
     }
 }
