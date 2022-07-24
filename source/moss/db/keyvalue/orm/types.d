@@ -167,6 +167,19 @@ public static auto modelName(M)() @safe if (isValidModel!M)
 }
 
 /**
+ * Compute index bucket name for specific index
+ *
+ * Params:
+ *      M = Model
+ *      field = Field that is indexed
+ * Returns:  a string like "users#index.name"
+ */
+public static auto indexName(M, field)() @safe if (isValidModel!M)
+{
+    return modelName!M ~ "#index." ~ field;
+}
+
+/**
  * Compute basename for each row
  *
  * If the model name is "user" (struct User, table users) then
