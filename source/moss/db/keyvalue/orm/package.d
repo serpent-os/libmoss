@@ -38,12 +38,27 @@ public DatabaseResult createModel(M...)(scope return Transaction tx) @safe
     {
         static assert(isValidModel!modelType);
         {
+            /* Handle primary model */
             auto err = tx.createBucketIfNotExists(modelName!modelType)
                 .match!((DatabaseError error) => DatabaseResult(error),
                         (Bucket bk) => NoDatabaseError);
             if (!err.isNull)
             {
                 return err;
+            }
+
+            /* Create all of the indices */
+            static foreach (field; getSymbolsByUDA!(modelType, Indexed))
+            {
+                {
+                    auto e = tx.createBucketIfNotExists(indexName!(modelType, field.stringof))
+                        .match!((DatabaseError err) => DatabaseResult(err),
+                                (Bucket bk) => NoDatabaseError);
+                    if (!e.isNull)
+                    {
+                        return e;
+                    }
+                }
             }
         }
     }
@@ -93,14 +108,41 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
             /* Encode all the fields */
             static foreach (field; __traits(allMembers, M))
             {
+                static if (__traits(compiles, __traits(getMember, obj, field)))
                 {
-                    immutable auto key = field.mossEncode;
-                    immutable auto val = __traits(getMember, obj, field).mossEncode;
-
-                    DatabaseResult err = tx.set(itemBucket, key, val);
-                    if (!err.isNull)
                     {
-                        return err;
+                        /* To access UDAs on each field we have to import it. */
+                        mixin("import " ~ moduleName!M ~ " : " ~ Unconst!(OriginalType!M)
+                            .stringof ~ ";");
+
+                        immutable auto key = field.mossEncode;
+                        immutable auto val = __traits(getMember, obj, field).mossEncode;
+
+                        DatabaseResult err = tx.set(itemBucket, key, val);
+                        if (!err.isNull)
+                        {
+                            return err;
+                        }
+
+                        /* Is this one indexed? */
+                        static if (mixin("getUDAs!(" ~ M.stringof ~ "." ~ field ~ ", Indexed)")
+                            .length != 0)
+                        {
+                            {
+                                auto bucket = tx.bucket(indexName!(M, field));
+                                if (bucket.isNull)
+                                {
+                                    return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
+                                        M.stringof ~ ".save(): Create the model first!"));
+                                }
+                                auto e = tx.set(bucket, val, rowID);
+                                if (!e.isNull)
+                                {
+                                    return e;
+                                }
+                            }
+                            pragma(msg, "Adding index for " ~ M.stringof ~ "." ~ field);
+                        }
                     }
                 }
             }
@@ -208,6 +250,34 @@ public auto list(M)(scope const ref Transaction tx) @safe if (isValidModel!M)
     assert(rowName(one) == expRow);
 }
 
+/**
+ * Types defined only for testing
+ */
+debug
+{
+    import std.stdint : uint64_t;
+
+    @Model static struct Animal
+    {
+        @PrimaryKey string breed;
+        bool mostlyFriendly;
+    }
+
+    @Model static struct UserAccount
+    {
+        @PrimaryKey uint64_t id;
+        @Indexed string username;
+        //Group[] groups;
+    }
+
+    @Model static struct Group
+    {
+        @PrimaryKey uint64_t id;
+        // UserAccount[] users;
+    }
+
+}
+
 @("Basic unit testing..") @safe unittest
 {
     import moss.db.keyvalue : Database;
@@ -221,12 +291,6 @@ public auto list(M)(scope const ref Transaction tx) @safe if (isValidModel!M)
         import std.file : rmdirRecurse;
 
         "ormDB".rmdirRecurse();
-    }
-
-    @Model static struct Animal
-    {
-        @PrimaryKey string breed;
-        bool mostlyFriendly;
     }
 
     {
@@ -260,7 +324,6 @@ public auto list(M)(scope const ref Transaction tx) @safe if (isValidModel!M)
 @("Mock users demo") @safe unittest
 {
     import moss.db.keyvalue : Database;
-    import std.stdint : uint64_t;
     import std.string : format;
 
     Database db;
@@ -272,19 +335,6 @@ public auto list(M)(scope const ref Transaction tx) @safe if (isValidModel!M)
         import std.file : rmdirRecurse;
 
         "ormDB2".rmdirRecurse();
-    }
-
-    @Model static struct UserAccount
-    {
-        @PrimaryKey uint64_t id;
-        @Indexed string username;
-        //Group[] groups;
-    }
-
-    @Model static struct Group
-    {
-        @PrimaryKey uint64_t id;
-        // UserAccount[] users;
     }
 
     /* Get our model in place */

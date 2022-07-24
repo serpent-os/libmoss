@@ -174,9 +174,9 @@ public static auto modelName(M)() @safe if (isValidModel!M)
  *      field = Field that is indexed
  * Returns:  a string like "users#index.name"
  */
-public static auto indexName(M, field)() @safe if (isValidModel!M)
+public static auto indexName(M, alias field)() @safe if (isValidModel!M)
 {
-    return modelName!M ~ "#index." ~ field;
+    return (modelName!M ~ "#index." ~ field).mossEncode;
 }
 
 /**
