@@ -69,8 +69,6 @@ public DatabaseResult createModel(M...)(scope return Transaction tx) @safe
 /**
  * Save the object in the current transaction
  *
- * TODO: Store indices!
- *
  * Params:
  *      M = Model
  *      obj = Model object
