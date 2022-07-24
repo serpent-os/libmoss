@@ -33,6 +33,7 @@ public DatabaseResult createModel(M...)(scope return Transaction tx) @safe
 {
     static foreach (modelType; M)
     {
+        static assert(isValidModel!modelType);
         {
             auto err = tx.createBucketIfNotExists(modelName!modelType)
                 .match!((DatabaseError error) => DatabaseResult(error),
@@ -224,6 +225,7 @@ public DatabaseResult load(M, V)(scope return  out M obj,
 {
     import moss.db.keyvalue : Database;
     import std.stdint : uint64_t;
+    import std.string : format;
 
     Database db;
     Database.open("lmdb://ormDB2", DatabaseFlags.CreateIfNotExists)
@@ -252,6 +254,22 @@ public DatabaseResult load(M, V)(scope return  out M obj,
     /* Get our model in place */
     {
         immutable err = db.update((scope tx) => tx.createModel!(UserAccount, Group));
+        assert(err.isNull, err.message);
+    }
+
+    {
+        immutable err = db.update((scope tx) @safe {
+            foreach (i; 0 .. 500)
+            {
+                immutable acct = UserAccount(i, format!"User %d"(i));
+                auto err = acct.save(tx);
+                if (!err.isNull)
+                {
+                    return err;
+                }
+            }
+            return NoDatabaseError;
+        });
         assert(err.isNull, err.message);
     }
 }

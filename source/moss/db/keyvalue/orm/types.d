@@ -117,8 +117,8 @@ static bool isEncodable(M)()
             {
                 /* Let the dev know why this doesn't work */
                 pragma(msg,
-                        M.stringof ~ "." ~ field ~ ": Type (" ~ fieldType.stringof
-                        ~ ") is not mossEncodable");
+                        Unconst!M.stringof ~ "." ~ field ~ ": Type ("
+                        ~ fieldType.stringof ~ ") is not mossEncodable");
                 ret = false;
             }
         }
@@ -161,7 +161,7 @@ public static auto modelName(M)() @safe if (isValidModel!M)
     }
     else
     {
-        enum name = M.stringof.toLower();
+        enum name = Unconst!M.stringof.toLower();
     }
     return name.endsWith("s") ? name : name ~ "s";
 }
@@ -190,7 +190,7 @@ public static auto rowBaseName(M)() @safe if (isValidModel!(M))
     }
     else
     {
-        enum name = M.stringof.toLower();
+        enum name = Unconst!M.stringof.toLower();
     }
 
     return ("." ~ name ~ ".").mossEncode();
