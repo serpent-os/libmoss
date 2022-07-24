@@ -22,6 +22,20 @@ public import moss.db.keyvalue.orm.types;
 import std.traits;
 
 /**
+ * Create the inital model (primary key buckets etc)
+ *
+ * Params:
+ *      M = Model
+ *      tx = Read-write transaction
+ * Returns: nullable error
+ */
+public DatabaseResult createModel(M)(scope return Transaction tx) @safe
+{
+    return tx.createBucketIfNotExists(modelName!M)
+        .match!((DatabaseError err) => DatabaseResult(err), (Bucket bk) => NoDatabaseError);
+}
+
+/**
  * Save the object in the current transaction
  *
  * TODO: Store indices!
@@ -30,7 +44,7 @@ import std.traits;
  *      M = Model
  *      obj = Model object
  *      tx = Read-write transaction
- * Returns: A DatabaseResult sumtype, check for errors
+ * Returns: A nullable error
  */
 public DatabaseResult save(M)(scope return ref M obj, scope return Transaction tx) @safe
         if (isValidModel!M)
@@ -75,11 +89,12 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
  * Params:
  *      M = model
  *      V = lookup value type
+ *      obj = Object in which to load the return value
  *      tx = Transaction
  *      lookup = Primary key to lookup
  * Returns: non null DatabaseResult if we failed to load it.
  */
-public DatabaseResult load(M, V)(scope return ref M obj,
+public DatabaseResult load(M, V)(scope return  out M obj,
         scope const ref Transaction tx, in return V lookup) @safe
         if (isValidModel!M)
 {
@@ -155,15 +170,30 @@ public DatabaseResult load(M, V)(scope return ref M obj,
         bool mostlyFriendly;
     }
 
-    /* Try to save a user. */
-    auto dog = Animal("dog", true);
-    auto err = db.update((scope tx) @safe { return dog.save(tx); });
-    assert(err.isNull, err.message);
+    {
+        immutable err = db.update((scope tx) => createModel!Animal(tx));
+        assert(err.isNull, err.message);
+    }
 
-    Animal a;
-    auto err2 = db.view((tx) => a.load(tx, "dog"));
-    assert(err2.isNull, err2.message);
-    assert(a.breed == "dog" && a.mostlyFriendly == true, "corrupt puppy");
-    auto err3 = db.view((tx) => a.load(tx, "chicken"));
-    assert(!err3.isNull, "Should not find chickens!");
+    /* Try to save a dog. */
+    {
+        auto dog = Animal("dog", true);
+        immutable err = db.update((scope tx) => dog.save(tx));
+        assert(err.isNull, err.message);
+    }
+
+    /* Load a dog only */
+    {
+        Animal dog;
+        immutable err = db.view((tx) => dog.load(tx, "dog"));
+        assert(err.isNull, err.message);
+        assert(dog.breed == "dog" && dog.mostlyFriendly, "corrupt puppy");
+    }
+
+    /* No chickens! */
+    {
+        Animal chicken;
+        immutable err = db.view((tx) => chicken.load(tx, "chicken"));
+        assert(!err.isNull, "look at all those chickens");
+    }
 }
