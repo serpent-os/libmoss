@@ -272,4 +272,13 @@ public DatabaseResult load(M, V)(scope return  out M obj,
         });
         assert(err.isNull, err.message);
     }
+
+    /* Ensure user 30 exists */
+    {
+        UserAccount account;
+        immutable err = db.view((tx) => account.load(tx, 30));
+        assert(err.isNull, err.message);
+        assert(account.id == 30, "Invalid account number");
+        assert(account.username == "User 30", "Invalid username");
+    }
 }
