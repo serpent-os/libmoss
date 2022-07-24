@@ -307,7 +307,7 @@ public auto list(M)(scope const ref Transaction tx) @safe if (isValidModel!M)
     /* Ensure user 30 exists */
     {
         UserAccount account;
-        immutable err = db.view((tx) => account.load(tx, cast(uint64_t) 30));
+        immutable err = db.view((tx) => account.load(tx, 30UL));
         assert(err.isNull, err.message);
         assert(account.id == 30, "Invalid account number");
         assert(account.username == "User 30", "Invalid username");
