@@ -59,6 +59,16 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
                 M.stringof ~ ".save(): Create the model first!"));
     }
 
+    /* Stash in the primary index */
+    {
+        mixin("auto pkey = obj." ~ getSymbolsByUDA!(M, PrimaryKey)[0].stringof ~ ";");
+        auto err = tx.set(modelBucket, pkey.mossEncode, rowID);
+        if (!err.isNull)
+        {
+            return err;
+        }
+    }
+
     /**
      * Now save all of the fields
      */
