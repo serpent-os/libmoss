@@ -81,6 +81,7 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
         if (isValidModel!M)
 {
     auto rowID = rowName(obj);
+    mixin("auto pkey = obj." ~ getSymbolsByUDA!(M, PrimaryKey)[0].stringof ~ ";");
 
     /* Ensure the *model bucket* exists */
     immutable auto modelBucket = tx.bucket(modelName!M);
@@ -92,7 +93,6 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
 
     /* Stash in the primary index */
     {
-        mixin("auto pkey = obj." ~ getSymbolsByUDA!(M, PrimaryKey)[0].stringof ~ ";");
         auto err = tx.set(modelBucket, pkey.mossEncode, rowID);
         if (!err.isNull)
         {
@@ -135,7 +135,7 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
                                     return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
                                         M.stringof ~ ".save(): Create the model first!"));
                                 }
-                                auto e = tx.set(bucket, val, rowID);
+                                auto e = tx.set(bucket, val, pkey.mossEncode);
                                 if (!e.isNull)
                                 {
                                     return e;
@@ -205,6 +205,53 @@ public DatabaseResult load(M, V)(scope return  out M obj,
     }
 
     return NoDatabaseError;
+}
+
+/**
+ * Load according to a specific index
+ */
+public DatabaseResult load(alias searchColumn, M, V)(scope return  out M obj,
+        scope const ref Transaction tx, in return V indexValue) @safe
+        if (isValidModel!M)
+{
+    obj = M.init;
+
+    /* Ensure its a thing. */
+    static assert(__traits(compiles, __traits(getMember, Unconst!M, searchColumn)),
+            M.stringof ~ "." ~ searchColumn ~ ": Search column does not exist");
+
+    /* To access UDAs on each field we have to import it. */
+    mixin("import " ~ moduleName!M ~ " : " ~ Unconst!(OriginalType!M).stringof ~ ";");
+
+    /* Make sure its @Indexed */
+    static assert(mixin("getUDAs!(" ~ M.stringof ~ "." ~ searchColumn ~ ", Indexed)")
+            .length > 0, M.stringof ~ "." ~ searchColumn ~ ": Not an @Indexed field");
+
+    alias searchType = Unconst!(typeof(__traits(getMember, M, searchColumn)));
+    static assert(is(searchType == Unconst!V),
+            M.stringof ~ "." ~ searchColumn ~ ": Wrong type for field, got "
+            ~ V.stringof ~ ", expected " ~ searchType.stringof);
+
+    auto bucket = tx.bucket(indexName!(M, searchColumn));
+    if (bucket.isNull)
+    {
+        return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
+                M.stringof ~ ".load(): Create the model first!"));
+    }
+
+    auto res = tx.get(bucket, indexValue.mossEncode);
+    if (res is null)
+    {
+        return DatabaseResult(DatabaseError(DatabaseErrorCode.KeyNotFound,
+                M.stringof ~ ".load(): Cannot find key"));
+    }
+
+    enum primaryColumn = getSymbolsByUDA!(M, PrimaryKey)[0].stringof;
+    alias primaryType = Unconst!(typeof(__traits(getMember, obj, primaryColumn)));
+
+    primaryType key;
+    key.mossDecode(res);
+    return obj.load(tx, key);
 }
 
 /**
@@ -356,7 +403,6 @@ debug
             }
             return NoDatabaseError;
         });
-        assert(err.isNull, err.message);
     }
 
     /* Ensure user 30 exists */
@@ -387,5 +433,13 @@ debug
             writeln(accounts);
         }
 
+    }
+
+    /* Try to find the user by username */
+    {
+        UserAccount user;
+        immutable err = db.view((tx) => user.load!"username"(tx, "User 29"));
+        assert(err.isNull, err.message);
+        assert(user.id == 29, "Corrupt user");
     }
 }
