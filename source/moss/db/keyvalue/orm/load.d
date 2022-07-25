@@ -103,8 +103,8 @@ public DatabaseResult load(alias searchColumn, M, V)(scope return  out M obj,
     mixin("import " ~ moduleName!M ~ " : " ~ Unconst!(OriginalType!M).stringof ~ ";");
 
     /* Make sure its @Indexed */
-    static assert(mixin("getUDAs!(" ~ M.stringof ~ "." ~ searchColumn ~ ", Indexed)")
-            .length > 0, M.stringof ~ "." ~ searchColumn ~ ": Not an @Indexed field");
+    static assert(isFieldIndexed!(M, searchColumn),
+            M.stringof ~ "." ~ searchColumn ~ ": Not an @Indexed field");
 
     alias searchType = Unconst!(typeof(__traits(getMember, M, searchColumn)));
     static assert(is(searchType == Unconst!V),

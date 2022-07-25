@@ -91,8 +91,7 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
                         }
 
                         /* Is this one indexed? */
-                        static if (mixin("getUDAs!(" ~ M.stringof ~ "." ~ field ~ ", Indexed)")
-                            .length != 0)
+                        static if (isFieldIndexed!(M, field))
                         {
                             {
                                 auto bucket = tx.bucket(indexName!(M, field));
