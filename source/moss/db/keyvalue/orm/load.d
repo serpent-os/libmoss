@@ -79,6 +79,15 @@ public DatabaseResult load(M, V)(scope return  out M obj,
 
 /**
  * Load according to a specific index
+ *
+ * Params:
+ *      searchColumn = @Indexed field name
+ *      M = Model
+ *      V = value type
+ *      obj = Storage for the operation
+ *      tx = Read-only transaction
+ *      indexValue = Unique value to search within the index
+ * Returns: Nullable error type
  */
 public DatabaseResult load(alias searchColumn, M, V)(scope return  out M obj,
         scope const ref Transaction tx, in return V indexValue) @safe
