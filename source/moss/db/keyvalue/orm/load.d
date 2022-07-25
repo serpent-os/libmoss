@@ -19,6 +19,9 @@ public import moss.db.keyvalue.errors;
 public import moss.db.keyvalue.interfaces;
 public import moss.db.keyvalue.orm.types;
 
+import std.algorithm : map;
+import std.array : array;
+import std.range : ElementType;
 import std.traits;
 
 /**
@@ -62,15 +65,39 @@ public DatabaseResult load(M, V)(scope return  out M obj,
 
     static foreach (field; __traits(allMembers, M))
     {
+        static if (__traits(compiles, __traits(getMember, M, field)))
         {
-            immutable auto rawData = tx.get(bucket, field.mossEncode);
-            if (rawData is null)
             {
-                obj = M.init;
-                return DatabaseResult(DatabaseError(DatabaseErrorCode.KeyNotFound,
-                        M.stringof ~ ".load(" ~ searchColumn ~ "): Key not found: " ~ field.idup));
+                alias fieldType = getFieldType!(M, field);
+                static if (isEncodableSlice!fieldType && !isFieldIndexed!(M, field))
+                {
+                    /* Handle slices */
+                    immutable name = sliceName!(M, field)(searchObj);
+                    auto sliceBucket = tx.bucket(name);
+                    if (sliceBucket.isNull)
+                    {
+                        return DatabaseResult(DatabaseError(DatabaseErrorCode.KeyNotFound,
+                                M.stringof ~ ".load(" ~ searchColumn
+                                ~ "): Key not found: " ~ field.idup));
+                    }
+                    /* Map them all back into the slice */
+                    auto results = tx.iterator!(ElementType!fieldType,
+                            ushort)(sliceBucket).map!((r) => r.key).array;
+                    mixin("obj." ~ field ~ " = results;");
+                }
+                else
+                {
+                    immutable auto rawData = tx.get(bucket, field.mossEncode);
+                    if (rawData is null)
+                    {
+                        obj = M.init;
+                        return DatabaseResult(DatabaseError(DatabaseErrorCode.KeyNotFound,
+                                M.stringof ~ ".load(" ~ searchColumn
+                                ~ "): Key not found: " ~ field.idup));
+                    }
+                    mixin("obj." ~ field ~ ".mossDecode(rawData);");
+                }
             }
-            mixin("obj." ~ field ~ ".mossDecode(rawData);");
         }
     }
 

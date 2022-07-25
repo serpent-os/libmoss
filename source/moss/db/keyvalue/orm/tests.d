@@ -53,6 +53,7 @@ debug
     {
         @PrimaryKey uint64_t id;
         @Indexed string username;
+        string[] permissions;
         //Group[] groups;
     }
 
@@ -133,7 +134,10 @@ debug
         immutable err = db.update((scope tx) @safe {
             foreach (i; 0 .. 500)
             {
-                immutable acct = UserAccount(i, format!"User %d"(i));
+                immutable acct = UserAccount(i, format!"User %d"(i), i == 3
+                    ? ["canEat(chickens)", "canView(chickens"] : [
+                        "canView(chickens)"
+                    ]);
                 auto err = acct.save(tx);
                 if (!err.isNull)
                 {

@@ -50,9 +50,17 @@ public DatabaseResult createModel(M...)(scope return Transaction tx) @safe
                     /* Public members only */
                     static if (__traits(compiles, __traits(getMember, modelType, field)))
                     {
-                        /* Handle @Indexed fields */
-                        static if (isFieldIndexed!(modelType, field))
+                        alias fieldType = getFieldType!(modelType, field);
+                        static if (isEncodableSlice!fieldType)
                         {
+                            /* Can't Index on slices. */
+                            static assert(!isFieldIndexed!(modelType, field),
+                                    M.stringof ~ "." ~ field
+                                    ~ ": Encodable slices cannot be @Indexed");
+                        }
+                        else static if (isFieldIndexed!(modelType, field))
+                        {
+                            /* Handle @Indexed buckets */
                             auto e = createIndexBucket!(modelType, field)(tx);
                             if (!e.isNull)
                             {

@@ -81,40 +81,84 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
                         mixin("import " ~ moduleName!M ~ " : " ~ Unconst!(OriginalType!M)
                             .stringof ~ ";");
 
-                        immutable auto key = field.mossEncode;
-                        immutable auto val = __traits(getMember, obj, field).mossEncode;
-
-                        DatabaseResult err = tx.set(itemBucket, key, val);
-                        if (!err.isNull)
+                        alias fieldType = getFieldType!(M, field);
+                        static if (isEncodableSlice!fieldType && !isFieldIndexed!(M, field))
                         {
-                            return err;
-                        }
+                            /* Handle encoding of slices */
+                            auto name = sliceName!(M, field)(obj);
 
-                        /* Is this one indexed? */
-                        static if (isFieldIndexed!(M, field))
-                        {
+                            /* Wipe last one if it exists.. */
+                            auto oldBucket = tx.bucket(name);
+                            if (!oldBucket.isNull)
                             {
-                                auto bucket = tx.bucket(indexName!(M, field));
-                                if (bucket.isNull)
+                                auto err = tx.removeBucket(oldBucket);
+                                if (!err.isNull)
                                 {
-                                    return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
-                                        M.stringof ~ ".save(): Create the model first!"));
-                                }
-                                /* Remove the old index now */
-                                if (haveOldData)
-                                {
-                                    immutable oldVal = __traits(getMember, oldObj, field)
-                                        .mossEncode;
-                                    cast(void) tx.remove(bucket, oldVal);
-                                }
-                                /* Set the new index */
-                                auto e = tx.set(bucket, val, pkey.mossEncode);
-                                if (!e.isNull)
-                                {
-                                    return e;
+                                    return err;
                                 }
                             }
-                            pragma(msg, "Adding index for " ~ M.stringof ~ "." ~ field);
+
+                            /* Create the new bucket for slice storage */
+                            auto err = tx.createBucket(name)
+                                .match!((DatabaseError err) => DatabaseResult(err), (Bucket bk) {
+                                    DatabaseError err;
+                                    static auto val = (cast(ushort) 1).mossEncode;
+                                    /* Store all the elements as *keys* which will always dedupe the list. */
+                                    foreach (immutable element; __traits(getMember, obj, field))
+                                    {
+                                        auto res = tx.set(bk, element.mossEncode, val);
+                                        if (!res.isNull)
+                                        {
+                                            err = res.get;
+                                            break;
+                                        }
+                                    }
+                                    return DatabaseResult(err);
+                                });
+                            if (!err.isNull)
+                            {
+                                return err;
+                            }
+
+                        }
+                        else
+                        {
+                            /* Handle everything else */
+                            immutable auto key = field.mossEncode;
+                            immutable auto val = __traits(getMember, obj, field).mossEncode;
+
+                            DatabaseResult err = tx.set(itemBucket, key, val);
+                            if (!err.isNull)
+                            {
+                                return err;
+                            }
+
+                            /* Is this one indexed? */
+                            static if (isFieldIndexed!(M, field))
+                            {
+                                {
+                                    auto bucket = tx.bucket(indexName!(M, field));
+                                    if (bucket.isNull)
+                                    {
+                                        return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
+                                            M.stringof ~ ".save(): Create the model first!"));
+                                    }
+                                    /* Remove the old index now */
+                                    if (haveOldData)
+                                    {
+                                        immutable oldVal = __traits(getMember, oldObj, field)
+                                            .mossEncode;
+                                        cast(void) tx.remove(bucket, oldVal);
+                                    }
+                                    /* Set the new index */
+                                    auto e = tx.set(bucket, val, pkey.mossEncode);
+                                    if (!e.isNull)
+                                    {
+                                        return e;
+                                    }
+                                }
+                                pragma(msg, "Adding index for " ~ M.stringof ~ "." ~ field);
+                            }
                         }
                     }
                 }

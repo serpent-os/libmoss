@@ -107,7 +107,7 @@ static bool isValidModel(M)()
  *      F = field type
  * Returns: true if encoding is supported
  */
-static bool isEncodableSlice(F)()
+static bool isEncodableSlice(alias F)()
 {
     bool ret;
     static if ((!isSomeString!F && isArray!F) && isMossEncodable!(ElementType!F))
@@ -238,7 +238,8 @@ public static auto indexName(M, alias field)() @safe if (isValidModel!M)
  *      M = Model
  * Returns: Moss encoded row base name
  */
-public static auto rowBaseName(M)() @safe if (isValidModel!(M))
+public static auto rowBaseName(M, bool sliceElement = false)() @safe
+        if (isValidModel!(M))
 {
     import std.string : toLower, endsWith;
     import std.range : empty;
@@ -254,7 +255,14 @@ public static auto rowBaseName(M)() @safe if (isValidModel!(M))
         enum name = (Unconst!M).stringof.toLower();
     }
 
-    return ("." ~ name ~ ".").mossEncode();
+    static if (sliceElement)
+    {
+        return (".#slice#" ~ name ~ ".)").mossEncode();
+    }
+    else
+    {
+        return ("." ~ name ~ ".").mossEncode();
+    }
 }
 
 /**
@@ -271,4 +279,10 @@ public ImmutableDatum rowName(M)(in M obj) @safe if (isValidModel!M)
 {
     mixin("auto pkey = obj." ~ getSymbolsByUDA!(M, PrimaryKey)[0].stringof ~ ";");
     return rowBaseName!M ~ (pkey.mossEncode);
+}
+
+public ImmutableDatum sliceName(M, alias F)(in M obj) @safe if (isValidModel!M)
+{
+    mixin("auto pkey = obj." ~ getSymbolsByUDA!(M, PrimaryKey)[0].stringof ~ ";");
+    return rowBaseName!(M, true) ~ (pkey.mossEncode);
 }
