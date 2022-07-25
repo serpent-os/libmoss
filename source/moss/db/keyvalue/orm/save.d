@@ -1,0 +1,126 @@
+/*
+ * SPDX-FileCopyrightText: Copyright © 2020-2022 Serpent OS Developers
+ *
+ * SPDX-License-Identifier: Zlib
+ */
+
+/**
+ * moss.db.keyvalue.orm.save;
+ *
+ * Save support for the ORM API
+ *
+ * Authors: Copyright © 2020-2022 Serpent OS Developers
+ * License: Zlib
+ */
+
+module moss.db.keyvalue.orm.save;
+
+public import moss.db.keyvalue.errors;
+public import moss.db.keyvalue.interfaces;
+public import moss.db.keyvalue.orm.types;
+
+import moss.db.keyvalue.orm.load;
+
+import std.traits;
+
+/**
+ * Save the object in the current transaction
+ *
+ * Params:
+ *      M = Model
+ *      obj = Model object
+ *      tx = Read-write transaction
+ * Returns: A nullable error
+ */
+public DatabaseResult save(M)(scope return ref M obj, scope return Transaction tx) @safe
+        if (isValidModel!M)
+{
+    auto rowID = rowName(obj);
+    mixin("auto pkey = obj." ~ getSymbolsByUDA!(M, PrimaryKey)[0].stringof ~ ";");
+    Unconst!M oldObj = Unconst!M.init;
+    bool haveOldData;
+
+    /* Does it already exist? */
+    {
+        immutable err = oldObj.load(tx, pkey);
+        if (err.isNull)
+        {
+            haveOldData = true;
+        }
+    }
+
+    /* Ensure the *model bucket* exists */
+    immutable auto modelBucket = tx.bucket(modelName!M);
+    if (modelBucket.isNull)
+    {
+        return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
+                M.stringof ~ ".save(): Create the model first!"));
+    }
+
+    /* Stash in the primary index */
+    {
+        auto err = tx.set(modelBucket, pkey.mossEncode, rowID);
+        if (!err.isNull)
+        {
+            return err;
+        }
+    }
+
+    /**
+     * Now save all of the fields
+     */
+    return tx.createBucketIfNotExists(rowID)
+        .match!((DatabaseError err) => DatabaseResult(err), (Bucket itemBucket) {
+            /* Encode all the fields */
+            static foreach (field; __traits(allMembers, M))
+            {
+                static if (__traits(compiles, __traits(getMember, obj, field)))
+                {
+                    {
+                        /* To access UDAs on each field we have to import it. */
+                        mixin("import " ~ moduleName!M ~ " : " ~ Unconst!(OriginalType!M)
+                            .stringof ~ ";");
+
+                        immutable auto key = field.mossEncode;
+                        immutable auto val = __traits(getMember, obj, field).mossEncode;
+
+                        DatabaseResult err = tx.set(itemBucket, key, val);
+                        if (!err.isNull)
+                        {
+                            return err;
+                        }
+
+                        /* Is this one indexed? */
+                        static if (mixin("getUDAs!(" ~ M.stringof ~ "." ~ field ~ ", Indexed)")
+                            .length != 0)
+                        {
+                            {
+                                auto bucket = tx.bucket(indexName!(M, field));
+                                if (bucket.isNull)
+                                {
+                                    return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
+                                        M.stringof ~ ".save(): Create the model first!"));
+                                }
+                                /* Remove the old index now */
+                                if (haveOldData)
+                                {
+                                    immutable oldVal = __traits(getMember, oldObj, field)
+                                        .mossEncode;
+                                    cast(void) tx.remove(bucket, oldVal);
+                                }
+                                /* Set the new index */
+                                auto e = tx.set(bucket, val, pkey.mossEncode);
+                                if (!e.isNull)
+                                {
+                                    return e;
+                                }
+                            }
+                            pragma(msg, "Adding index for " ~ M.stringof ~ "." ~ field);
+                        }
+                    }
+                }
+            }
+
+            return NoDatabaseError;
+        });
+}
