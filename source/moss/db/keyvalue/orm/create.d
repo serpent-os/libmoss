@@ -44,16 +44,21 @@ public DatabaseResult createModel(M...)(scope return Transaction tx) @safe
                 return err;
             }
 
-            /* Create all of the indices */
-            static foreach (field; getSymbolsByUDA!(modelType, Indexed))
+            static foreach (field; __traits(allMembers, modelType))
             {
                 {
-                    auto e = tx.createBucketIfNotExists(indexName!(modelType, field.stringof))
-                        .match!((DatabaseError err) => DatabaseResult(err),
-                                (Bucket bk) => NoDatabaseError);
-                    if (!e.isNull)
+                    /* Public members only */
+                    static if (__traits(compiles, __traits(getMember, modelType, field)))
                     {
-                        return e;
+                        /* Handle @Indexed fields */
+                        static if (isFieldIndexed!(modelType, field))
+                        {
+                            auto e = createIndexBucket!(modelType, field)(tx);
+                            if (!e.isNull)
+                            {
+                                return e;
+                            }
+                        }
                     }
                 }
             }
@@ -61,4 +66,13 @@ public DatabaseResult createModel(M...)(scope return Transaction tx) @safe
     }
 
     return NoDatabaseError;
+}
+
+/**
+ * Helper to create per-index buckets
+ */
+private static DatabaseResult createIndexBucket(M, alias F)(scope return Transaction tx) @safe
+{
+    return tx.createBucketIfNotExists(indexName!(M, F))
+        .match!((DatabaseError err) => DatabaseResult(err), (Bucket bk) => NoDatabaseError);
 }

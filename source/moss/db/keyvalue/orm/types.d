@@ -15,6 +15,7 @@
 
 module moss.db.keyvalue.orm.types;
 
+import std.range : ElementType;
 import std.traits;
 import moss.core.encoding;
 
@@ -100,6 +101,53 @@ static bool isValidModel(M)()
 }
 
 /**
+ * Determine if the slice element is encodable
+ *
+ * Params:
+ *      F = field type
+ * Returns: true if encoding is supported
+ */
+static bool isEncodableSlice(F)()
+{
+    bool ret;
+    static if ((!isSomeString!F && isArray!F) && isMossEncodable!(ElementType!F))
+    {
+        ret = true;
+    }
+    return ret;
+}
+
+/**
+ * Determine if the field in M is @Indexed
+ *
+ * Params:
+ *      M = Model
+ *      F = Field
+ * Returns: true if @Indexed
+ */
+static bool isFieldIndexed(M, alias F)()
+{
+    bool ret;
+    static if (getUDAs!(mixin("M." ~ F), Indexed).length > 0)
+    {
+        ret = true;
+    }
+    return ret;
+}
+
+/**
+ * Helper to deterine the field type
+ *
+ * Params:
+ *      M = Model type
+ *      F = field name
+ */
+static template getFieldType(M, alias F)
+{
+    alias getFieldType = OriginalType!(Unconst!(typeof(__traits(getMember, M, F))));
+}
+
+/**
  * Return true if we can encode this type
  *
  * Params:
@@ -113,7 +161,7 @@ static bool isEncodable(M)()
     {
         {
             alias fieldType = OriginalType!(typeof(__traits(getMember, M, field)));
-            static if (!isMossEncodable!fieldType)
+            static if (!isMossEncodable!fieldType && !isEncodableSlice!fieldType)
             {
                 /* Let the dev know why this doesn't work */
                 pragma(msg,
@@ -161,7 +209,7 @@ public static auto modelName(M)() @safe if (isValidModel!M)
     }
     else
     {
-        enum name = Unconst!M.stringof.toLower();
+        enum name = (Unconst!M).stringof.toLower();
     }
     return name.endsWith("s") ? name : name ~ "s";
 }
@@ -203,7 +251,7 @@ public static auto rowBaseName(M)() @safe if (isValidModel!(M))
     }
     else
     {
-        enum name = Unconst!M.stringof.toLower();
+        enum name = (Unconst!M).stringof.toLower();
     }
 
     return ("." ~ name ~ ".").mossEncode();
