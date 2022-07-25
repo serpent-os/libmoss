@@ -45,6 +45,8 @@ public final class Database
      *
      * Params:
      *      uri = Resource locator
+     *      flags = Allow creation, read-only, etc
+     * Returns: SumTupe of either a Database object or an error
      */
     static SumType!(Database, DatabaseError) open(string uri,
             DatabaseFlags flags = DatabaseFlags.None) @safe
