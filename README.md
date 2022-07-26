@@ -62,7 +62,7 @@ types in a model can be supported by overloading `mossEncode` etc.
     @PrimaryKey uint id;
     @Indexed string username;
     string[] permissions;
-    uid[] groups;
+    uint[] groups;
 }
 
 @Model struct Group
@@ -70,7 +70,7 @@ types in a model can be supported by overloading `mossEncode` etc.
     @PrimaryKey uint id;
     @Indexed string name;
     string[] permissions;
-    uid[] users;
+    uint[] users;
 }
 
 /* Initialise models */
