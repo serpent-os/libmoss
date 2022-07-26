@@ -157,7 +157,6 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
                                         return e;
                                     }
                                 }
-                                pragma(msg, "Adding index for " ~ M.stringof ~ "." ~ field);
                             }
                         }
                     }
