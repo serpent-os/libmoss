@@ -27,6 +27,13 @@ struct PrimaryKey
 }
 
 /**
+ * UDA: Decorate a primary key as automatically incrementing
+ */
+struct AutoIncrement
+{
+}
+
+/**
  * UDA: Construct a two-way mapping for quick indexing
  */
 struct Indexed
@@ -131,6 +138,29 @@ static bool isFieldIndexed(M, alias F)()
 }
 
 /**
+ * Determine if the field is an automatically incrementing one
+ *
+ * Params:
+ *      M = Model
+ *      F = Field
+ * Returns: true if we encountered an AutoIncrement field
+ */
+static bool isAutoIncrement(M, alias F)()
+{
+    bool ret;
+    static if (getUDAs!(mixin("M." ~ F), AutoIncrement).length > 0)
+    {
+        alias fieldType = getFieldType!(M, F);
+        static assert(isNumeric!fieldType,
+                M.stringof ~ "." ~ F ~ ": @AutoIncrement only works for numeric types");
+        static assert(!isFloatingPoint!fieldType,
+                M.stringof ~ "." ~ F ~ ": @AutoIncrement does not work with floating point types");
+        ret = true;
+    }
+    return ret;
+}
+
+/**
  * Helper to deterine the field type
  *
  * Params:
@@ -220,6 +250,30 @@ public static auto modelName(M)() @safe if (isValidModel!M)
 public static auto indexName(M, alias field)() @safe if (isValidModel!M)
 {
     return (modelName!M ~ "#index." ~ field).mossEncode;
+}
+
+/**
+ * Compute static metadata name for the model
+ *
+ * Params:
+ *      M = Model
+ * Returns: a string like "users#meta#"
+ */
+public static auto metaName(M)() @safe if (isValidModel!M)
+{
+    return (modelName!M ~ "#meta#").mossEncode;
+}
+
+/**
+ * Compute per-field auto-increment key
+ *
+ * Params:
+ *      F = Field
+ * Returns: A string like "autoIncrement.id"
+ */
+public static auto autoincrementFieldName(alias F)() @safe
+{
+    return "autoIncrement." ~ F.stringof;
 }
 
 /**

@@ -51,7 +51,7 @@ debug
 
     @Model static struct UserAccount
     {
-        @PrimaryKey uint64_t id;
+        @AutoIncrement @PrimaryKey uint64_t id;
         @Indexed string username;
         string[] permissions;
         //Group[] groups;
@@ -132,9 +132,9 @@ debug
 
     {
         immutable err = db.update((scope tx) @safe {
-            foreach (i; 0 .. 500)
+            foreach (i; 1 .. 500)
             {
-                immutable acct = UserAccount(i, format!"User %d"(i), i == 3
+                immutable acct = UserAccount(0, format!"User %d"(i), i == 3
                     ? ["canEat(chickens)", "canView(chickens"] : [
                         "canView(chickens)"
                     ]);

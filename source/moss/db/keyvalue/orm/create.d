@@ -44,6 +44,13 @@ public DatabaseResult createModel(M...)(scope return Transaction tx) @safe
                 return err;
             }
 
+            /* Construct metadata bucket */
+            auto errMeta = createMetaBucket!modelType(tx);
+            if (!errMeta.isNull)
+            {
+                return err;
+            }
+
             static foreach (field; __traits(allMembers, modelType))
             {
                 {
@@ -83,4 +90,13 @@ private static DatabaseResult createIndexBucket(M, alias F)(scope return Transac
 {
     return tx.createBucketIfNotExists(indexName!(M, F))
         .match!((DatabaseError err) => DatabaseResult(err), (Bucket bk) => NoDatabaseError);
+}
+
+/**
+ * Helper to create per-model meta bucket
+ */
+private static DatabaseResult createMetaBucket(M)(scope return Transaction tx) @safe
+{
+    return tx.createBucketIfNotExists(metaName!M)
+        .match!((err) => DatabaseResult(err), (bk) => NoDatabaseError);
 }

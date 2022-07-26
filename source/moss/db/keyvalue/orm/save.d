@@ -32,13 +32,19 @@ import std.traits;
  *      tx = Read-write transaction
  * Returns: A nullable error
  */
-public DatabaseResult save(M)(scope return ref M obj, scope return Transaction tx) @safe
+public DatabaseResult save(M)(return ref M inputObj, scope return Transaction tx) @safe
         if (isValidModel!M)
 {
-    auto rowID = rowName(obj);
-    mixin("auto pkey = obj." ~ getSymbolsByUDA!(M, PrimaryKey)[0].stringof ~ ";");
+    Unconst!M obj;
+    alias UM = Unconst!M;
+    () @trusted { obj = cast(UM) inputObj; }();
     Unconst!M oldObj = Unconst!M.init;
     bool haveOldData;
+
+    auto metaBucket = tx.bucket(metaName!M);
+    assert(!metaBucket.isNull);
+
+    mixin("auto pkey = obj." ~ getSymbolsByUDA!(M, PrimaryKey)[0].stringof ~ ";");
 
     /* Does it already exist? */
     {
@@ -47,7 +53,39 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
         {
             haveOldData = true;
         }
+        else
+        {
+            /* Increment if needed. */
+            static if (isAutoIncrement!(M, getSymbolsByUDA!(M, PrimaryKey)[0].stringof))
+            {
+                immutable fieldName = autoincrementFieldName!(getSymbolsByUDA!(M, PrimaryKey)[0]);
+                alias pkeyType = getFieldType!(M, getSymbolsByUDA!(M, PrimaryKey)[0].stringof);
+                pkeyType useValue = pkeyType.init;
+                auto storedValue = tx.get!pkeyType(metaBucket, fieldName);
+                if (!storedValue.isNull)
+                {
+                    useValue = storedValue;
+                }
+                ++useValue;
+                auto errIncr = tx.set(metaBucket, fieldName, useValue);
+                if (!errIncr.isNull)
+                {
+                    return errIncr;
+                }
+                /* Force the ID */
+                mixin("obj." ~ getSymbolsByUDA!(M, PrimaryKey)[0].stringof ~ " = useValue;");
+                mixin("pkey = useValue;");
+            }
+        }
     }
+
+    /* If we can mutate the return pointer, do so */
+    static if (isMutable!M)
+    {
+        inputObj = obj;
+    }
+
+    auto rowID = rowName(obj);
 
     /* Ensure the *model bucket* exists */
     immutable auto modelBucket = tx.bucket(modelName!M);
@@ -85,7 +123,7 @@ public DatabaseResult save(M)(scope return ref M obj, scope return Transaction t
                         static if (isEncodableSlice!fieldType && !isFieldIndexed!(M, field))
                         {
                             /* Handle encoding of slices */
-                            auto name = sliceName!(M, field)(obj);
+                            auto name = sliceName!(UM, field)(obj);
 
                             /* Wipe last one if it exists.. */
                             auto oldBucket = tx.bucket(name);
