@@ -28,7 +28,7 @@ import std.traits;
  *
  * Params:
  *      M = Model
- *      obj = Model object
+ *      inputObj = Model object
  *      tx = Read-write transaction
  * Returns: A nullable error
  */
@@ -61,7 +61,7 @@ public DatabaseResult save(M)(return ref M inputObj, scope return Transaction tx
                 immutable fieldName = autoincrementFieldName!(getSymbolsByUDA!(M, PrimaryKey)[0]);
                 alias pkeyType = getFieldType!(M, getSymbolsByUDA!(M, PrimaryKey)[0].stringof);
                 pkeyType useValue = pkeyType.init;
-                auto storedValue = tx.get!pkeyType(metaBucket, fieldName);
+                immutable storedValue = tx.get!pkeyType(metaBucket, fieldName);
                 if (!storedValue.isNull)
                 {
                     useValue = storedValue;

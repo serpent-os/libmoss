@@ -45,7 +45,7 @@ public DatabaseResult createModel(M...)(scope return Transaction tx) @safe
             }
 
             /* Construct metadata bucket */
-            auto errMeta = createMetaBucket!modelType(tx);
+            immutable auto errMeta = createMetaBucket!modelType(tx);
             if (!errMeta.isNull)
             {
                 return err;
