@@ -27,7 +27,7 @@ auto err = db.update((scope tx) @safe
 {
     return tx.createBucketIfNotExists("bob").match!(
         (DatabaseError err) => DatabaseResult(err),
-        (Bucket bk) => tx.set(bucket, "age", 12);
+        (Bucket bk) => tx.set(bk, "age", 12);
     )
 });
 assert(err.isNull, err.message);
