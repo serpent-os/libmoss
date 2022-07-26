@@ -316,6 +316,15 @@ public ImmutableDatum rowName(M)(in M obj) @safe if (isValidModel!M)
     return rowBaseName!M ~ (pkey.mossEncode);
 }
 
+/**
+ * Retrieve the slice bucket name for a model entry,
+ * i.e. .#slice#user.1
+ *
+ * Params:
+ *      M = Model
+ *      obj = Model object to generate an ID for
+ * Returns: moss encoded slice name
+ */
 public ImmutableDatum sliceName(M, alias F)(in M obj) @safe if (isValidModel!M)
 {
     mixin("auto pkey = obj." ~ getSymbolsByUDA!(M, PrimaryKey)[0].stringof ~ ";");
