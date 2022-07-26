@@ -32,6 +32,14 @@ struct PrimaryKey
 }
 
 /**
+ * UDA: This slice links to a foreign model
+ */
+struct ForeignKey
+{
+
+}
+
+/**
  * UDA: Construct a two-way mapping for quick indexing
  */
 struct Indexed
@@ -136,6 +144,32 @@ static bool isFieldIndexed(M, alias F)()
 }
 
 /**
+ * Determine if the field in M is @ForeignKey compatible
+ *
+ * Params:
+ *      M = Model
+ *      F = Field
+ * Returns: true if @ForeignKey (And a valid slice)
+ */
+static bool isForeignKeyField(M, alias F)()
+{
+    bool ret;
+    alias fieldType = getFieldType!(M, F);
+    /* Is this a slice? */
+    static if (isArray!fieldType)
+    {
+        alias eType = Unconst!(ElementType!fieldType);
+        static if (getUDAs!(__traits(getMember, M, F), ForeignKey).length > 0)
+        {
+            static assert(is(eType == struct) && getUDAs!(eType, Model).length > 0,
+                    fieldType.stringof ~ ": Foreign key support limited to @Model types");
+            ret = true;
+        }
+    }
+    return ret;
+}
+
+/**
  * Helper to deterine the field type
  *
  * Params:
@@ -161,7 +195,8 @@ static bool isEncodable(M)()
     {
         {
             alias fieldType = OriginalType!(typeof(__traits(getMember, M, field)));
-            static if (!isMossEncodable!fieldType && !isEncodableSlice!fieldType)
+            static if (!isMossEncodable!fieldType && !isForeignKeyField!(M,
+                    field) && !isEncodableSlice!fieldType)
             {
                 /* Let the dev know why this doesn't work */
                 pragma(msg,
