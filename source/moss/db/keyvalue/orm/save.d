@@ -42,6 +42,11 @@ public DatabaseResult save(M)(return ref M inputObj, scope return Transaction tx
     bool haveOldData;
 
     auto metaBucket = tx.bucket(metaName!M);
+    if (metaBucket.isNull)
+    {
+        return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
+                M.stringof ~ ".save(): Create the model first!"));
+    }
     assert(!metaBucket.isNull);
 
     mixin("auto pkey = obj." ~ getSymbolsByUDA!(M, PrimaryKey)[0].stringof ~ ";");

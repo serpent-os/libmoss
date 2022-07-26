@@ -108,3 +108,110 @@ public DatabaseResult remove(M)(scope return const ref M inputObj, scope return 
     /* Remove the model-instance bucket. */
     return tx.removeBucket(content);
 }
+
+/**
+ * Completely purge the model from the database.
+ *
+ * Params:
+ *      M = Model
+ *      tx = Read-write transaction
+ * Returns: Nullable error type
+ */
+public DatabaseResult removeAll(M)(scope return Transaction tx) @safe
+        if (isValidModel!M)
+{
+    /* Ensure the *model bucket* exists */
+    auto modelBucket = tx.bucket(modelName!M);
+    if (modelBucket.isNull)
+    {
+        return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
+                M.stringof ~ ".removeAll(): Create the model first!"));
+    }
+
+    /* Remove each entry so that the slice buckets etc are wiped. */
+    foreach (item; tx.iterator(modelBucket))
+    {
+        Unconst!M searchObj;
+        /* Decode the search object */
+        mixin("searchObj." ~ getSymbolsByUDA!(M,
+                PrimaryKey)[0].stringof ~ ".mossDecode(item.entry.key);");
+        auto instance = tx.bucket(rowName(searchObj));
+        if (instance.isNull)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
+                    M.stringof ~ ".remove(): Create the model first!"));
+        }
+        static foreach (field; __traits(allMembers, M))
+        {
+            static if (__traits(compiles, __traits(getMember, M, field)))
+            {
+                {
+                    alias fieldType = getFieldType!(M, field);
+                    static if (isEncodableSlice!fieldType && !isFieldIndexed!(M, field))
+                    {
+                        /* Remove the slice bucket */
+                        auto bk = tx.bucket(sliceName!(M, field)(searchObj));
+                        if (bk.isNull)
+                        {
+                            return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
+                                    M.stringof ~ ".removeAll(): Create the model first!"));
+                        }
+                        auto err = tx.removeBucket(bk);
+                        if (!err.isNull)
+                        {
+                            return err;
+                        }
+                    }
+                }
+            }
+        }
+
+        /* Remove the search object bucket itself */
+        auto err = tx.removeBucket(instance);
+        if (!err.isNull)
+        {
+            return err;
+        }
+    }
+
+    /* Remove all index buckets globally */
+    static foreach (field; getSymbolsByUDA!(M, Indexed))
+    {
+        static if (__traits(compiles, __traits(getMember, M, field.stringof)))
+        {
+            static if (isFieldIndexed!(M, field.stringof))
+            {
+                auto bk = tx.bucket(indexName!(M, field.stringof));
+                if (bk.isNull)
+                {
+                    return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
+                            M.stringof ~ ".remove(): Create the model first!"));
+                }
+                auto err = tx.removeBucket(bk);
+                if (!err.isNull)
+                {
+                    return err;
+                }
+            }
+        }
+    }
+
+    {
+        auto metabucket = tx.bucket(metaName!M);
+        if (metabucket.isNull)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
+                    M.stringof ~ ".remove(): Create the model first!"));
+        }
+
+        /* Goodbye meta bucket */
+        auto errMeta = tx.removeBucket(metabucket);
+        if (!errMeta.isNull)
+        {
+            return errMeta;
+        }
+    }
+
+    /* Goodbye global model */
+    return tx.removeBucket(modelBucket);
+}

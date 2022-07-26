@@ -19,6 +19,7 @@ import moss.db.keyvalue;
 import moss.db.keyvalue.orm;
 import std.algorithm : filter;
 import std.array : array;
+import std.range : empty;
 
 @("Basic type testing") @safe unittest
 {
@@ -210,5 +211,32 @@ debug
         {
             assert(user.id != 10, "Why is it still here?");
         }
+    }
+
+    {
+        /* Remove all users */
+        auto err = db.update((scope tx) => tx.removeAll!UserAccount);
+        assert(err.isNull, err.message);
+        UserAccount lookup;
+        auto err2 = db.view((scope tx) => lookup.load(tx, 1UL));
+        assert(!err2.isNull, "Lookup shouldnt work");
+        assert(err2.code == DatabaseErrorCode.BucketNotFound);
+        auto err3 = db.update((scope tx) => lookup.save(tx));
+        assert(!err3.isNull, "Save shouldnt work");
+
+        /* Make sure recreation works */
+        auto err4 = db.update((scope tx) => tx.createModel!UserAccount);
+        assert(err4.isNull, err.message);
+        auto err5 = db.update((scope tx) => lookup.save(tx));
+        assert(err5.isNull, err.message);
+
+        UserAccount[] allUsers;
+        db.view((in tx) @safe {
+            allUsers = tx.list!UserAccount.array;
+            return NoDatabaseError;
+        });
+        assert(allUsers.length == 1, "Corruption!");
+        assert(allUsers[0].username == "", "Corruption!");
+        assert(allUsers[0].permissions.empty, "Corruption!");
     }
 }
