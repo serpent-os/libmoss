@@ -24,11 +24,6 @@ import moss.core.encoding;
  */
 struct PrimaryKey
 {
-    /**
-     * Automatically increment for each key insertion.
-     * Requires an integer type
-     */
-    bool autoIncrement;
 }
 
 /**
