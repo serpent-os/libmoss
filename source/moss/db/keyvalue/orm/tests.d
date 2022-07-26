@@ -185,4 +185,30 @@ debug
         assert(err.isNull, err.message);
         assert(user.id == 29, "Corrupt user");
     }
+
+    {
+        /* Remove user 10, ensure it is *gone gone * */
+        UserAccount removal = UserAccount(10);
+        auto err = db.update((scope tx) => removal.remove(tx));
+        assert(err.isNull, err.message);
+
+        UserAccount lookup;
+        auto err2 = db.view((in tx) => lookup.load(tx, 10UL));
+        assert(!err2.isNull, "User 10 should be gone");
+
+        lookup = UserAccount.init;
+        auto err3 = db.view((in tx) => lookup.load!"username"(tx, "User 10"));
+        assert(!err3.isNull, "User 10 by username should be gone");
+
+        UserAccount[] allUsers;
+        db.view((in tx) @safe {
+            allUsers = tx.list!UserAccount.array();
+            return NoDatabaseError;
+        });
+        assert(allUsers.length == 498, "Stray users bruh");
+        foreach (user; allUsers)
+        {
+            assert(user.id != 10, "Why is it still here?");
+        }
+    }
 }

@@ -20,5 +20,6 @@ public import moss.db.keyvalue.interfaces;
 public import moss.db.keyvalue.orm.create;
 public import moss.db.keyvalue.orm.list;
 public import moss.db.keyvalue.orm.load;
+public import moss.db.keyvalue.orm.remove;
 public import moss.db.keyvalue.orm.save;
 public import moss.db.keyvalue.orm.types;
