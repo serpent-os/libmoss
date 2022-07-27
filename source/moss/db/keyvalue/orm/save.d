@@ -180,12 +180,24 @@ public DatabaseResult save(M)(return ref M inputObj, scope return Transaction tx
                             static if (isFieldIndexed!(M, field))
                             {
                                 {
+                                    immutable pkeyEncoded = pkey.mossEncode;
+
                                     auto bucket = tx.bucket(indexName!(M, field));
                                     if (bucket.isNull)
                                     {
                                         return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketNotFound,
                                             M.stringof ~ ".save(): Create the model first!"));
                                     }
+                                    /* Index = unique! */
+                                    auto existingIndex = tx.get(bucket, val);
+                                    if (existingIndex !is null && val !is null
+                                        && existingIndex != pkeyEncoded)
+                                    {
+                                        return DatabaseResult(DatabaseError(DatabaseErrorCode.BucketExists,
+                                            M.stringof
+                                            ~ ".save(): Breaking unique constraint on " ~ field));
+                                    }
+
                                     /* Remove the old index now */
                                     if (haveOldData)
                                     {
@@ -194,7 +206,7 @@ public DatabaseResult save(M)(return ref M inputObj, scope return Transaction tx
                                         cast(void) tx.remove(bucket, oldVal);
                                     }
                                     /* Set the new index */
-                                    auto e = tx.set(bucket, val, pkey.mossEncode);
+                                    auto e = tx.set(bucket, val, pkeyEncoded);
                                     if (!e.isNull)
                                     {
                                         return e;
