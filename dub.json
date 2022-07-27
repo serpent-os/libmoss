@@ -12,9 +12,6 @@
 		"moss-core": {
 			"path": "../moss-core"
 		},
-		"lmdb-d": {
-			"repository": "git+git@gitlab.com:serpent-os/dlang/lmdb-d.git",
-			"version": "d0d33eda733ce34ab82d68fc1f762b3899add4d5"
-		}
+		"lmdb-d": ">=0.0.1"
 	},
 }
