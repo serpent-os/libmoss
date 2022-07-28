@@ -281,7 +281,7 @@ private unittest
 {
     import moss.core.util : computeSHA256;
 
-    auto inputPath = "LICENSE";
+    auto inputPath = "LICENSES/Zlib.txt";
     auto outputPath = "LICENSE.COPY";
 
     auto inpFD = open(inputPath.toStringz, O_RDONLY, 0);

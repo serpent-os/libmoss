@@ -171,8 +171,8 @@ package:
             break;
         case StoreType.User:
             _directory = join([
-                userHome, ".moss/store", identifier, versionIdentifier
-            ], "/");
+                    userHome, ".moss/store", identifier, versionIdentifier
+                    ], "/");
             break;
         }
 

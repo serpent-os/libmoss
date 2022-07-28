@@ -272,7 +272,7 @@ public struct IOUtil
 @("Ensure copyFile works as expected")
 private unittest
 {
-    auto res = IOUtil.copyFile("LICENSE", "LICENSE.test");
+    auto res = IOUtil.copyFile("LICENSES/Zlib.txt", "LICENSE.test");
     scope (exit)
     {
         cstdlib.unlink("LICENSE.test".toStringz);

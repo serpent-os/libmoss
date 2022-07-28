@@ -92,8 +92,8 @@ unittest
 {
     const auto expHash = "5eca857080b9a65301edc2c6ebb5ebd3abc5ed679c49ab532a300c91d3674fc8";
 
-    immutable auto directHash = computeSHA256("LICENSE");
-    immutable auto mapHash = computeSHA256("LICENSE", true);
+    immutable auto directHash = computeSHA256("LICENSES/Zlib.txt");
+    immutable auto mapHash = computeSHA256("LICENSES/Zlib.txt", true);
 
     assert(expHash == directHash, "Mismatch in direct hash");
     assert(expHash == directHash, "Mismatch in mmap hash");
