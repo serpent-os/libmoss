@@ -5,13 +5,10 @@
 	"copyright": "Copyright © 2020-2022 Serpent OS Developers",
 	"description": "Nested key-value database abstraction",
 	"license": "Zlib",
-	"version": "0.0.0",
 	"name": "moss-db",
 	"targetType": "autodetect",
 	"dependencies": {
-		"moss-core": {
-			"path": "../moss-core"
-		},
+		"moss-core": ">=0.0.1",
 		"lmdb-d": ">=0.0.1"
 	},
 }
