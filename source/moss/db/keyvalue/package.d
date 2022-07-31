@@ -117,6 +117,7 @@ public final class Database
         }
         catch (Exception ex)
         {
+            tx.drop();
             return DatabaseResult(DatabaseError(DatabaseErrorCode.UncaughtException,
                     ex.message.idup));
         }
@@ -151,6 +152,7 @@ public final class Database
         }
         catch (Exception ex)
         {
+            tx.drop();
             return DatabaseResult(DatabaseError(DatabaseErrorCode.UncaughtException,
                     ex.message.idup));
         }
