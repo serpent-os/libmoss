@@ -109,9 +109,17 @@ public final class Database
         {
             return ret;
         }
-        ret = viewDg(tx);
-        tx.drop();
-        return ret;
+        try
+        {
+            ret = viewDg(tx);
+            tx.drop();
+            return ret;
+        }
+        catch (Exception ex)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.UncaughtException,
+                    ex.message.idup));
+        }
     }
 
     /**
@@ -131,13 +139,21 @@ public final class Database
         {
             return ret;
         }
-        ret = updateDg(tx);
-        if (!ret.isNull)
+        try
         {
-            tx.drop();
-            return ret;
+            ret = updateDg(tx);
+            if (!ret.isNull)
+            {
+                tx.drop();
+                return ret;
+            }
+            return tx.commit();
         }
-        return tx.commit();
+        catch (Exception ex)
+        {
+            return DatabaseResult(DatabaseError(DatabaseErrorCode.UncaughtException,
+                    ex.message.idup));
+        }
     }
 
     /**

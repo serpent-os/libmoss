@@ -33,6 +33,7 @@ public enum DatabaseErrorCode : uint8_t
     KeyNotFound,
     BucketNotFound,
     BucketExists,
+    UncaughtException,
 }
 
 /**
