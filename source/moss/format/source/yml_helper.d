@@ -32,28 +32,27 @@ void setValue(T)(ref Node node, ref T value, YamlSchema schema)
 
     enforce(node.nodeID == NodeID.scalar, format!"Expected %s for %s"(T.stringof, node.tag));
 
-    trace(format!"Function %s parsing node:\n  '- %s\n  '- via schema: %s"(__FUNCTION__,
-            node, schema));
-
     static if (is(T == int64_t))
     {
         value = node.as!int64_t;
+        trace("   '- parsed as <int64_t>");
     }
     else static if (is(T == uint64_t))
     {
         value = node.as!uint64_t;
+        trace("   '- parsed as <uint64_t>");
     }
     else static if (is(T == bool))
     {
         value = node.as!bool;
+        trace("   '- parsed as <bool>");
     }
     else
     {
         value = node.as!string;
-        trace(format!"  '- parsed '%s' as <%s>"(value, T.stringof));
+        trace("   '- parsed as <string>");
         if (schema.acceptableValues.length < 1)
         {
-            trace("  '- (schema acceptableValues.length < 1, skipping)");
             return;
         }
 
@@ -62,7 +61,6 @@ void setValue(T)(ref Node node, ref T value, YamlSchema schema)
                 format!"setValue(): %s not a valid value for %s. Acceptable values: %s"(value,
                     schema.name, schema.acceptableValues));
     }
-    trace(format!"  '- parsed '%s' as <%s>"(value, T.stringof));
 }
 
 /**
@@ -73,22 +71,20 @@ void setValueArray(T)(ref Node node, ref T value)
     /* We can support a single value *or* a list. */
     enforce(node.nodeID != NodeID.mapping, format!"Expected %s for %s"(T.stringof, node.tag));
 
-    trace(format!"Function %s parsing node:\n  '- %s"(__FUNCTION__, node));
-
     switch (node.nodeID)
     {
         static if (is(T == string) || is(T == string[]))
         {
     case NodeID.scalar:
             value ~= node.as!string;
-            trace(format!"  '- parsed '%s' as <string>"(node.as!string));
+            trace("   '- parsed as <string>");
             break;
     case NodeID.sequence:
-            trace("  '- parsing sequence as string scalars:");
+            trace("   '- sequence of <string> scalars:");
             foreach (ref Node v; node)
             {
                 value ~= v.as!string;
-                trace(format!"    '- parsed '%s' as <string>"(v.as!string));
+                trace(format!"    '- parsed '%s'"(v.as!string));
             }
             break;
         }
@@ -96,10 +92,10 @@ void setValueArray(T)(ref Node node, ref T value)
         {
     case NodeID.scalar:
             value ~= node.as!(typeof(value[0]));
-            trace(format!"  '- parsed '%s' as <%s>"(node, node.as!(typeof(value[0]))));
+            trace(format!"   '- parsed as <%s>"(node.as!(typeof(value[0]))));
             break;
     case NodeID.sequence:
-            trace("  '- parsing sequence:");
+            trace("   '- sequence of scalars:");
             foreach (ref Node v; node)
             {
                 value ~= v.as!(typeof(value[0]));
@@ -108,54 +104,78 @@ void setValueArray(T)(ref Node node, ref T value)
             break;
         }
     default:
-        trace(format!"  '- node.nodeID %s not parsed?"(node.nodeID));
+        trace(format!"'- node.nodeID %s not parsed?"(node.nodeID));
         break;
     }
 }
 
 /**
  * Parse a section in the YAML by the given input node + section, setting as
- * many automatic values as possible using our UDA helper system
+ * many automatic values as possible using our UDA helper system.
+ *
+ * This is essentially a dispatch function.
  */
 void parseSection(T)(ref Node node, ref T section) @system
 {
-    import std.traits : getUDAs, moduleName;
+    import std.traits : getUDAs, hasUDA, moduleName;
 
-    /* Walk members */
+    /* Walk the members in the type T section struct -- the order is undefined */
     static foreach (member; __traits(allMembers, T))
     {
+        /*
+         * The extra set of brackets ensures that each compile time loop
+         * gets a clean scope with no duplicate declarations
+         * (otherwise the compiler complains vociferously)
+         */
         {
             mixin("import " ~ moduleName!T ~ ";");
 
-            mixin("enum udaID = getUDAs!(" ~ T.stringof ~ "." ~ member ~ ", YamlSchema);");
-            static if (udaID.length == 1)
+            /* YamlSchema BEGIN */
+            mixin("enum hasYamlSchema = hasUDA!(" ~ T.stringof ~ "." ~ member ~ ", YamlSchema);");
+            static if (hasYamlSchema)
             {
-                static assert(udaID.length == 1, "Missing YamlSchema for " ~ T.stringof
-                        ~ "." ~ member);
-                enum yamlName = udaID[0].name;
-                enum mandatory = udaID[0].required;
-                enum type = udaID[0].type;
-
-                static if (mandatory)
+                debug
                 {
-                    enforce(node.containsKey(yamlName), "Missing mandatory key: " ~ yamlName);
+                    /* Add a compile-time message each time a field with a YamlSchema is found */
+                    pragma(msg, ">>> YamlSchema found for: ", T, ".", member);
                 }
+                /* ... and a run-time message if appropriate */
+                trace("'- YamlSchema found for: ", T.stringof, ".", member);
 
-                static if (type == YamlType.Single)
+                mixin("enum udaID = getUDAs!(" ~ T.stringof ~ "." ~ member ~ ", YamlSchema);");
+                static if (udaID.length == 1)
                 {
-                    if (node.containsKey(yamlName))
+                    trace(" '- Parsing YamlSchema for member: ", member);
+                    static assert(udaID.length == 1,
+                            "Missing YamlSchema for " ~ T.stringof ~ "." ~ member);
+                    enum yamlName = udaID[0].name;
+                    enum mandatory = udaID[0].required;
+                    enum type = udaID[0].type;
+
+                    static if (mandatory)
                     {
-                        mixin("setValue(node[yamlName], section." ~ member ~ ", udaID);");
+                        enforce(node.containsKey(yamlName), "Missing mandatory key: " ~ yamlName);
                     }
-                }
-                else static if (type == YamlType.Array)
-                {
-                    if (node.containsKey(yamlName))
+
+                    static if (type == YamlType.Single)
                     {
-                        mixin("setValueArray(node[yamlName], section." ~ member ~ ");");
+                        if (node.containsKey(yamlName))
+                        {
+                            trace(format!"  '- Parsing %s:"(yamlName));
+                            mixin("setValue(node[yamlName], section." ~ member ~ ", udaID);");
+                        }
+                    }
+                    else static if (type == YamlType.Array)
+                    {
+                        if (node.containsKey(yamlName))
+                        {
+                            trace(format!"  '- Parsing %s:"(yamlName));
+                            mixin("setValueArray(node[yamlName], section." ~ member ~ ");");
+                        }
                     }
                 }
             }
-        }
+            /* YamlSchema END */
+       }
     }
 }

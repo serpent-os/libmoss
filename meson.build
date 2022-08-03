@@ -13,6 +13,9 @@ if meson.is_subproject()
 	installFiles = false
 endif
 
+# set up convenient debugging flags for mixins
+add_project_arguments('--mixin=mixin_generated_code.txt', language : 'd')
+
 # Grab moss-core
 moss_core = subproject('moss-core')
 link_libmoss_core = moss_core.get_variable('link_libmoss_core')
@@ -20,9 +23,9 @@ link_libmoss_core = moss_core.get_variable('link_libmoss_core')
 # Grab moss-vendor
 moss_vendor = subproject('moss-vendor',
     default_options: [
+        'with_xxhash=true',
         'with_yaml=true',
         'with_zstd=true',
-        'with_xxhash=true',
     ]
 )
 
@@ -31,19 +34,20 @@ link_libmoss_vendor_yaml = moss_vendor.get_variable('link_libmoss_vendor_yaml')
 link_libmoss_vendor_zstd = moss_vendor.get_variable('link_libmoss_vendor_zstd')
 
 formatSource_sources = [
-    'source/moss/format/source/package.d',
-    'source/moss/format/source/package_definition.d',
-    'source/moss/format/source/schema.d',
-    'source/moss/format/source/source_definition.d',
-    'source/moss/format/source/tuning_flag.d',
-    'source/moss/format/source/tuning_group.d',
-    'source/moss/format/source/yml_helper.d',
-    'source/moss/format/source/macros.d',
-    'source/moss/format/source/spec.d',
     'source/moss/format/source/build_definition.d',
     'source/moss/format/source/build_options.d',
-    'source/moss/format/source/upstream_definition.d',
+    'source/moss/format/source/macros.d',
+    'source/moss/format/source/package.d',
+    'source/moss/format/source/package_definition.d',
+    'source/moss/format/source/path_definition.d',
+    'source/moss/format/source/schema.d',
     'source/moss/format/source/script.d',
+    'source/moss/format/source/source_definition.d',
+    'source/moss/format/source/spec.d',
+    'source/moss/format/source/tuning_flag.d',
+    'source/moss/format/source/tuning_group.d',
+    'source/moss/format/source/upstream_definition.d',
+    'source/moss/format/source/yml_helper.d',
 ]
 
 formatBinary_sources = [
@@ -58,19 +62,19 @@ formatBinary_sources = [
     'source/moss/format/binary/payload/layout/entry.d',
     'source/moss/format/binary/payload/layout/entryset.d',
     'source/moss/format/binary/payload/layout/package.d',
-    'source/moss/format/binary/payload/meta/record.d',
     'source/moss/format/binary/payload/meta/package.d',
+    'source/moss/format/binary/payload/meta/record.d',
     'source/moss/format/binary/payload/meta/record_pair.d',
     'source/moss/format/binary/payload/package.d',
-    'source/moss/format/binary/reader/zstd_token.d',
     'source/moss/format/binary/reader/package.d',
     'source/moss/format/binary/reader/token.d',
-    'source/moss/format/binary/writer/zlib_token.d',
-    'source/moss/format/binary/writer/zstd_token.d',
-    'source/moss/format/binary/writer/package.d',
-    'source/moss/format/binary/writer/token.d',
+    'source/moss/format/binary/reader/zstd_token.d',
     'source/moss/format/binary/repo/package.d',
     'source/moss/format/binary/repo/repo_writer.d',
+    'source/moss/format/binary/writer/package.d',
+    'source/moss/format/binary/writer/token.d',
+    'source/moss/format/binary/writer/zlib_token.d',
+    'source/moss/format/binary/writer/zstd_token.d',
 ]
 
 aux_sources_format_binary = [
@@ -95,6 +99,7 @@ libmoss_format_source = static_library(
 	dependencies: [
         link_libmoss_core,
         link_libmoss_vendor_yaml,
+        link_libmoss_vendor_xxhash,
     ],
 	include_directories: libmoss_format_source_includes,
 )

@@ -22,6 +22,7 @@ public import std.stdio : File;
 public import moss.format.source.build_definition;
 public import moss.format.source.build_options;
 public import moss.format.source.package_definition;
+public import moss.format.source.path_definition;
 public import moss.format.source.schema;
 public import moss.format.source.source_definition;
 public import moss.format.source.upstream_definition;
@@ -29,6 +30,10 @@ public import moss.format.source.upstream_definition;
 import dyaml;
 import moss.format.source.yml_helper;
 import moss.format.source.script;
+import std.conv : to;
+import std.exception : enforce;
+import std.experimental.logger;
+import std.format : format;
 
 /**
  * A Spec is a stone specification file. It is used to parse a "stone.yml"
@@ -101,13 +106,12 @@ public:
      */
     void parse() @system
     {
-        import std.exception : enforce;
-
         enforce(_file.isOpen(), "Spec.parse(): File is not open");
 
         auto loader = Loader.fromFile(_file);
         auto root = loader.load();
 
+        trace("Parsing YML:");
         /* Parse the rootContext source */
         parseSection(root, source);
         parseSection(root, rootBuild);
@@ -123,7 +127,6 @@ public:
 
         /* Used for expansion when requested */
         _sbuilder = ScriptBuilder();
-        import std.conv : to;
 
         _sbuilder.addDefinition("name", source.name);
         _sbuilder.addDefinition("version", source.versionIdentifier);
@@ -138,7 +141,6 @@ public:
     @property bool emul32() const
     {
         import moss.core : platform;
-        import std.string : format;
 
         immutable auto plat = platform();
         return plat.emul32 && (supportedArchitecture(format!"emul32/%s"(plat.name))
@@ -176,18 +178,23 @@ public:
     /**
      * Return an expanded version of the PackageDefinition
      */
-    PackageDefinition expand(PackageDefinition p) @safe
+    PackageDefinition expand(PackageDefinition pkd) @safe
     {
         import std.algorithm : map, uniq;
         import std.array : array;
 
-        p.name = _sbuilder.process(p.name);
-        p.summary = _sbuilder.process(p.summary);
-        p.description = _sbuilder.process(p.description);
-        p.runtimeDependencies = p.runtimeDependencies.map!((r) => _sbuilder.process(r)).uniq.array;
-        p.paths = p.paths.map!((r) => _sbuilder.process(r)).uniq.array;
-
-        return p;
+        pkd.name = _sbuilder.process(pkd.name);
+        trace(format!"# Expanding PackageDefinition %s"(pkd.name));
+        pkd.summary = _sbuilder.process(pkd.summary);
+        pkd.description = _sbuilder.process(pkd.description);
+        pkd.runtimeDependencies = pkd.runtimeDependencies.map!((r) => _sbuilder.process(r)).uniq.array;
+        /* this expands the raw paths, but doesn't touch the type information */
+        foreach(pd; pkd.paths)
+        {
+            pd.path = _sbuilder.process(pd.path);
+        }
+        trace(format!"## Expanded pkd.paths:\n%s"(pkd.paths));
+        return pkd;
     }
 
 private:
@@ -197,8 +204,6 @@ private:
      */
     void parseTuningOptions(ref Node node)
     {
-        import std.exception : enforce;
-
         if (!node.containsKey("tuning"))
         {
             return;
@@ -261,8 +266,6 @@ private:
      */
     void parsePackages(ref Node node)
     {
-        import std.exception : enforce;
-
         if (!node.containsKey("packages"))
         {
             return;
@@ -278,19 +281,63 @@ private:
             assert(k.nodeID == NodeID.mapping, "Each item in packages must be a mapping");
             foreach (ref Node c, ref Node v; k)
             {
-                PackageDefinition pk;
+                PackageDefinition pkd;
                 auto name = c.as!string;
-                parseSection(v, pk);
-                pk.name = name;
-                subPackages[name] = pk;
+                trace(format!"# ParsePackages: Parsing sub-package %s"(name));
+                parseSection(v, pkd);
+                parsePaths(v["paths"], pkd);
+                pkd.name = name;
+                subPackages[name] = pkd;
+            }
+        }
+    }
+
+    /**
+     * Find all PathDefinition instances and set them up
+     */
+    void parsePaths(ref Node paths, ref PackageDefinition pkd)
+    {
+        import std.algorithm.searching : canFind;
+        import std.array : split;
+        import std.string : strip;
+
+        /* It is an error if a subpackage does not have a paths key! */
+        if (paths.length == 0)
+        {
+            trace("parsePaths: paths.length == 0, no paths to parse.");
+            return;
+        }
+        trace("'- Converting YML paths to typed PathDefinitions:");
+        /// TODO: static foreach with static if looking for OptionallyTypedPaths ?
+        foreach (Node path; paths)
+        {
+            enforce(path.nodeID == NodeID.scalar || path.nodeID == NodeID.mapping,
+                    "LINT: path '%s' is improperly formatted. The format is '- <path> : <type>'");
+
+            PathDefinition pd;
+            /* scalar path, which is of implicit type "any" */
+            if (path.nodeID == NodeID.scalar)
+            {
+                pd = PathDefinition(path.as!string);
+                trace(format!" '- PathDefinition('%s')"(pd));
+                pkd.paths ~= pd;
+                continue;
+            }
+            else /* (path.nodeID == NodeID.mapping) */
+            {
+                /// FIXME: It feels stupid to have to parse this with a foreach
+                foreach(string p, string t; path)
+                {
+                    pd = PathDefinition(p, t);
+                    trace(format!" '- PathDefinition('%s')"(pd));
+                    pkd.paths ~= pd;
+                }
             }
         }
     }
 
     void parseArchitectures(ref Node node)
     {
-        import std.exception : enforce;
-
         if (!node.containsKey("architectures"))
         {
             import moss.core.platform : platform;
@@ -325,7 +372,6 @@ private:
      */
     void parseBuilds(ref Node node)
     {
-        import std.exception : enforce;
         import std.string : startsWith;
 
         if (!node.containsKey("profiles"))
@@ -377,7 +423,6 @@ private:
      */
     void parseUpstreams(ref Node node)
     {
-        import std.exception : enforce;
         import std.algorithm : startsWith;
 
         if (!node.containsKey("upstreams"))
