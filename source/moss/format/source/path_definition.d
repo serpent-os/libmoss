@@ -39,6 +39,15 @@ struct PathDefinition
     }
 
     /**
+     * Properly formatted path
+     */
+    string toString() @safe const
+    {
+        ///TODO: Decide how to handle this
+        return format!"%s : %s"(this.path, strPathTypeLookup[this.type]);
+    }
+
+    /**
      * Make it possible to test PathDefinitions for equality
      */
     bool opEquals()(auto ref const PathDefinition rhs) @trusted const
@@ -85,14 +94,6 @@ struct PathDefinition
         /* hashFunc.finish returns an 8-byte (64bit) long ubyte[] when using XXH3_64 */
         auto hash = hashFunc.finish.toHexString.to!ulong;
         return hash;
-    }
-
-    /**
-     * Properly formatted path
-     */
-    string toString() @safe const
-    {
-        return format!"%s : %s"(this.path, strPathTypeLookup[this.type]);
     }
 
     /**
