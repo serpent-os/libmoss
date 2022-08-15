@@ -17,6 +17,7 @@
 module moss.format.source.package_definition;
 
 public import moss.format.source.schema;
+import moss.format.source.path_definition;
 
 /**
  * A Package Definition allows overriding of specific values from the
@@ -24,7 +25,6 @@ public import moss.format.source.schema;
  */
 struct PackageDefinition
 {
-
     /**
      * The name of the package. This is automatically set by the spec
      * parsing routine.
@@ -54,5 +54,5 @@ struct PackageDefinition
      * main package. This overrides automatic collection and allows
      * custom subpackages to be created.
      */
-    @YamlSchema("paths", false, YamlType.Array) string[] paths;
+    PathDefinition[] paths;
 }

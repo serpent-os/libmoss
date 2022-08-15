@@ -22,6 +22,7 @@ public import std.stdio : File;
 public import moss.format.source.build_definition;
 public import moss.format.source.build_options;
 public import moss.format.source.package_definition;
+public import moss.format.source.path_definition;
 public import moss.format.source.schema;
 public import moss.format.source.source_definition;
 public import moss.format.source.upstream_definition;
@@ -29,6 +30,10 @@ public import moss.format.source.upstream_definition;
 import dyaml;
 import moss.format.source.yml_helper;
 import moss.format.source.script;
+import std.conv : to;
+import std.exception : enforce;
+import std.experimental.logger;
+import std.format : format;
 
 /**
  * A Spec is a stone specification file. It is used to parse a "stone.yml"
@@ -101,7 +106,7 @@ public:
      */
     void parse() @system
     {
-        import std.exception : enforce;
+        trace(__FUNCTION__, ": ", _file);
 
         enforce(_file.isOpen(), "Spec.parse(): File is not open");
 
@@ -109,21 +114,29 @@ public:
         auto root = loader.load();
 
         /* Parse the rootContext source */
+        debug { trace("# spec.d/parse/parseSection(root, source)"); }
         parseSection(root, source);
+        debug { trace("# spec.d/parse/parseSection(root, rootBuild)"); }
         parseSection(root, rootBuild);
+        debug { trace("# spec.d/parse/parseSection(root, rootPackage)"); }
         parseSection(root, rootPackage);
+        debug { trace("# spec.d/parse/parseSection(root, options)"); }
         parseSection(root, options);
 
+        debug { trace("# spec.d/parse/parsePackages(root)"); }
         parsePackages(root);
         rootPackage.name = source.name;
+        debug { trace("# spec.d/parse/parseBuilds(root)"); }
         parseBuilds(root);
+        debug { trace("# spec.d/parse/parseUpstreams(root)"); }
         parseUpstreams(root);
+        debug { trace("# spec.d/parse/parseArchitectures(root)"); }
         parseArchitectures(root);
+        debug { trace("# spec.d/parse/parseTuningOptions(root)"); }
         parseTuningOptions(root);
 
         /* Used for expansion when requested */
         _sbuilder = ScriptBuilder();
-        import std.conv : to;
 
         _sbuilder.addDefinition("name", source.name);
         _sbuilder.addDefinition("version", source.versionIdentifier);
@@ -138,7 +151,6 @@ public:
     @property bool emul32() const
     {
         import moss.core : platform;
-        import std.string : format;
 
         immutable auto plat = platform();
         return plat.emul32 && (supportedArchitecture(format!"emul32/%s"(plat.name))
@@ -176,18 +188,23 @@ public:
     /**
      * Return an expanded version of the PackageDefinition
      */
-    PackageDefinition expand(PackageDefinition p) @safe
+    PackageDefinition expand(PackageDefinition pkd) @safe
     {
         import std.algorithm : map, uniq;
         import std.array : array;
 
-        p.name = _sbuilder.process(p.name);
-        p.summary = _sbuilder.process(p.summary);
-        p.description = _sbuilder.process(p.description);
-        p.runtimeDependencies = p.runtimeDependencies.map!((r) => _sbuilder.process(r)).uniq.array;
-        p.paths = p.paths.map!((r) => _sbuilder.process(r)).uniq.array;
-
-        return p;
+        pkd.name = _sbuilder.process(pkd.name);
+        debug { trace(format!"# spec.d/expand: PackageDefinition %s"(pkd.name)); }
+        pkd.summary = _sbuilder.process(pkd.summary);
+        pkd.description = _sbuilder.process(pkd.description);
+        pkd.runtimeDependencies = pkd.runtimeDependencies.map!((r) => _sbuilder.process(r)).uniq.array;
+        /* this expands the raw paths, but doesn't touch the type information */
+        foreach(pd; pkd.paths)
+        {
+            pd.path = _sbuilder.process(pd.path);
+        }
+        debug { trace(format!"## Expanded pkd.paths:\n%s"(pkd.paths)); }
+        return pkd;
     }
 
 private:
@@ -197,15 +214,13 @@ private:
      */
     void parseTuningOptions(ref Node node)
     {
-        import std.exception : enforce;
-
         if (!node.containsKey("tuning"))
         {
             return;
         }
 
         Node root = node["tuning"];
-        enforce(root.nodeID == NodeID.sequence, "tuning key should be a sequence of tuning options");
+        enforce(root.nodeID == NodeID.sequence, "LINT: parseTuningOptions(): tuning key should be a sequence of tuning options");
 
         /* Step through all items in root */
         foreach (ref Node k; root)
@@ -221,12 +236,12 @@ private:
             {
                 auto keys = k.mappingKeys;
                 auto vals = k.mappingValues;
-                enforce(keys.length == 1, "Each tuning option has 1 key only");
-                enforce(vals.length == 1, "Each tuning option has 1 value only");
+                enforce(keys.length == 1, "LINT: parseTuningOptions(): Each tuning option has 1 key only");
+                enforce(vals.length == 1, "LINT: parseTuningOptions(): Each tuning option has 1 value only");
 
                 auto name = keys[0].as!string;
                 enforce(vals[0].nodeID == NodeID.scalar,
-                        "Each tuning option must have 1 scalar value");
+                        "LINT: parseTuningOptions(): Each tuning option must have 1 scalar value");
                 const auto val = vals[0];
                 try
                 {
@@ -249,7 +264,7 @@ private:
             }
             else
             {
-                enforce(0, "Unsupported value in tuning");
+                enforce(0, "LINT: parseTuningOptions(): Unsupported value in tuning");
             }
 
             options.tuneSelections ~= sel;
@@ -261,36 +276,87 @@ private:
      */
     void parsePackages(ref Node node)
     {
-        import std.exception : enforce;
-
         if (!node.containsKey("packages"))
         {
+            debug { trace("## spec.d/parsePackages: No 'packages' key found for node: ", node); }
             return;
         }
 
         Node root = node["packages"];
         enforce(root.nodeID == NodeID.sequence,
-                "packages key should be a sequence of package definitions");
+                "LINT: parsePackages(): packages key should be a sequence of package definitions");
 
         /* Step through all items in root */
         foreach (ref Node k; root)
         {
-            assert(k.nodeID == NodeID.mapping, "Each item in packages must be a mapping");
+            assert(k.nodeID == NodeID.mapping, "LINT: parsePackages(): Each item in packages must be a mapping");
             foreach (ref Node c, ref Node v; k)
             {
-                PackageDefinition pk;
+                PackageDefinition pkd;
                 auto name = c.as!string;
-                parseSection(v, pk);
-                pk.name = name;
-                subPackages[name] = pk;
+                debug { trace(format!"## spec.d/parse/parsePackages: %s"(name)); }
+                parseSection(v, pkd);
+                if (v.containsKey("paths"))
+                {
+                    parsePaths(v["paths"], pkd);
+                }
+                pkd.name = name;
+                subPackages[name] = pkd;
+            }
+        }
+    }
+
+    /**
+     * Find all PathDefinition instances and set them up
+     */
+    void parsePaths(ref Node paths, ref PackageDefinition pkd)
+    {
+        import std.algorithm.searching : canFind;
+        import std.array : split;
+        import std.string : strip;
+
+        /* It is an error if a subpackage does not have a paths key! */
+        if (paths.length == 0)
+        {
+            debug { trace("### spec.d/parse/parsePackages/parsePaths: paths.length == 0, no paths to parse."); }
+            return;
+        }
+
+        debug { trace("### spec.d/parse/parsePackages/parsePaths: "); }
+        foreach (Node path; paths)
+        {
+            enforce(path.nodeID == NodeID.scalar || path.nodeID == NodeID.mapping,
+                    "LINT: parsePaths(): path '%s' is improperly formatted. The format is '- <path> : <type>'");
+
+            PathDefinition pd;
+            /* scalar path, which is of implicit type "any" */
+            if (path.nodeID == NodeID.scalar)
+            {
+                pd = PathDefinition(path.as!string);
+                debug { trace(format!"    '- PathDefinition('%s')"(pd)); }
+                pkd.paths ~= pd;
+                continue;
+            }
+            else /* (path.nodeID == NodeID.mapping) */
+            {
+                auto keys = path.mappingKeys;
+                auto vals = path.mappingValues;
+
+                enforce(keys.length == 1, "LINT: parsePaths(): Each item in paths must have 1 key");
+                enforce(vals.length == 1, "LINT: parsePaths(): Each item in paths must have 1 value");
+
+                Node _path = keys[0];
+                Node _type = vals[0];
+
+                pd = PathDefinition(_path.as!string, _type.as!string);
+                debug { trace(format!"    '- PathDefinition('%s')"(pd)); }
+                pkd.paths ~= pd;
             }
         }
     }
 
     void parseArchitectures(ref Node node)
     {
-        import std.exception : enforce;
-
         if (!node.containsKey("architectures"))
         {
             import moss.core.platform : platform;
@@ -302,7 +368,7 @@ private:
             if (node.containsKey("emul32"))
             {
                 Node emul32n = node["emul32"];
-                enforce(emul32n.nodeID == NodeID.scalar, "emul32 must be a boolean scalar value");
+                enforce(emul32n.nodeID == NodeID.scalar, "LINT: parseArchitectures(): emul32 must be a boolean scalar value");
 
                 /* Enable the host architecture + emul32 */
                 if (emul32n.as!bool == true)
@@ -325,7 +391,6 @@ private:
      */
     void parseBuilds(ref Node node)
     {
-        import std.exception : enforce;
         import std.string : startsWith;
 
         if (!node.containsKey("profiles"))
@@ -335,12 +400,12 @@ private:
 
         Node root = node["profiles"];
         enforce(root.nodeID == NodeID.sequence,
-                "profiles key should be a sequence of build definitions");
+                "LINT: parseBuilds(): profiles key should be a sequence of build definitions");
 
         /* Step through all items in root */
         foreach (ref Node k; root)
         {
-            assert(k.nodeID == NodeID.mapping, "Each item in profiles must be a mapping");
+            assert(k.nodeID == NodeID.mapping, "LINT: parseBuilds(): Each item in profiles must be a mapping");
             foreach (ref Node c, ref Node v; k)
             {
                 BuildDefinition bd;
@@ -377,7 +442,6 @@ private:
      */
     void parseUpstreams(ref Node node)
     {
-        import std.exception : enforce;
         import std.algorithm : startsWith;
 
         if (!node.containsKey("upstreams"))
@@ -387,7 +451,7 @@ private:
 
         Node root = node["upstreams"];
         enforce(root.nodeID == NodeID.sequence,
-                "upstreams key should be a sequence of upstream definitions");
+                "LINT: parseUpstreams(): upstreams key should be a sequence of upstream definitions");
 
         foreach (ref Node k; root)
         {
@@ -403,7 +467,7 @@ private:
                 }
 
                 enforce(v.nodeID == NodeID.scalar || v.nodeID == NodeID.mapping,
-                        "upstream definition should be a single value or mapping");
+                        "LINT: parseUpstreams(): upstream definition should be a single value or mapping");
                 final switch (ups.type)
                 {
                 case UpstreamType.Plain:

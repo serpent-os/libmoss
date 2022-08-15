@@ -333,6 +333,7 @@ public:
 
         string lastLine;
         char lastChar = '\0';
+        /// TODO: Candidate for an Appender for efficiency?
         string ret = "";
 
         if (input.length < 3)
@@ -349,7 +350,8 @@ public:
 
             if (context.braceStart > 0)
             {
-                enforce(context.braceEnd > context.braceStart, "Must end variable with: )");
+                enforce(context.braceEnd > context.braceStart,
+                        "Macro definition MUST end with a ')'");
             }
 
             if (context.macroStart >= context.macroEnd)
