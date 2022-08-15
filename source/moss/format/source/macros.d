@@ -253,6 +253,7 @@ private:
                         "LINT: parseFlags(): Expected map for each item");
                 TuningFlag tf;
                 auto name = c.as!string;
+                debug { trace(format!"## TuningFlag: %s"(name)); }
                 parseSection(v, tf);
                 parseSection(v, tf.root);
 
@@ -262,6 +263,7 @@ private:
                     Node gnu = v["gnu"];
                     enforce(gnu.nodeID == NodeID.mapping,
                             "LINT: parseFlags(): expected gnu section to be a mapping");
+                    debug { trace("### Toolchain: gnu"); }
                     parseSection(gnu, tf.gnu);
                 }
 
@@ -271,6 +273,7 @@ private:
                     Node llvm = v["llvm"];
                     enforce(llvm.nodeID == NodeID.mapping,
                             "LINT: parseFlags(): expected llvm section to be a mapping");
+                    debug { trace("### Toolchain: llvm"); }
                     parseSection(llvm, tf.llvm);
                 }
 
@@ -307,6 +310,7 @@ private:
                 enforce(v.nodeID == NodeID.mapping,
                         "LINT: parseActions(): Expected map for each item");
                 auto name = c.as!string;
+                debug { trace(format!"## Actions: %s"(name)); }
                 Action candidateAction;
                 parseSection(v, candidateAction);
 
@@ -337,6 +341,7 @@ private:
                         "LINT: parseTuning(): Expected map for each item");
                 TuningGroup group;
                 auto name = c.as!string;
+                debug { trace(format!"## TuningGroup: %s"(name)); }
                 parseSection(v, group);
                 parseSection(v, group.root);
 
@@ -360,7 +365,7 @@ private:
                             auto childName = cc.as!string;
                             enforce(!(childName in group.choices),
                                     "LINT: parseTuning(): Duplicate option found in " ~ name);
-
+                            debug { trace(format!"### TuningOption: %s"(childName)); }
                             /* Parse the option and store it */
                             parseSection(vv, to);
                             group.choices[childName] = to;
