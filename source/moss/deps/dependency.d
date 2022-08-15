@@ -39,6 +39,7 @@ shared static this()
     depLookupTable["pkgconfig"] = DependencyType.PkgconfigName;
     depLookupTable["python"] = DependencyType.PythonName;
     depLookupTable["soname"] = DependencyType.SharedLibraryName;
+    depLookupTable.rehash();
 }
 
 /**
