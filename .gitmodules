@@ -9,7 +9,7 @@
 	url = https://github.com/serpent-os/elf-d.git
 [submodule "rocksdb-binding"]
 	path = vendor/rocksdb/rocksdb-binding
-	url = https://github.com/serpent-os/rocksdb-binding.git
+	url = https://gitlab.com/serpent-os/dlang/rocksdb-binding.git
 [submodule "xxhash-d"]
 	path = subprojects/xxhash-d
 	url = https://github.com/serpent-os/xxhash-d.git
