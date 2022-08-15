@@ -21,6 +21,8 @@ public import moss.deps.registry.plugin : RegistryPlugin;
 public import std.stdint : uint64_t;
 public import std.typecons : Nullable;
 
+@trusted:
+
 /**
  * Item flags can be combined so that we have more information on a
  * candidate without having to consult the plugin again.

@@ -15,6 +15,8 @@
  */
 module moss.deps.registry.transaction;
 
+@trusted:
+
 import moss.deps.dependency;
 public import moss.deps.registry.item;
 public import moss.deps.registry.manager;

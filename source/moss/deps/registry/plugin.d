@@ -23,6 +23,8 @@ public import moss.deps.registry.item;
 public import moss.deps.dependency;
 public import std.typecons : Nullable;
 
+@trusted:
+
 /**
  * A RegistryPlugin is added to the RegistryManager allowing it to load data from pkgIDs
  * if present.

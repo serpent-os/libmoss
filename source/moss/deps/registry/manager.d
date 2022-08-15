@@ -20,6 +20,8 @@ public import moss.deps.registry.transaction;
 
 import std.algorithm : each, filter, joiner, map;
 
+@trusted:
+
 /**
  * Encapsulation of multiple underlying "query plugins"
  */

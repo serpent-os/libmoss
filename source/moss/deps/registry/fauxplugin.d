@@ -20,6 +20,8 @@ import std.algorithm : each, filter, map;
 import std.array : array;
 import moss.deps.registry.candidate;
 
+@trusted:
+
 /**
  * Our FauxSource is used entirely for unit tests.
  */
