@@ -19,6 +19,7 @@ import std.container.rbtree;
 import std.exception : enforce;
 import std.string : format;
 import std.stdio : File, stdout;
+import std.traits : Unconst;
 
 /**
  * Validate **basic** topological sorting. We achieve this by passing a closure
@@ -78,40 +79,38 @@ private enum VertexStatus
 }
 
 /**
- * We use allocated Vertex structs to maintain each vertex, or node, in our
+ * We use heap and stack Vertex cobjects to maintain each vertex, or node, in our
  * graph structure. Additionally each Vertex may contain a set of edges that
  * connect it to another Vertex in a single direction.
  */
-private struct Vertex(L)
+private class Vertex(L)
 {
-    alias LabelType = L;
+    alias LabelType = Unconst!L;
     alias EdgeStorage = RedBlackTree!(LabelType, "a < b", false);
+
+    @disable this();
+
+    /**
+     * Construct a new Labeled Vertex
+     */
+    this(LabelType label, bool initStore = false) @safe
+    {
+        this.label = label;
+        if (initStore)
+        {
+            edges = new EdgeStorage();
+        }
+    }
 
     /**
      * Label is used for sorting the vertices and referencing it
      */
-    immutable(LabelType) label;
+    LabelType label;
 
     /**
      * Store any edge references
      */
     EdgeStorage edges;
-
-    /**
-     * Factory to create a new Vertex
-     */
-    static Vertex!(LabelType)* create(in LabelType label)
-    {
-        return new Vertex!(LabelType)(cast(immutable(LabelType)) label, new EdgeStorage());
-    }
-
-    /**
-     * Factory to create a comparator Vertex
-     */
-    static Vertex!(LabelType) refConstruct(in LabelType label)
-    {
-        return Vertex!(LabelType)(cast(immutable(LabelType)) label);
-    }
 
     /**
      * Return true if both vertices are equal
@@ -140,7 +139,7 @@ private struct Vertex(L)
     /**
      * Return the hash code for the label
      */
-    ulong toHash() @safe nothrow const
+    override ulong toHash() @safe nothrow const
     {
         return typeid(LabelType).getHash(&label);
     }
@@ -159,17 +158,17 @@ private struct Vertex(L)
  * intelligent use than a simple Depth-First Search, so that we can support
  * multiple candidate scenarios.
  */
-public final class DirectedAcyclicalGraph(L)
+public final class DirectedAcyclicalGraph(B)
 {
-    alias LabelType = L;
+    alias LabelType = Unconst!B;
     alias VertexDescriptor = Vertex!(LabelType);
-    alias VertexTree = RedBlackTree!(VertexDescriptor*, "a.label < b.label", false);
-    alias DfsClosure = void delegate(LabelType l);
+    alias VertexTree = RedBlackTree!(VertexDescriptor, "a.label < b.label", false);
+    alias DfsClosure = void delegate(LabelType l) @safe;
 
     /**
      * Construct a new DependencyGraph
      */
-    this()
+    this() @safe
     {
         vertices = new VertexTree();
     }
@@ -177,38 +176,38 @@ public final class DirectedAcyclicalGraph(L)
     /**
      * Return true if we already have this node
      */
-    bool hasVertex(in LabelType label)
+    bool hasVertex(LabelType label) @safe const
     {
-        auto desc = VertexDescriptor.refConstruct(label);
-        return !vertices.equalRange(&desc).empty;
+        scope desc = new VertexDescriptor(label);
+        return () @trusted { return !vertices.equalRange(desc).empty; }();
     }
 
     /**
      * Add a new node to the tree.
      */
-    void addVertex(in LabelType label)
+    void addVertex(LabelType label) @safe
     {
         enforce(!hasVertex(label), "Cannot add duplicate node");
-        vertices.insert(VertexDescriptor.create(label));
+        () @trusted { vertices.insert(new VertexDescriptor(label, true)); }();
     }
 
     /**
      * Add an edge between the two named vertices
      */
-    void addEdge(in LabelType u, in LabelType v)
+    void addEdge(LabelType u, LabelType v) @safe
     {
-        auto desc = VertexDescriptor.refConstruct(u);
-        auto match = vertices.equalRange(&desc);
-        enforce(!match.empty, "Cannot find node: %s".format(u));
+        scope desc = new VertexDescriptor(u);
+        auto match = () @trusted { return vertices.equalRange(desc); }();
+        enforce(!match.empty, "Cannot find node: ");
 
-        match.front.edges.insert(cast(LabelType) v);
+        () @trusted { match.front.edges.insert(v); }();
 
     }
 
     /**
      * Perform depth first search and execute closure on encountered nodes
      */
-    void topologicalSort(DfsClosure cb)
+    void topologicalSort(DfsClosure cb) @safe
     {
         enforce(cb !is null, "Cannot perform search without a closure");
         /* Discolour/reset each vertex */
@@ -231,7 +230,7 @@ public final class DirectedAcyclicalGraph(L)
      * Emit the graph to the given output stream.
      * Highly simplistic
      */
-    void emitGraph(File output = stdout)
+    void emitGraph(File output = stdout) @system
     {
         import std.conv : to;
 
@@ -254,17 +253,19 @@ public final class DirectedAcyclicalGraph(L)
     /**
      * Automatically break U->V->U cycle dependencies
      */
-    void breakCycles()
+    void breakCycles() @safe
     {
         foreach (v; vertices)
         {
             restart: foreach (edge; v.edges)
             {
                 auto lookupNode = getVertex(edge);
-                auto matches = lookupNode.edges.equalRange(cast(LabelType) v.label);
+                auto matches = () @trusted {
+                    return lookupNode.edges.equalRange(v.label);
+                }();
                 if (!matches.empty)
                 {
-                    lookupNode.edges.removeKey(matches);
+                    () @trusted { lookupNode.edges.removeKey(matches); }();
                     goto restart;
                 }
             }
@@ -274,7 +275,7 @@ public final class DirectedAcyclicalGraph(L)
     /**
      * Returns a new DAG that is a transposed version of this one.
      */
-    DirectedAcyclicalGraph!LabelType reversed()
+    DirectedAcyclicalGraph!LabelType reversed() @safe
     {
         auto ret = new DirectedAcyclicalGraph!LabelType();
 
@@ -302,12 +303,12 @@ public final class DirectedAcyclicalGraph(L)
     /**
      * Return a new graph that is a subgraph starting with only the rootVertex.
      */
-    DirectedAcyclicalGraph!LabelType subgraph(in LabelType rootVertex)
+    DirectedAcyclicalGraph!LabelType subgraph(LabelType rootVertex) @safe
     {
         auto match = getVertex(rootVertex);
         auto dag = new DirectedAcyclicalGraph!LabelType();
 
-        void addClone(VertexDescriptor* vd)
+        void addClone(VertexDescriptor vd)
         {
             if (!dag.hasVertex(vd.label))
             {
@@ -330,19 +331,18 @@ private:
     /**
      * Helper to return a node
      */
-    auto getVertex(in LabelType v)
+    auto getVertex(LabelType v) @safe
     {
-        auto desc = VertexDescriptor.refConstruct(v);
-        auto match = vertices.equalRange(&desc);
-        enforce(!match.empty, "Cannot find node: %s".format(v));
-
+        scope desc = new VertexDescriptor(v);
+        auto match = () @trusted { return vertices.equalRange(desc); }();
+        enforce(!match.empty, "Cannot find node");
         return match.front;
     }
 
     /**
      * Internal depth first search visit logic
      */
-    void dfsVisit(VertexDescriptor* vertex, DfsClosure cb)
+    void dfsVisit(VertexDescriptor vertex, DfsClosure cb) @safe
     {
         vertex.status = VertexStatus.Discovered;
         foreach (edge; vertex.edges)
@@ -357,14 +357,17 @@ private:
             /* Dun dun dun, cycle. */
             else if (edgeNode.status == VertexStatus.Discovered)
             {
-                throw new Exception("Encountered dependency cycle between %s and %s".format(edgeNode.label,
-                        vertex.label));
+                auto cycleString = () @trusted {
+                    return format!"Encountered dependency cycle between %s and %s"(edgeNode.label,
+                            vertex.label);
+                }();
+                throw new Exception(cycleString);
             }
         }
 
         /* Done, yield the result */
         vertex.status = VertexStatus.Explored;
-        cb(cast(LabelType) vertex.label);
+        cb(vertex.label);
     }
 
     VertexTree vertices;

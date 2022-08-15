@@ -138,7 +138,7 @@ public final class Transaction
         /* Remove each subgraph resolution */
         foreach (item; items)
         {
-            auto subgraph = revgraph.subgraph(item);
+            auto subgraph = revgraph.subgraph(cast(RegistryItem) item);
             subgraph.topologicalSort((r) { removals ~= r; });
         }
 
