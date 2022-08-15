@@ -6,16 +6,16 @@
 	url = https://github.com/dlang-community/D-YAML.git
 [submodule "elf-d"]
 	path = vendor/elf/elf-d
-	url = https://gitlab.com/serpent-os/dlang/elf-d.git
+	url = https://github.com/serpent-os/elf-d.git
 [submodule "rocksdb-binding"]
 	path = vendor/rocksdb/rocksdb-binding
-	url = https://gitlab.com/serpent-os/dlang/rocksdb-binding.git
+	url = https://github.com/serpent-os/rocksdb-binding.git
 [submodule "xxhash-d"]
 	path = subprojects/xxhash-d
-	url = https://gitlab.com/serpent-os/dlang/xxhash-d.git
+	url = https://github.com/serpent-os/xxhash-d.git
 [submodule "zstd"]
 	path = vendor/zstd/zstd
 	url = https://github.com/repeatedly/zstd-d.git
 [submodule "subprojects/difflib-d"]
 	path = subprojects/difflib-d
-	url = https://gitlab.com/serpent-os/dlang/difflib-d.git
+	url = https://github.com/serpent-os/difflib-d.git
