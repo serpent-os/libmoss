@@ -262,6 +262,8 @@ public struct IOUtil
         case cstdlib.EXDEV:
         case cstdlib.EMLINK:
         case cstdlib.EPERM:
+            import std.stdio: stderr, writeln;
+            stderr.writeln(__FUNCTION__, ": Hardlink operation failed, trying to copy instead...");
             return IOUtil.copyFile(source, target);
         default:
             return IOResult(CError(err));
