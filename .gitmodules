@@ -16,6 +16,3 @@
 [submodule "zstd"]
 	path = vendor/zstd/zstd
 	url = https://github.com/repeatedly/zstd-d.git
-[submodule "subprojects/difflib-d"]
-	path = subprojects/difflib-d
-	url = https://github.com/serpent-os/difflib-d.git
