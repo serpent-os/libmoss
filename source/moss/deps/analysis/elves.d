@@ -203,6 +203,7 @@ unittest
 {
     import std.file : thisExePath;
     import moss.deps.analysis.analyser : Analyser;
+    import std.stdio : stdout;
 
     auto ourname = thisExePath;
 

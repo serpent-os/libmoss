@@ -261,7 +261,7 @@ unittest
     auto a = new Analyser();
     a.addChain(licenseChain);
     a.addChain(allChain);
-    auto l = FileInfo("LICENSE", "LICENSE");
+    auto l = FileInfo("LICENSES/Zlib.txt", "LICENSES/Zlib.txt");
     l.target = "main";
     a.addFile(l);
     a.process();
