@@ -18,6 +18,8 @@ module moss.core.fetchcontext;
 public import std.stdint : uint64_t;
 public import std.signals;
 
+@trusted:
+
 public enum FetchType
 {
     /**
