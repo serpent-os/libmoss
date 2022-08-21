@@ -19,6 +19,8 @@ import moss.core.fetchcontext;
 import moss.fetcher.worker : WorkerPreference;
 import moss.fetcher.result;
 
+@trusted:
+
 /**
  * Acknowledgement startup completed
  */

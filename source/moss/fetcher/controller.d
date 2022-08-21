@@ -29,6 +29,8 @@ import core.sync.mutex;
 
 public import moss.core.fetchcontext;
 
+@trusted:
+
 /**
  * A fairly simple implementation of the FetchContext. Downloads added to
  * this fetcher are subject to sorting by *expected size* and grouped by

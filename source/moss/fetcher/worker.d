@@ -31,6 +31,8 @@ import std.stdint : uint64_t;
 
 import std.concurrency : locate, Tid, thisTid, receiveOnly, receive, send;
 
+@trusted:
+
 /**
  * We permit a message every 100 ms (10hz)
  */

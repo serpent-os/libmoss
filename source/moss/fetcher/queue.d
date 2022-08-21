@@ -17,6 +17,8 @@ module moss.fetcher.queue;
 import moss.core.fetchcontext : Fetchable;
 import std.container.rbtree;
 
+@trusted:
+
 /**
  * Specialist dequeue helper to automatically sort the Fetchables into
  * largest and smallest calls, whilst grouping by URI for connection reuse.

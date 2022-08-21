@@ -21,6 +21,8 @@ import std.string : fromStringz;
 import core.sys.posix.string : strerror;
 import std.string : format;
 
+@trusted:
+
 /**
  * moss-fetcher may have errors from 3 primary domains so we specify them
  * for ease of handling
