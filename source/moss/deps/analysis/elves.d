@@ -209,8 +209,8 @@ unittest
 
     auto fi = FileInfo(ourname, ourname);
     auto rule = AnalysisChain("elves", [
-            &acceptElfFiles, &scanElfFiles, &includeElfFiles
-            ]);
+        &acceptElfFiles, &scanElfFiles, &includeElfFiles
+    ]);
     fi.target = "main";
     auto an = new Analyser();
     an.addFile(fi);
