@@ -113,7 +113,7 @@ public DatabaseResult save(M)(return ref M inputObj, scope return Transaction tx
      * Now save all of the fields
      */
     return tx.createBucketIfNotExists(rowID)
-        .match!((DatabaseError err) => DatabaseResult(err), (Bucket itemBucket) {
+        .match!((DatabaseError err) => DatabaseResult(err), (Bucket itemBucket) @safe {
             /* Encode all the fields */
             static foreach (field; __traits(allMembers, M))
             {
@@ -143,7 +143,8 @@ public DatabaseResult save(M)(return ref M inputObj, scope return Transaction tx
 
                             /* Create the new bucket for slice storage */
                             auto err = tx.createBucket(name)
-                                .match!((DatabaseError err) => DatabaseResult(err), (Bucket bk) {
+                                .match!((DatabaseError err) => DatabaseResult(err),
+                                    (Bucket bk) @safe {
                                     DatabaseError err;
                                     static auto val = (cast(ushort) 1).mossEncode;
                                     /* Store all the elements as *keys* which will always dedupe the list. */

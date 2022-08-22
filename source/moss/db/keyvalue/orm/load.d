@@ -35,7 +35,7 @@ import std.traits;
  *      lookup = Primary key to lookup
  * Returns: non null DatabaseResult if we failed to load it.
  */
-public DatabaseResult load(M, V)(scope return  out M obj,
+public DatabaseResult load(M, V)(scope return out M obj,
         scope const ref Transaction tx, in return V lookup) @safe
         if (isValidModel!M)
 {
@@ -81,8 +81,10 @@ public DatabaseResult load(M, V)(scope return  out M obj,
                                 ~ "): Key not found: " ~ field.idup));
                     }
                     /* Map them all back into the slice */
-                    auto results = tx.iterator!(ElementType!fieldType,
-                            ushort)(sliceBucket).map!((r) => r.key).array;
+                    auto results = () @trusted {
+                        return tx.iterator!(ElementType!fieldType,
+                                ushort)(sliceBucket).map!((r) => r.key).array;
+                    }();
                     mixin("obj." ~ field ~ " = results;");
                 }
                 else
@@ -116,7 +118,7 @@ public DatabaseResult load(M, V)(scope return  out M obj,
  *      indexValue = Unique value to search within the index
  * Returns: Nullable error type
  */
-public DatabaseResult load(alias searchColumn, M, V)(scope return  out M obj,
+public DatabaseResult load(alias searchColumn, M, V)(scope return out M obj,
         scope const ref Transaction tx, in return V indexValue) @safe
         if (isValidModel!M)
 {

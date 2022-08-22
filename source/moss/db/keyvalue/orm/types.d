@@ -342,5 +342,5 @@ public ImmutableDatum rowName(M)(in M obj) @safe if (isValidModel!M)
 public ImmutableDatum sliceName(M, alias F)(in M obj) @safe if (isValidModel!M)
 {
     mixin("auto pkey = obj." ~ getSymbolsByUDA!(M, PrimaryKey)[0].stringof ~ ";");
-    return rowBaseName!(M, true) ~ (pkey.mossEncode);
+    return rowBaseName!(M, true) ~ (pkey.mossEncode) ~ (("." ~ F.stringof).mossEncode);
 }
