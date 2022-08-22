@@ -192,7 +192,7 @@ public struct Dependency
     /**
      * Encode Dependency into immutable(ubyte[])
      */
-    pure ImmutableDatum mossEncode() const
+    pure ImmutableDatum mossEncode() @trusted const
     {
         return cast(ImmutableDatum)(
                 cast(Datum)(type.mossEncode()) ~ cast(Datum)(target.mossEncode()));
@@ -201,7 +201,7 @@ public struct Dependency
     /**
      * Decode a Dependency from immutable(ubyte[])
      */
-    pure void mossDecode(in ImmutableDatum rawBytes)
+    pure void mossDecode(in ImmutableDatum rawBytes) @trusted
     {
         enforce(rawBytes.length >= DependencyType.sizeof + 1);
         auto segmentStart = rawBytes[0 .. DependencyType.sizeof];
@@ -276,7 +276,7 @@ public struct Provider
     /**
      * Encode Provider into immutable(ubyte[])
      */
-    pure ImmutableDatum mossEncode() const
+    pure ImmutableDatum mossEncode() @trusted const
     {
         return cast(ImmutableDatum)(
                 cast(Datum)(type.mossEncode()) ~ cast(Datum)(target.mossEncode()));
@@ -285,7 +285,7 @@ public struct Provider
     /**
      * Decode a Provider from immutable(ubyte[])
      */
-    pure void mossDecode(in ImmutableDatum rawBytes)
+    pure void mossDecode(in ImmutableDatum rawBytes) @trusted
     {
         enforce(rawBytes.length >= ProviderType.sizeof + 1);
         auto segmentStart = rawBytes[0 .. ProviderType.sizeof];
