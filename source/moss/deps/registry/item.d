@@ -20,8 +20,39 @@ public import moss.core.fetchcontext;
 public import moss.deps.registry.plugin : RegistryPlugin;
 public import std.stdint : uint64_t;
 public import std.typecons : Nullable;
+public import std.range : isInputRange;
+import std.array : array;
+import std.algorithm : multiSort, SwapStrategy, map;
 
 @trusted:
+
+/**
+ * Given an input range of items, sort them by various
+ * predicates:
+ *
+ *  plugin.priority (soon)
+ *  item.releaseNumber
+ *  item.buildRelease (soon)
+ */
+public auto sortedRegistryItems(R)(R items) if (isInputRange!R)
+{
+    static struct Comparator
+    {
+        string pkgID;
+        uint64_t sourceRelease;
+        uint64_t buildRelease;
+        uint64_t pluginPriority;
+        RegistryPlugin plugin;
+    }
+
+    auto cmp = items.map!((i) {
+        ItemInfo inf = i.info();
+        return Comparator(i.pkgID, inf.releaseNumber, 0, 0, i.plugin);
+    }).array();
+    cmp.multiSort!("a.pluginPriority > b.pluginPriority", "a.sourceRelease > b.sourceRelease",
+            "a.buildRelease > b.buildRelease", SwapStrategy.unstable);
+    return cmp.map!((c) => RegistryItem(c.pkgID, c.plugin));
+}
 
 /**
  * Item flags can be combined so that we have more information on a

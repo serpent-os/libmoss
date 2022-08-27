@@ -336,7 +336,7 @@ private:
         }
 
         return lookupNode.mappings.values.map!((m) => RegistryItem(m.pkgID,
-                m.plugin, m.flags)).array;
+                m.plugin, m.flags)).sortedRegistryItems.array;
     }
 
     RegistryItem[] added;

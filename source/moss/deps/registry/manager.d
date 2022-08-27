@@ -50,7 +50,8 @@ public final class RegistryManager
      */
     auto byProvider(in ProviderType type, const(string) provider, ItemFlags flags = ItemFlags.None)
     {
-        return plugins.map!((s) => s.queryProviders(type, provider, flags)).joiner;
+        return plugins.map!((s) => s.queryProviders(type, provider, flags))
+            .joiner.sortedRegistryItems;
     }
 
     /**
@@ -58,7 +59,7 @@ public final class RegistryManager
      */
     pragma(inline, true) auto byName(const(string) pkgName, ItemFlags flags = ItemFlags.None)
     {
-        return byProvider(ProviderType.PackageName, pkgName, flags);
+        return byProvider(ProviderType.PackageName, pkgName, flags).sortedRegistryItems;
     }
 
     /**
@@ -68,7 +69,8 @@ public final class RegistryManager
     {
         return plugins.map!((s) => s.queryID(pkgID))
             .filter!((r) => !r.isNull())
-            .map!((r) => RegistryItem(r.get.pkgID, r.get.plugin));
+            .map!((r) => RegistryItem(r.get.pkgID, r.get.plugin))
+            .sortedRegistryItems;
     }
 
     /**
