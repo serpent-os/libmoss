@@ -148,7 +148,7 @@ public DatabaseResult save(M)(return ref M inputObj, scope return Transaction tx
                                     DatabaseError err;
                                     static auto val = (cast(ushort) 1).mossEncode;
                                     /* Store all the elements as *keys* which will always dedupe the list. */
-                                    foreach (immutable element; __traits(getMember, obj, field))
+                                    foreach (element; __traits(getMember, obj, field))
                                     {
                                         auto res = tx.set(bk, element.mossEncode, val);
                                         if (!res.isNull)
