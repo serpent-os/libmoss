@@ -43,15 +43,16 @@ public auto sortedRegistryItems(R)(R items) if (isInputRange!R)
         uint64_t buildRelease;
         uint64_t pluginPriority;
         RegistryPlugin plugin;
+        ItemFlags flags;
     }
 
     auto cmp = items.map!((i) {
         ItemInfo inf = i.info();
-        return Comparator(i.pkgID, inf.releaseNumber, 0, 0, i.plugin);
+        return Comparator(i.pkgID, inf.releaseNumber, 0, 0, i.plugin, i.flags);
     }).array();
     cmp.multiSort!("a.pluginPriority > b.pluginPriority", "a.sourceRelease > b.sourceRelease",
             "a.buildRelease > b.buildRelease", SwapStrategy.unstable);
-    return cmp.map!((c) => RegistryItem(c.pkgID, c.plugin));
+    return cmp.map!((c) => RegistryItem(c.pkgID, c.plugin, c.flags));
 }
 
 /**
