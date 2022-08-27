@@ -89,7 +89,7 @@ align(1):
     /**
      * Encode this entry into a ubyte sequence
      */
-    ImmutableDatum mossEncode()
+    ImmutableDatum mossEncode() const
     {
         LayoutEntry cp = this;
         cp.toNetworkOrder();

@@ -109,6 +109,10 @@ extern (C) public struct EntrySet
         /* Write record + value */
         auto strings = encodeStrings();
         entry.sourceLength = cast(uint16_t) sourceData.length;
+        if (strings !is null)
+        {
+            entry.targetLength = cast(uint16_t) strings.length;
+        }
         entry.encode(wr);
         if (entry.sourceLength > 0)
         {
@@ -120,9 +124,16 @@ extern (C) public struct EntrySet
     /**
      * Encode this entry set into a ubyte sequence
      */
-    ImmutableDatum mossEncode()
+    ImmutableDatum mossEncode() @trusted const
     {
-        return cast(ImmutableDatum)((cast(ubyte[]) entry.mossEncode()) ~ sourceData ~ encodeStrings());
+        auto encoded  = encodeStrings();
+        LayoutEntry entCopy  = cast() entry;
+        if (encoded !is null)
+        {
+            entCopy.targetLength = cast(uint16_t) encoded.length;
+        }
+
+        return cast(ImmutableDatum)((cast(ubyte[]) entry.mossEncode()) ~ sourceData ~ encoded);
     }
 
     /**
@@ -161,7 +172,7 @@ package:
 
 private:
 
-    ubyte[] encodeStrings() @trusted
+    ubyte[] encodeStrings() @trusted const
     {
         import std.exception : enforce;
 
@@ -170,7 +181,6 @@ private:
         if (target !is null && target.length > 0)
         {
             enforce(target.length < uint16_t.max, "encode(): String length too long");
-            entry.targetLength = cast(uint16_t)(target.length + 1);
             encoded ~= target.mossEncode();
         }
 
