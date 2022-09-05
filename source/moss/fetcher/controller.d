@@ -36,9 +36,6 @@ public import moss.core.fetchcontext;
  * this fetcher are subject to sorting by *expected size* and grouped by
  * their URI.
  *
- * The largest pending downloads will typically download on the main thread
- * while the remaining threads will gobble up all the small jobs, hopefully
- * leading to better distribution.
  *
  * In a lame attempt at optimisation we support connection reuse as well as
  * sharing the shmem cache between curl handles (CURLSH)
@@ -90,10 +87,10 @@ public final class FetchController : FetchContext
         FetchWorker[] workers;
         ulong livingWorkers = nWorkers;
 
-        /* Create N workers, worker 0 preferring large items first */
+        /* Create N workers, worker 0 preferring small items first */
         foreach (i; 0 .. nWorkers)
         {
-            auto pref = i == 0 ? WorkerPreference.LargeItems : WorkerPreference.SmallItems;
+            auto pref = i == 0 ? WorkerPreference.SmallItems : WorkerPreference.LargeItems;
             auto worker = new FetchWorker(i, pref);
             worker.startFully();
             workers ~= worker;
