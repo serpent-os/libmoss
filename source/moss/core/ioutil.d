@@ -266,6 +266,8 @@ public struct IOUtil
 
             stderr.writeln(__FUNCTION__, ": Hardlink operation failed, trying to copy instead...");
             return IOUtil.copyFile(source, target);
+        case 0:
+            return IOResult(true);
         default:
             return IOResult(CError(err));
         }
