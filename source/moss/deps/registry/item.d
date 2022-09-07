@@ -16,8 +16,8 @@
  */
 module moss.deps.registry.item;
 
-public import moss.core.fetchcontext;
 public import moss.deps.registry.plugin : RegistryPlugin;
+public import moss.deps.registry.job;
 public import std.stdint : uint64_t;
 public import std.typecons : Nullable;
 public import std.range : isInputRange;
@@ -147,9 +147,9 @@ public struct RegistryItem
     /** 
      * Try to fetch this item
      */
-    pragma(inline, true) void fetch(FetchContext f)
+    pragma(inline, true) Job fetch()
     {
-        plugin.fetchItem(f, pkgID);
+        return plugin.fetchItem(pkgID);
     }
 
     /**

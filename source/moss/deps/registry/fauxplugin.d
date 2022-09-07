@@ -113,9 +113,9 @@ package final class FauxSource : RegistryPlugin
     }
 
     /* no op */
-    override void fetchItem(FetchContext context, in string pkgID)
+    override Job fetchItem(in string pkgID)
     {
-
+        return null;
     }
 
     override void close()

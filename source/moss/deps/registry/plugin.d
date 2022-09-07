@@ -69,7 +69,7 @@ public interface RegistryPlugin
      * Request that the item is fetched from its location into a storage
      * medium.
      */
-    void fetchItem(FetchContext context, in string pkgID);
+    Job fetchItem(in string pkgID);
 
     /**
      * Request the plugin deallocate any resources
