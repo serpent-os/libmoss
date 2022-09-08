@@ -22,6 +22,7 @@ libmoss_core_sources = [
 	'source/moss/core/platform.d',
 	'source/moss/core/store.d',
 	'source/moss/core/encoding.d',
+	'source/moss/core/errors.d',
 	'source/moss/core/package.d',
 	'source/moss/core/util.d',
 	'source/moss/core/ioutil.d',
