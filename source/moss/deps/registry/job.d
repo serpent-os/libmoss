@@ -14,6 +14,8 @@
  */
 module moss.deps.registry.job;
 
+public import std.stdint : uint64_t;
+
 /**
  * Specific job *type*
  */
@@ -167,6 +169,27 @@ public class Job
         _status = s;
     }
 
+    /**
+     * Expected size
+     *
+     * Returns: expected download size
+     */
+    pure @property auto expectedSize() @safe @nogc nothrow const
+    {
+        return _expectedSize;
+    }
+
+    /**
+     * Expected size
+     *
+     * Params:
+     *      s = New expected size
+     */
+    pure @property void expectedSize(uint64_t s) @safe @nogc nothrow
+    {
+        _expectedSize = s;
+    }
+
 private:
 
     JobType _type;
@@ -174,5 +197,6 @@ private:
     string _remoteURI;
     string _destinationPath;
     string _checksum;
+    uint64_t _expectedSize = 0;
     JobStatus _status = JobStatus.Pending;
 }
