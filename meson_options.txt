@@ -1,4 +1,5 @@
 option('with_elf', type: 'boolean', value: false)
+option('with_lmdb', type: 'boolean', value: false)
 option('with_xxhash', type: 'boolean', value: false)
 option('with_yaml', type: 'boolean', value: false)
 option('with_zstd', type: 'boolean', value: false)

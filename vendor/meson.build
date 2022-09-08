@@ -1,5 +1,6 @@
 possible_modules = [
     'elf',
+    'lmdb',
     'yaml',
     'xxhash',
     'zstd',
