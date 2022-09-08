@@ -47,7 +47,7 @@ public enum JobStatus
  * A Job is our abstraction of the fetching system to
  * allow manipulation and persistence of state.
  */
-public class Job
+public final class Job
 {
 
     @disable this();
