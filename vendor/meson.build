@@ -1,6 +1,5 @@
 possible_modules = [
     'elf',
-    'rocksdb',
     'yaml',
     'xxhash',
     'zstd',
