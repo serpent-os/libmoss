@@ -126,8 +126,8 @@ extern (C) public struct EntrySet
      */
     ImmutableDatum mossEncode() @trusted const
     {
-        auto encoded  = encodeStrings();
-        LayoutEntry entCopy  = cast() entry;
+        auto encoded = encodeStrings();
+        LayoutEntry entCopy = cast() entry;
         if (encoded !is null)
         {
             entCopy.targetLength = cast(uint16_t) encoded.length;

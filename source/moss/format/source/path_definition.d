@@ -84,16 +84,7 @@ struct PathDefinition
      */
     ulong toHash() @trusted const
     {
-        import std.conv : to;
-        import std.digest : toHexString;
-        import xxhash;
-
-        auto hashFunc = new XXH3_64;
-        auto sourceBytes = cast(ubyte[]) this.toString;
-        hashFunc.put(sourceBytes);
-        /* hashFunc.finish returns an 8-byte (64bit) long ubyte[] when using XXH3_64 */
-        auto hash = hashFunc.finish.toHexString.to!ulong;
-        return hash;
+        return typeid(path).getHash(&path);
     }
 
     /**

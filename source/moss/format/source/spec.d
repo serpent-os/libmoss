@@ -114,25 +114,52 @@ public:
         auto root = loader.load();
 
         /* Parse the rootContext source */
-        debug { trace("# spec.d/parse/parseSection(root, source)"); }
+        debug
+        {
+            trace("# spec.d/parse/parseSection(root, source)");
+        }
         parseSection(root, source);
-        debug { trace("# spec.d/parse/parseSection(root, rootBuild)"); }
+        debug
+        {
+            trace("# spec.d/parse/parseSection(root, rootBuild)");
+        }
         parseSection(root, rootBuild);
-        debug { trace("# spec.d/parse/parseSection(root, rootPackage)"); }
+        debug
+        {
+            trace("# spec.d/parse/parseSection(root, rootPackage)");
+        }
         parseSection(root, rootPackage);
-        debug { trace("# spec.d/parse/parseSection(root, options)"); }
+        debug
+        {
+            trace("# spec.d/parse/parseSection(root, options)");
+        }
         parseSection(root, options);
 
-        debug { trace("# spec.d/parse/parsePackages(root)"); }
+        debug
+        {
+            trace("# spec.d/parse/parsePackages(root)");
+        }
         parsePackages(root);
         rootPackage.name = source.name;
-        debug { trace("# spec.d/parse/parseBuilds(root)"); }
+        debug
+        {
+            trace("# spec.d/parse/parseBuilds(root)");
+        }
         parseBuilds(root);
-        debug { trace("# spec.d/parse/parseUpstreams(root)"); }
+        debug
+        {
+            trace("# spec.d/parse/parseUpstreams(root)");
+        }
         parseUpstreams(root);
-        debug { trace("# spec.d/parse/parseArchitectures(root)"); }
+        debug
+        {
+            trace("# spec.d/parse/parseArchitectures(root)");
+        }
         parseArchitectures(root);
-        debug { trace("# spec.d/parse/parseTuningOptions(root)"); }
+        debug
+        {
+            trace("# spec.d/parse/parseTuningOptions(root)");
+        }
         parseTuningOptions(root);
 
         /* Used for expansion when requested */
@@ -194,16 +221,23 @@ public:
         import std.array : array;
 
         pkd.name = _sbuilder.process(pkd.name);
-        debug { trace(format!"# spec.d/expand: PackageDefinition %s"(pkd.name)); }
+        debug
+        {
+            trace(format!"# spec.d/expand: PackageDefinition %s"(pkd.name));
+        }
         pkd.summary = _sbuilder.process(pkd.summary);
         pkd.description = _sbuilder.process(pkd.description);
-        pkd.runtimeDependencies = pkd.runtimeDependencies.map!((r) => _sbuilder.process(r)).uniq.array;
+        pkd.runtimeDependencies = pkd.runtimeDependencies.map!((r) => _sbuilder.process(r))
+            .uniq.array;
         /* this expands the raw paths, but doesn't touch the type information */
-        foreach(pd; pkd.paths)
+        foreach (pd; pkd.paths)
         {
             pd.path = _sbuilder.process(pd.path);
         }
-        debug { trace(format!"## Expanded pkd.paths:\n%s"(pkd.paths)); }
+        debug
+        {
+            trace(format!"## Expanded pkd.paths:\n%s"(pkd.paths));
+        }
         return pkd;
     }
 
@@ -220,7 +254,8 @@ private:
         }
 
         Node root = node["tuning"];
-        enforce(root.nodeID == NodeID.sequence, "LINT: parseTuningOptions(): tuning key should be a sequence of tuning options");
+        enforce(root.nodeID == NodeID.sequence,
+                "LINT: parseTuningOptions(): tuning key should be a sequence of tuning options");
 
         /* Step through all items in root */
         foreach (ref Node k; root)
@@ -236,8 +271,10 @@ private:
             {
                 auto keys = k.mappingKeys;
                 auto vals = k.mappingValues;
-                enforce(keys.length == 1, "LINT: parseTuningOptions(): Each tuning option has 1 key only");
-                enforce(vals.length == 1, "LINT: parseTuningOptions(): Each tuning option has 1 value only");
+                enforce(keys.length == 1,
+                        "LINT: parseTuningOptions(): Each tuning option has 1 key only");
+                enforce(vals.length == 1,
+                        "LINT: parseTuningOptions(): Each tuning option has 1 value only");
 
                 auto name = keys[0].as!string;
                 enforce(vals[0].nodeID == NodeID.scalar,
@@ -278,7 +315,10 @@ private:
     {
         if (!node.containsKey("packages"))
         {
-            debug { trace("## spec.d/parsePackages: No 'packages' key found for node: ", node); }
+            debug
+            {
+                trace("## spec.d/parsePackages: No 'packages' key found for node: ", node);
+            }
             return;
         }
 
@@ -289,12 +329,16 @@ private:
         /* Step through all items in root */
         foreach (ref Node k; root)
         {
-            assert(k.nodeID == NodeID.mapping, "LINT: parsePackages(): Each item in packages must be a mapping");
+            assert(k.nodeID == NodeID.mapping,
+                    "LINT: parsePackages(): Each item in packages must be a mapping");
             foreach (ref Node c, ref Node v; k)
             {
                 PackageDefinition pkd;
                 auto name = c.as!string;
-                debug { trace(format!"## spec.d/parse/parsePackages: %s"(name)); }
+                debug
+                {
+                    trace(format!"## spec.d/parse/parsePackages: %s"(name));
+                }
                 parseSection(v, pkd);
                 if (v.containsKey("paths"))
                 {
@@ -318,11 +362,18 @@ private:
         /* It is an error if a subpackage does not have a paths key! */
         if (paths.length == 0)
         {
-            debug { trace("### spec.d/parse/parsePackages/parsePaths: paths.length == 0, no paths to parse."); }
+            debug
+            {
+                trace(
+                        "### spec.d/parse/parsePackages/parsePaths: paths.length == 0, no paths to parse.");
+            }
             return;
         }
 
-        debug { trace("### spec.d/parse/parsePackages/parsePaths: "); }
+        debug
+        {
+            trace("### spec.d/parse/parsePackages/parsePaths: ");
+        }
         foreach (Node path; paths)
         {
             enforce(path.nodeID == NodeID.scalar || path.nodeID == NodeID.mapping,
@@ -333,7 +384,10 @@ private:
             if (path.nodeID == NodeID.scalar)
             {
                 pd = PathDefinition(path.as!string);
-                debug { trace(format!"    '- PathDefinition('%s')"(pd)); }
+                debug
+                {
+                    trace(format!"    '- PathDefinition('%s')"(pd));
+                }
                 pkd.paths ~= pd;
                 continue;
             }
@@ -343,13 +397,17 @@ private:
                 auto vals = path.mappingValues;
 
                 enforce(keys.length == 1, "LINT: parsePaths(): Each item in paths must have 1 key");
-                enforce(vals.length == 1, "LINT: parsePaths(): Each item in paths must have 1 value");
+                enforce(vals.length == 1,
+                        "LINT: parsePaths(): Each item in paths must have 1 value");
 
                 Node _path = keys[0];
                 Node _type = vals[0];
 
                 pd = PathDefinition(_path.as!string, _type.as!string);
-                debug { trace(format!"    '- PathDefinition('%s')"(pd)); }
+                debug
+                {
+                    trace(format!"    '- PathDefinition('%s')"(pd));
+                }
                 pkd.paths ~= pd;
             }
         }
@@ -368,7 +426,8 @@ private:
             if (node.containsKey("emul32"))
             {
                 Node emul32n = node["emul32"];
-                enforce(emul32n.nodeID == NodeID.scalar, "LINT: parseArchitectures(): emul32 must be a boolean scalar value");
+                enforce(emul32n.nodeID == NodeID.scalar,
+                        "LINT: parseArchitectures(): emul32 must be a boolean scalar value");
 
                 /* Enable the host architecture + emul32 */
                 if (emul32n.as!bool == true)
@@ -405,7 +464,8 @@ private:
         /* Step through all items in root */
         foreach (ref Node k; root)
         {
-            assert(k.nodeID == NodeID.mapping, "LINT: parseBuilds(): Each item in profiles must be a mapping");
+            assert(k.nodeID == NodeID.mapping,
+                    "LINT: parseBuilds(): Each item in profiles must be a mapping");
             foreach (ref Node c, ref Node v; k)
             {
                 BuildDefinition bd;

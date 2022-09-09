@@ -108,17 +108,35 @@ public:
         try
         {
             auto root = loader.load();
-            debug { trace("# macros.d/parse/parseActions(root)"); }
+            debug
+            {
+                trace("# macros.d/parse/parseActions(root)");
+            }
             parseActions(root);
-            debug { trace("# macros.d/parse/parseDefinitions(root)"); }
+            debug
+            {
+                trace("# macros.d/parse/parseDefinitions(root)");
+            }
             parseDefinitions(root);
-            debug { trace("# macros.d/parse/parseFlags(root)"); }
+            debug
+            {
+                trace("# macros.d/parse/parseFlags(root)");
+            }
             parseFlags(root);
-            debug { trace("# macros.d/parse/parseTuning(root)"); }
+            debug
+            {
+                trace("# macros.d/parse/parseTuning(root)");
+            }
             parseTuning(root);
-            debug { trace("# macros.d/parse/parsePackages(root)"); }
+            debug
+            {
+                trace("# macros.d/parse/parsePackages(root)");
+            }
             parsePackages(root);
-            debug { trace("# macros.d/parse/parseDefaults(root)"); }
+            debug
+            {
+                trace("# macros.d/parse/parseDefaults(root)");
+            }
             parseDefaults(root);
         }
         catch (Exception ex)
@@ -142,17 +160,21 @@ private:
 
         /* Grab root sequence */
         Node node = root["packages"];
-        enforce(node.nodeID == NodeID.sequence, "LINT: parsePackages(): Expected sequence for packages");
+        enforce(node.nodeID == NodeID.sequence,
+                "LINT: parsePackages(): Expected sequence for packages");
 
         foreach (ref Node k; node)
         {
-            enforce(k.nodeID == NodeID.mapping, "LINT: parsePackages(): Each item in packages must be a mapping");
+            enforce(k.nodeID == NodeID.mapping,
+                    "LINT: parsePackages(): Each item in packages must be a mapping");
 
             auto keys = k.mappingKeys;
             auto vals = k.mappingValues;
 
-            enforce(keys.length == 1, "LINT: parsePackages(): Each item in packages must have 1 key");
-            enforce(vals.length == 1, "LINT: parsePackages(): Each item in packages must have 1 value");
+            enforce(keys.length == 1,
+                    "LINT: parsePackages(): Each item in packages must have 1 key");
+            enforce(vals.length == 1,
+                    "LINT: parsePackages(): Each item in packages must have 1 value");
 
             auto key = keys[0];
             Node val = vals[0];
@@ -160,7 +182,10 @@ private:
             enforce(key.nodeID == NodeID.scalar,
                     "LINT: parsePackages(): Each item key in packages must be a scalar string");
             auto name = key.as!string;
-            debug { trace(format!"## macros.d/parse/parsePackages: %s"(name)); }
+            debug
+            {
+                trace(format!"## macros.d/parse/parsePackages: %s"(name));
+            }
             enforce(val.nodeID == NodeID.mapping,
                     "LINT: parsePackages(): Each item value in packages must be a mapping");
 
@@ -189,11 +214,18 @@ private:
 
         if (paths.length == 0)
         {
-            debug { trace("### macros.d/parse/parsePackages/parsePaths: paths.length == 0, no paths to parse."); }
+            debug
+            {
+                trace(
+                        "### macros.d/parse/parsePackages/parsePaths: paths.length == 0, no paths to parse.");
+            }
             return;
         }
 
-        debug { trace("### macros.d/parse/parsePackages/parsePaths:"); }
+        debug
+        {
+            trace("### macros.d/parse/parsePackages/parsePaths:");
+        }
         foreach (Node path; paths)
         {
             enforce(path.nodeID == NodeID.scalar || path.nodeID == NodeID.mapping,
@@ -204,7 +236,10 @@ private:
             if (path.nodeID == NodeID.scalar)
             {
                 pd = PathDefinition(path.as!string);
-                debug { trace(format!"    '- PathDefinition('%s')"(pd)); }
+                debug
+                {
+                    trace(format!"    '- PathDefinition('%s')"(pd));
+                }
                 pkd.paths ~= pd;
                 continue;
             }
@@ -213,8 +248,7 @@ private:
                 auto keys = path.mappingKeys;
                 auto vals = path.mappingValues;
 
-                enforce(keys.length == 1,
-                        "LINT: parsePaths(): Each item in paths must have 1 key");
+                enforce(keys.length == 1, "LINT: parsePaths(): Each item in paths must have 1 key");
                 enforce(vals.length == 1,
                         "LINT: parsePaths(): Each item in paths must have 1 value");
 
@@ -222,7 +256,10 @@ private:
                 Node _type = vals[0];
 
                 pd = PathDefinition(_path.as!string, _type.as!string);
-                debug { trace(format!"    '- PathDefinition('%s')"(pd)); }
+                debug
+                {
+                    trace(format!"    '- PathDefinition('%s')"(pd));
+                }
                 pkd.paths ~= pd;
             }
         }
@@ -240,20 +277,22 @@ private:
 
         /* Grab root sequence */
         Node node = root["flags"];
-        enforce(node.nodeID == NodeID.sequence,
-                "LINT: parseFlags(): Expected sequence for flags");
+        enforce(node.nodeID == NodeID.sequence, "LINT: parseFlags(): Expected sequence for flags");
 
         foreach (ref Node k; node)
         {
             assert(k.nodeID == NodeID.mapping,
-                   "LINT: parseFlags(): Each item in flags must be a mapping");
+                    "LINT: parseFlags(): Each item in flags must be a mapping");
             foreach (ref Node c, ref Node v; k)
             {
                 enforce(v.nodeID == NodeID.mapping,
                         "LINT: parseFlags(): Expected map for each item");
                 TuningFlag tf;
                 auto name = c.as!string;
-                debug { trace(format!"## TuningFlag: %s"(name)); }
+                debug
+                {
+                    trace(format!"## TuningFlag: %s"(name));
+                }
                 parseSection(v, tf);
                 parseSection(v, tf.root);
 
@@ -263,7 +302,10 @@ private:
                     Node gnu = v["gnu"];
                     enforce(gnu.nodeID == NodeID.mapping,
                             "LINT: parseFlags(): expected gnu section to be a mapping");
-                    debug { trace("### Toolchain: gnu"); }
+                    debug
+                    {
+                        trace("### Toolchain: gnu");
+                    }
                     parseSection(gnu, tf.gnu);
                 }
 
@@ -273,7 +315,10 @@ private:
                     Node llvm = v["llvm"];
                     enforce(llvm.nodeID == NodeID.mapping,
                             "LINT: parseFlags(): expected llvm section to be a mapping");
-                    debug { trace("### Toolchain: llvm"); }
+                    debug
+                    {
+                        trace("### Toolchain: llvm");
+                    }
                     parseSection(llvm, tf.llvm);
                 }
 
@@ -304,13 +349,16 @@ private:
         foreach (ref Node k; node)
         {
             assert(k.nodeID == NodeID.mapping,
-                   "LINT: parseActions(): Each item in actions must be a mapping");
+                    "LINT: parseActions(): Each item in actions must be a mapping");
             foreach (ref Node c, ref Node v; k)
             {
                 enforce(v.nodeID == NodeID.mapping,
                         "LINT: parseActions(): Expected map for each item");
                 auto name = c.as!string;
-                debug { trace(format!"## Actions: %s"(name)); }
+                debug
+                {
+                    trace(format!"## Actions: %s"(name));
+                }
                 Action candidateAction;
                 parseSection(v, candidateAction);
 
@@ -328,20 +376,22 @@ private:
 
         /* Grab root sequence */
         Node node = root["tuning"];
-        enforce(node.nodeID == NodeID.sequence,
-                "LINT: parseTuning(): Expected sequence for tuning");
+        enforce(node.nodeID == NodeID.sequence, "LINT: parseTuning(): Expected sequence for tuning");
 
         foreach (ref Node k; node)
         {
             assert(k.nodeID == NodeID.mapping,
-                   "LINT: parseTuning(): Each item in tuning must be a mapping");
+                    "LINT: parseTuning(): Each item in tuning must be a mapping");
             foreach (ref Node c, ref Node v; k)
             {
                 enforce(v.nodeID == NodeID.mapping,
                         "LINT: parseTuning(): Expected map for each item");
                 TuningGroup group;
                 auto name = c.as!string;
-                debug { trace(format!"## TuningGroup: %s"(name)); }
+                debug
+                {
+                    trace(format!"## TuningGroup: %s"(name));
+                }
                 parseSection(v, group);
                 parseSection(v, group.root);
 
@@ -365,7 +415,10 @@ private:
                             auto childName = cc.as!string;
                             enforce(!(childName in group.choices),
                                     "LINT: parseTuning(): Duplicate option found in " ~ name);
-                            debug { trace(format!"### TuningOption: %s"(childName)); }
+                            debug
+                            {
+                                trace(format!"### TuningOption: %s"(childName));
+                            }
                             /* Parse the option and store it */
                             parseSection(vv, to);
                             group.choices[childName] = to;
@@ -405,7 +458,8 @@ private:
         /* Grab each map */
         foreach (ref Node k; node)
         {
-            enforce(k.nodeID == NodeID.mapping, "LINT: parseDefinitions(): Expected mapping in sequence");
+            enforce(k.nodeID == NodeID.mapping,
+                    "LINT: parseDefinitions(): Expected mapping in sequence");
 
             auto mappingKeys = k.mappingKeys;
             auto mappingValues = k.mappingValues;
