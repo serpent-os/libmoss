@@ -314,11 +314,12 @@ public:
      */
     auto extraDependencies()
     {
-        import std.algorithm : map, each;
+        import std.algorithm : map, each, filter;
         import std.array : array;
 
         auto tree = new RedBlackTree!(string, "a < b", false);
-        usedMacros.map!((const s) => actionMap[s].dependencies)
+        usedMacros.filter!((m) => m in actionMap)
+            .map!((const s) => actionMap[s].dependencies)
             .each!((const d) { tree.insert(d); });
         return tree[].array;
     }
@@ -373,7 +374,7 @@ public:
             /* Store used actions */
             if (baked && context.braceEnd < 1)
             {
-                usedMacros ~= macroName;
+                usedMacros ~= macroName[1 .. $];
             }
 
             auto newval = process(mapping[macroName]);
