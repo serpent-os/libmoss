@@ -191,7 +191,7 @@ public:
      * This vastly simplifies substitution in the next set of script
      * evaluation.
      */
-    void bake() @safe
+    void bake(bool ignoreUnknown = false) @safe
     {
         if (baked)
         {
@@ -199,7 +199,7 @@ public:
         }
         foreach (ref k, v; mapping)
         {
-            mapping[k] = process(v).strip();
+            mapping[k] = process(v, ignoreUnknown).strip();
         }
         baked = true;
     }
@@ -327,7 +327,7 @@ public:
     /**
      * Begin tokenisation of the file, line by line
      */
-    string process(const(string) input) @safe
+    string process(const(string) input, bool ignoreUnknown = false) @safe
     {
         auto context = ParseContext();
         import std.string : format;
@@ -369,7 +369,20 @@ public:
 
             enforce(!macroName.endsWith("%"),
                     "Legacy style macro unsupported: %s".format(macroName));
-            enforce(macroName in mapping, "Unknown macro: %s".format(macroName));
+
+            string lookupVal;
+            if (macroName in mapping)
+            {
+                lookupVal = mapping[macroName];
+            }
+            else
+            {
+                if (!ignoreUnknown)
+                {
+                    enforce(macroName in mapping, "Unknown macro: %s".format(macroName));
+                }
+                lookupVal = " ";
+            }
 
             /* Store used actions */
             if (baked && context.braceEnd < 1)
@@ -377,7 +390,7 @@ public:
                 usedMacros ~= macroName[1 .. $];
             }
 
-            auto newval = process(mapping[macroName]);
+            auto newval = process(lookupVal, ignoreUnknown);
             ret ~= newval;
             context.reset();
         }
