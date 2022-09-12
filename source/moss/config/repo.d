@@ -18,6 +18,8 @@ import std.string : format;
 import moss.config.io.schema;
 import moss.config.io.configuration;
 
+public import std.stdint : uint64_t;
+
 /**
  * Provide a sane alias for typing
  */
@@ -43,6 +45,11 @@ public alias RepositoryConfiguration = Configuration!(Repository[]);
      * Where does one find said repository
      */
     @YamlSchema("uri", true) string uri = null;
+
+    /**
+     * Higher priority = pin behaviour
+     */
+    uint64_t priority = 0;
 
     /**
      * Return a human readable description of the repo
