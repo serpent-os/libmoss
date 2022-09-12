@@ -196,15 +196,19 @@ private:
             {
                 /* Make sure we don't duplicate a package name */
                 addProvider(pkg, provider);
-                if (provider.type != ProviderType.PackageName)
+                if (provider.type == ProviderType.PackageName)
                 {
                     continue;
                 }
-                auto nameProvider = byProvider(provider.type, provider.target);
-                enforce(nameProvider.length == 1,
-                        "FATAL ERROR: Multiple packages installed with the same name: %s %s".format(provider,
-                            nameProvider));
             }
+
+            auto name = pkg.info.name;
+            auto nameProvider = byProvider(ProviderType.PackageName, name);
+            enforce(nameProvider.length <= 1,
+                    "FATAL ERROR: Multiple packages installed with the same name: %s %s".format(name,
+                        nameProvider));
+            addProvider(pkg, Provider(name, ProviderType.PackageName));
+
             finalState ~= cast(RegistryItem) pkg;
         }
     }
