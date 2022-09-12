@@ -66,6 +66,11 @@ public interface RegistryPlugin
     const(RegistryItem)[] list(in ItemFlags flags) const;
 
     /**
+     * Higher priority = better chance of selection
+     */
+    pure @property uint64_t priority() @safe @nogc nothrow const;
+
+    /**
      * Request that the item is fetched from its location into a storage
      * medium.
      */

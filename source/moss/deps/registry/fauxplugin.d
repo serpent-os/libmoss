@@ -122,6 +122,11 @@ package final class FauxSource : RegistryPlugin
     {
     }
 
+    override pure @property uint64_t priority() @safe @nogc nothrow const
+    {
+        return 0;
+    }
+
     PackageCandidate[string] packages;
 }
 

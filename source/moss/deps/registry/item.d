@@ -30,7 +30,7 @@ import std.algorithm : multiSort, SwapStrategy, map;
  * Given an input range of items, sort them by various
  * predicates:
  *
- *  plugin.priority (soon)
+ *  plugin.priority
  *  item.releaseNumber
  *  item.buildRelease (soon)
  */
@@ -48,7 +48,7 @@ public auto sortedRegistryItems(R)(R items) if (isInputRange!R)
 
     auto cmp = items.map!((i) {
         ItemInfo inf = i.info();
-        return Comparator(i.pkgID, inf.releaseNumber, 0, 0, i.plugin, i.flags);
+        return Comparator(i.pkgID, inf.releaseNumber, 0, i.plugin.priority, i.plugin, i.flags);
     }).array();
     cmp.multiSort!("a.pluginPriority > b.pluginPriority", "a.sourceRelease > b.sourceRelease",
             "a.buildRelease > b.buildRelease", SwapStrategy.unstable);
