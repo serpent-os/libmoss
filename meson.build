@@ -28,6 +28,7 @@ libmoss_config_sources = [
     'source/moss/config/io/schema.d',
     'source/moss/config/io/snippet.d',
     'source/moss/config/io/configuration.d',
+    'source/moss/config/profile.d',
     'source/moss/config/repo.d',
 ]
 

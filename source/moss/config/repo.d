@@ -58,8 +58,8 @@ public alias RepositoryConfiguration = Configuration!(Repository[]);
     {
         if (description !is null)
         {
-            return format!"%s - \"%s\" (%s)"(id, uri, description);
+            return format!"%s - \"%s\" (%s @%s)"(id, uri, description, priority);
         }
-        return format!"%s - \"%s\""(id, uri);
+        return format!"%s - \"%s\" @ %s"(id, uri, priority);
     }
 }

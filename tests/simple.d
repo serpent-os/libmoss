@@ -17,6 +17,7 @@ module simple;
 
 import moss.config.io;
 import moss.config.repo;
+import moss.config.profile;
 import std.stdio : writeln;
 
 @("Primitive testing")
@@ -39,4 +40,17 @@ private unittest
     auto testItem = Repository("bootstrap", "Serpent OS (Protosnek)",
             "https://dev.serpentos.com/protosnek/x86_64/stone.index");
     assert(c.config[0] == testItem);
+}
+
+@("Ensure boulder works")
+private unittest
+{
+    auto c = new ProfileConfiguration();
+    c.load("../tests");
+    assert(c.sections.length == 2);
+    auto slocal = Repository("local", "",
+            "file:///var/cache/boulder/collections/local/stone.index", 10);
+    auto clocal = c.sections[1];
+    assert(clocal.collections[1] == slocal);
+    writeln(c.sections);
 }
