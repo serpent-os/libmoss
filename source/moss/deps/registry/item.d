@@ -165,6 +165,14 @@ public struct RegistryItem
      */
     int opCmp(ref const RegistryItem other) const
     {
+        if (this.pkgID > other.pkgID)
+        {
+            return 1;
+        }
+        else if (this.pkgID < other.pkgID)
+        {
+            return -1;
+        }
         if (this.plugin != other.plugin)
         {
             immutable auto otherID = other.plugin.stringof;
@@ -177,14 +185,6 @@ public struct RegistryItem
             {
                 return -1;
             }
-        }
-        if (this.pkgID > other.pkgID)
-        {
-            return 1;
-        }
-        else if (this.pkgID < other.pkgID)
-        {
-            return -1;
         }
         return 0;
     }
