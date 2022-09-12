@@ -42,9 +42,9 @@ unittest
     auto n = new Snippet!OurConfig("../tests/sequence_structs.yml");
     n.load();
     OurConfig requiredMatch = OurConfig("mainValue", [
-            Person("Bob", 40, ["Working", "Sleeping"]),
-            Person("Rupert", 0, ["Sleeping", "Sleeping"])
-            ]);
+        Person("Bob", 40, ["Working", "Sleeping"]),
+        Person("Rupert", 0, ["Sleeping", "Sleeping"])
+    ]);
     assert(n.config == requiredMatch);
     stderr.writeln(n.config);
 }
@@ -55,8 +55,8 @@ unittest
     auto config = new Configuration!OurConfig();
     config.load("../tests");
     OurConfig requiredMatch = OurConfig("001122", [
-            Person("Person_A", 22, ["Programming"]),
-            Person("Person_B", 25, ["Skiing", "Walking"]),
-            ]);
+        Person("Person_A", 22, ["Programming"]),
+        Person("Person_B", 25, ["Skiing", "Walking"]),
+    ]);
     assert(config.config == requiredMatch);
 }
