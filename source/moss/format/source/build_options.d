@@ -85,6 +85,11 @@ struct BuildOptions
     @YamlSchema("strip") bool strip = true;
 
     /**
+     * Enable networking for the build
+     */
+    @YamlSchema("networking") bool networking = false;
+
+    /**
      * A set of tuning selections to apply. Constructed at runtime through
      * parsing
      */
