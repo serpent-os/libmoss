@@ -84,6 +84,11 @@ public struct IOUtil
      */
     static IOResult copyFile(in string fromPath, in string toPath, cstdlib.mode_t mode = octal!644)
     {
+        scope (exit)
+        {
+            cstdlib.errno = 0;
+        }
+
         auto fdin = cstdlib.open(fromPath.toStringz, cstdlib.O_RDONLY, 0);
         if (fdin <= 0)
         {
@@ -111,6 +116,11 @@ public struct IOUtil
      */
     static IOResult copyFile(int fdIn, int fdOut, long len = 0)
     {
+        scope (exit)
+        {
+            cstdlib.errno = 0;
+        }
+
         /* Acquire the length using fstat() */
         if (len < 1)
         {
@@ -131,6 +141,11 @@ public struct IOUtil
      */
     static IOResult copyFileRange(int fdIn, long inOffsets, int fdOut, long outOffsets, long len)
     {
+        scope (exit)
+        {
+            cstdlib.errno = 0;
+        }
+
         cstdlib.loff_t inOff = inOffsets;
         cstdlib.loff_t outOff = outOffsets;
         cstdlib.loff_t nBytes = 0;
@@ -154,6 +169,11 @@ public struct IOUtil
      */
     static IOResult mkdir(in string path, cstdlib.mode_t mode = octal!755, bool ignoreExists = false)
     {
+        scope (exit)
+        {
+            cstdlib.errno = 0;
+        }
+
         auto ret = cstdlib.mkdir(path.toStringz, mode);
         if (ret == 0)
         {
@@ -172,6 +192,11 @@ public struct IOUtil
      */
     static IOFDResult create(in string path, cstdlib.mode_t mode = octal!644)
     {
+        scope (exit)
+        {
+            cstdlib.errno = 0;
+        }
+
         auto ret = cstdlib.open(path.toStringz,
                 cstdlib.O_WRONLY | cstdlib.O_CREAT | cstdlib.O_TRUNC, mode);
         if (ret < 0)
@@ -189,6 +214,11 @@ public struct IOUtil
      */
     static IOTempResult createTemporary(in string pattern)
     {
+        scope (exit)
+        {
+            cstdlib.errno = 0;
+        }
+
         /* Dup into NUL terminated buffer to get the real path back */
         auto copyBuffer = new char[pattern.length + 1];
         copyBuffer[0 .. pattern.length] = pattern;
@@ -211,6 +241,10 @@ public struct IOUtil
      */
     static IOTempdResult createTemporaryDirectory(in string pattern)
     {
+        scope (exit)
+        {
+            cstdlib.errno = 0;
+        }
         auto copyBuffer = new char[pattern.length + 1];
         copyBuffer[0 .. pattern.length] = pattern;
         copyBuffer[pattern.length] = '\0';
