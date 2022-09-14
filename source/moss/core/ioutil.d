@@ -289,16 +289,32 @@ public struct IOUtil
      */
     static IOResult hardlinkOrCopy(in string source, in string target) @trusted
     {
+        import std.stdio : stderr, writeln;
+
         auto ret = IOUtil.hardlink(source, target);
         auto err = ret.match!((e) => e.errorCode, (b) => 0);
         switch (err)
         {
         case cstdlib.EXDEV:
+            import std.file : copy, FileException;
+            debug { stderr.writeln(__FUNCTION__, ": Cross-mount hardlink operation failed, trying to copy instead..."); }
+            /* neither hardlink nor copy_file_range supports cross-mountpoint
+               linking/copying so use a dumb(er) copy */
+            IOResult copyRes;
+            try
+            {
+                copyRes = IOResult(true);
+                source.copy(target);
+            }
+            catch(FileException e)
+            {
+                stderr.writeln(e.msg);
+                copyRes = IOResult(CError(e.errno));
+            }
+            return copyRes;
         case cstdlib.EMLINK:
         case cstdlib.EPERM:
-            import std.stdio : stderr, writeln;
-
-            stderr.writeln(__FUNCTION__, ": Hardlink operation failed, trying to copy instead...");
+            debug { stderr.writeln(__FUNCTION__, ": Hardlink operation failed, trying to copy instead..."); }
             return IOUtil.copyFile(source, target);
         case 0:
             return IOResult(true);
