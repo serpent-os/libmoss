@@ -67,7 +67,7 @@ struct BuildOptions
      * project and execution of the workload, in the hopes of a finer tuned
      * profile data set
      */
-    @YamlSchema("cspgo") bool cspgo = true;
+    @YamlSchema("cspgo") bool cspgo = false;
 
     /**
      * Sample Profile Guided Optimisation
