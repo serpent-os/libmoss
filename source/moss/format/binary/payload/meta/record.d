@@ -95,6 +95,18 @@ enum RecordTag : uint16_t
 
     /** Repository index specific (size on disk) */
     @(RecordType.Uint64) PackageSize = 16,
+
+    /** A Build Dependency */
+    @(RecordType.Dependency) BuildDepends = 17,
+
+    /** Upstream URI for the source */
+    @(RecordType.String) SourceURI = 18,
+
+    /** Relative path for the source within the upstream URI */
+    @(RecordType.String) SourcePath = 19,
+
+    /** Ref/commit of the upstream source */
+    @(RecordType.String) SourceRef = 20,
 }
 
 /**
