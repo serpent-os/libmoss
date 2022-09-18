@@ -61,9 +61,17 @@ public auto sortedRegistryItems(R)(R items) if (isInputRange!R)
  */
 public enum ItemFlags
 {
+    /** No filter flags */
     None = 1 << 0,
+
+    /** Package is available for installation */
     Available = 1 << 1,
+
+    /** Package is already installed */
     Installed = 1 << 2,
+
+    /** Available as from-source build */
+    Source = 1 << 3,
 }
 
 /**
