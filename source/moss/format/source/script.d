@@ -16,14 +16,15 @@
 
 module moss.format.source.script;
 
-import std.string : format, splitLines, startsWith, endsWith;
-import std.exception : enforce;
-import moss.format.source.package_definition;
 import moss.format.source.macros : Action, MacroFile;
+import moss.format.source.package_definition;
 import moss.format.source.tuning_flag;
 import moss.format.source.tuning_group;
-import std.string : strip;
 import std.container.rbtree;
+import std.exception : enforce;
+import std.experimental.logger;
+import std.string : format, splitLines, startsWith, endsWith;
+import std.string : strip;
 
 /**
  * The private ParseContext is used by the ScriptBuilder to step
@@ -87,6 +88,7 @@ public:
         Action newAction = Action.init;
         newAction = cast(Action) action;
         actionMap[id] = newAction;
+        //trace("Added action: ", newAction);
     }
 
     /**
@@ -99,6 +101,7 @@ public:
     {
         enforce(!baked, "Cannot addDefinition to baked ScriptBuilder");
         mapping["%s%s%s".format(defineStart, id, defineEnd)] = define.strip();
+        //trace("Added definition: ", define);
     }
 
     /**
@@ -346,6 +349,7 @@ public:
         {
             if (!context.hasMacro)
             {
+                //trace("context: ", context, "has no macros?!");
                 return;
             }
 
@@ -357,10 +361,12 @@ public:
 
             if (context.macroStart >= context.macroEnd)
             {
+                //trace("context.macroStart >= context.macroEnd, returning.");
                 return;
             }
             if (context.macroEnd >= input.length)
             {
+                //trace("context.macroEnd >= input.length, returning.");
                 return;
             }
 
