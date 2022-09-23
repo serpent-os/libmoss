@@ -75,7 +75,10 @@ public final class FetchController : FetchContext
      */
     override void enqueue(in Fetchable f)
     {
-        queue.enqueue(f);
+        synchronized (queue)
+        {
+            queue.enqueue(f);
+        }
     }
 
     /**
@@ -139,7 +142,10 @@ public final class FetchController : FetchContext
      */
     pure override bool empty()
     {
-        return queue.empty;
+        synchronized (queue)
+        {
+            return queue.empty;
+        }
     }
 
     /**
@@ -147,7 +153,10 @@ public final class FetchController : FetchContext
      */
     override void clear()
     {
-        queue.clear();
+        synchronized (queue)
+        {
+            queue.clear();
+        }
     }
 
     /**
@@ -174,12 +183,15 @@ package:
      */
     NullableFetchable allocateWork(WorkerPreference preference)
     {
-        if (queue.empty)
+        synchronized (queue)
         {
-            return NullableFetchable();
+            if (queue.empty)
+            {
+                return NullableFetchable();
+            }
+            return NullableFetchable(preference == WorkerPreference.LargeItems
+                    ? queue.popLargest : queue.popSmallest);
         }
-        return NullableFetchable(preference == WorkerPreference.LargeItems
-                ? queue.popLargest : queue.popSmallest);
     }
 
 private:
@@ -303,7 +315,7 @@ private unittest
         stdout.flush();
     }
 
-    class Monitor
+    @trusted class Monitor
     {
         uint curRow = 0;
 
