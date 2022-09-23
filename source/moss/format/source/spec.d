@@ -106,7 +106,7 @@ public:
      */
     void parse() @system
     {
-        trace(__FUNCTION__, ": ", _file);
+        //trace(__FUNCTION__, ": ", _file);
 
         enforce(_file.isOpen(), "Spec.parse(): File is not open");
 
@@ -116,49 +116,49 @@ public:
         /* Parse the rootContext source */
         debug
         {
-            trace("# spec.d/parse/parseSection(root, source)");
+            //trace("# spec.d/parse/parseSection(root, source)");
         }
         parseSection(root, source);
         debug
         {
-            trace("# spec.d/parse/parseSection(root, rootBuild)");
+            //trace("# spec.d/parse/parseSection(root, rootBuild)");
         }
         parseSection(root, rootBuild);
         debug
         {
-            trace("# spec.d/parse/parseSection(root, rootPackage)");
+            //trace("# spec.d/parse/parseSection(root, rootPackage)");
         }
         parseSection(root, rootPackage);
         debug
         {
-            trace("# spec.d/parse/parseSection(root, options)");
+            //trace("# spec.d/parse/parseSection(root, options)");
         }
         parseSection(root, options);
 
         debug
         {
-            trace("# spec.d/parse/parsePackages(root)");
+            //trace("# spec.d/parse/parsePackages(root)");
         }
         parsePackages(root);
         rootPackage.name = source.name;
         debug
         {
-            trace("# spec.d/parse/parseBuilds(root)");
+            //trace("# spec.d/parse/parseBuilds(root)");
         }
         parseBuilds(root);
         debug
         {
-            trace("# spec.d/parse/parseUpstreams(root)");
+            //trace("# spec.d/parse/parseUpstreams(root)");
         }
         parseUpstreams(root);
         debug
         {
-            trace("# spec.d/parse/parseArchitectures(root)");
+            //trace("# spec.d/parse/parseArchitectures(root)");
         }
         parseArchitectures(root);
         debug
         {
-            trace("# spec.d/parse/parseTuningOptions(root)");
+            //trace("# spec.d/parse/parseTuningOptions(root)");
         }
         parseTuningOptions(root);
 
@@ -223,7 +223,7 @@ public:
         pkd.name = _sbuilder.process(pkd.name);
         debug
         {
-            trace(format!"# spec.d/expand: PackageDefinition %s"(pkd.name));
+            //trace(format!"# spec.d/expand: PackageDefinition %s"(pkd.name));
         }
         pkd.summary = _sbuilder.process(pkd.summary);
         pkd.description = _sbuilder.process(pkd.description);
@@ -236,7 +236,7 @@ public:
         }
         debug
         {
-            trace(format!"## Expanded pkd.paths:\n%s"(pkd.paths));
+            //trace(format!"## Expanded pkd.paths:\n%s"(pkd.paths));
         }
         return pkd;
     }
@@ -317,7 +317,7 @@ private:
         {
             debug
             {
-                trace("## spec.d/parsePackages: No 'packages' key found for node: ", node);
+                //trace("## spec.d/parsePackages: No 'packages' key found for node: ", node);
             }
             return;
         }
@@ -337,7 +337,7 @@ private:
                 auto name = c.as!string;
                 debug
                 {
-                    trace(format!"## spec.d/parse/parsePackages: %s"(name));
+                    //trace(format!"## spec.d/parse/parsePackages: %s"(name));
                 }
                 parseSection(v, pkd);
                 if (v.containsKey("paths"))
@@ -364,15 +364,14 @@ private:
         {
             debug
             {
-                trace(
-                        "### spec.d/parse/parsePackages/parsePaths: paths.length == 0, no paths to parse.");
+                //trace("### spec.d/parse/parsePackages/parsePaths: paths.length == 0, no paths to parse.");
             }
             return;
         }
 
         debug
         {
-            trace("### spec.d/parse/parsePackages/parsePaths: ");
+            //trace("### spec.d/parse/parsePackages/parsePaths: ");
         }
         foreach (Node path; paths)
         {
@@ -386,7 +385,7 @@ private:
                 pd = PathDefinition(path.as!string);
                 debug
                 {
-                    trace(format!"    '- PathDefinition('%s')"(pd));
+                    //trace(format!"    '- PathDefinition('%s')"(pd));
                 }
                 pkd.paths ~= pd;
                 continue;
@@ -406,7 +405,7 @@ private:
                 pd = PathDefinition(_path.as!string, _type.as!string);
                 debug
                 {
-                    trace(format!"    '- PathDefinition('%s')"(pd));
+                    //trace(format!"    '- PathDefinition('%s')"(pd));
                 }
                 pkd.paths ~= pd;
             }

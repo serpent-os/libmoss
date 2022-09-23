@@ -110,32 +110,32 @@ public:
             auto root = loader.load();
             debug
             {
-                trace("# macros.d/parse/parseActions(root)");
+                //trace("# macros.d/parse/parseActions(root)");
             }
             parseActions(root);
             debug
             {
-                trace("# macros.d/parse/parseDefinitions(root)");
+                //trace("# macros.d/parse/parseDefinitions(root)");
             }
             parseDefinitions(root);
             debug
             {
-                trace("# macros.d/parse/parseFlags(root)");
+                //trace("# macros.d/parse/parseFlags(root)");
             }
             parseFlags(root);
             debug
             {
-                trace("# macros.d/parse/parseTuning(root)");
+                //trace("# macros.d/parse/parseTuning(root)");
             }
             parseTuning(root);
             debug
             {
-                trace("# macros.d/parse/parsePackages(root)");
+                //trace("# macros.d/parse/parsePackages(root)");
             }
             parsePackages(root);
             debug
             {
-                trace("# macros.d/parse/parseDefaults(root)");
+                //trace("# macros.d/parse/parseDefaults(root)");
             }
             parseDefaults(root);
         }
@@ -184,7 +184,7 @@ private:
             auto name = key.as!string;
             debug
             {
-                trace(format!"## macros.d/parse/parsePackages: %s"(name));
+                //trace(format!"## macros.d/parse/parsePackages: %s"(name));
             }
             enforce(val.nodeID == NodeID.mapping,
                     "LINT: parsePackages(): Each item value in packages must be a mapping");
@@ -216,15 +216,14 @@ private:
         {
             debug
             {
-                trace(
-                        "### macros.d/parse/parsePackages/parsePaths: paths.length == 0, no paths to parse.");
+                //trace("### macros.d/parse/parsePackages/parsePaths: paths.length == 0, no paths to parse.");
             }
             return;
         }
 
         debug
         {
-            trace("### macros.d/parse/parsePackages/parsePaths:");
+            //trace("### macros.d/parse/parsePackages/parsePaths:");
         }
         foreach (Node path; paths)
         {
@@ -238,7 +237,7 @@ private:
                 pd = PathDefinition(path.as!string);
                 debug
                 {
-                    trace(format!"    '- PathDefinition('%s')"(pd));
+                    //trace(format!"    '- PathDefinition('%s')"(pd));
                 }
                 pkd.paths ~= pd;
                 continue;
@@ -258,7 +257,7 @@ private:
                 pd = PathDefinition(_path.as!string, _type.as!string);
                 debug
                 {
-                    trace(format!"    '- PathDefinition('%s')"(pd));
+                    //trace(format!"    '- PathDefinition('%s')"(pd));
                 }
                 pkd.paths ~= pd;
             }
@@ -291,7 +290,7 @@ private:
                 auto name = c.as!string;
                 debug
                 {
-                    trace(format!"## TuningFlag: %s"(name));
+                    //trace(format!"## TuningFlag: %s"(name));
                 }
                 parseSection(v, tf);
                 parseSection(v, tf.root);
@@ -304,7 +303,7 @@ private:
                             "LINT: parseFlags(): expected gnu section to be a mapping");
                     debug
                     {
-                        trace("### Toolchain: gnu");
+                        //trace("### Toolchain: gnu");
                     }
                     parseSection(gnu, tf.gnu);
                 }
@@ -317,7 +316,7 @@ private:
                             "LINT: parseFlags(): expected llvm section to be a mapping");
                     debug
                     {
-                        trace("### Toolchain: llvm");
+                        //trace("### Toolchain: llvm");
                     }
                     parseSection(llvm, tf.llvm);
                 }
@@ -357,7 +356,7 @@ private:
                 auto name = c.as!string;
                 debug
                 {
-                    trace(format!"## Actions: %s"(name));
+                    //trace(format!"## Actions: %s"(name));
                 }
                 Action candidateAction;
                 parseSection(v, candidateAction);
@@ -390,7 +389,7 @@ private:
                 auto name = c.as!string;
                 debug
                 {
-                    trace(format!"## TuningGroup: %s"(name));
+                    //trace(format!"## TuningGroup: %s"(name));
                 }
                 parseSection(v, group);
                 parseSection(v, group.root);
@@ -417,7 +416,7 @@ private:
                                     "LINT: parseTuning(): Duplicate option found in " ~ name);
                             debug
                             {
-                                trace(format!"### TuningOption: %s"(childName));
+                                //trace(format!"### TuningOption: %s"(childName));
                             }
                             /* Parse the option and store it */
                             parseSection(vv, to);

@@ -37,7 +37,7 @@ void setValue(T)(ref Node node, ref T value, YamlSchema schema)
         value = node.as!int64_t;
         debug
         {
-            trace("    '- <int64_t>");
+            //trace("    '- <int64_t>");
         }
     }
     else static if (is(T == uint64_t))
@@ -45,7 +45,7 @@ void setValue(T)(ref Node node, ref T value, YamlSchema schema)
         value = node.as!uint64_t;
         debug
         {
-            trace("    '- <uint64_t>");
+            //trace("    '- <uint64_t>");
         }
     }
     else static if (is(T == bool))
@@ -53,7 +53,7 @@ void setValue(T)(ref Node node, ref T value, YamlSchema schema)
         value = node.as!bool;
         debug
         {
-            trace("    '- <bool>");
+            //trace("    '- <bool>");
         }
     }
     else
@@ -61,7 +61,7 @@ void setValue(T)(ref Node node, ref T value, YamlSchema schema)
         value = node.as!string;
         debug
         {
-            trace("    '- <string>");
+            //trace("    '- <string>");
         }
         if (schema.acceptableValues.length < 1)
         {
@@ -91,20 +91,20 @@ void setValueArray(T)(ref Node node, ref T value)
             value ~= node.as!string;
             debug
             {
-                trace("    '- <string>");
+                //trace("    '- <string>");
             }
             break;
     case NodeID.sequence:
             debug
             {
-                trace("    '- sequence of <string> scalars:");
+                //trace("    '- sequence of <string> scalars:");
             }
             foreach (ref Node v; node)
             {
                 value ~= v.as!string;
                 debug
                 {
-                    trace(format!"     '- '%s'"(v.as!string));
+                    //trace(format!"     '- '%s'"(v.as!string));
                 }
             }
             break;
@@ -115,26 +115,26 @@ void setValueArray(T)(ref Node node, ref T value)
             value ~= node.as!(typeof(value[0]));
             debug
             {
-                trace(format!"    '- <%s>"(node.as!(typeof(value[0]))));
+                //trace(format!"    '- <%s>"(node.as!(typeof(value[0]))));
             }
             break;
     case NodeID.sequence:
             debug
             {
-                trace("    '- sequence of scalars:");
+                //trace("    '- sequence of scalars:");
             }
             foreach (ref Node v; node)
             {
                 value ~= v.as!(typeof(value[0]));
                 debug
                 {
-                    trace(format!"     '- '%s' as <%s>"(v, typeof(value[0])));
+                    //trace(format!"     '- '%s' as <%s>"(v, typeof(value[0])));
                 }
             }
             break;
         }
     default:
-        trace(format!"    '- node.nodeID %s not parsed?"(node.nodeID));
+        //trace(format!"    '- node.nodeID %s not parsed?"(node.nodeID));
         break;
     }
 }
@@ -190,11 +190,11 @@ void parseSection(T)(ref Node node, ref T section) @system
                         {
                             debug
                             {
-                                trace(format!"  '- Parsing YamlSchema for member: %s"(member));
+                                //trace(format!"  '- Parsing YamlSchema for member: %s"(member));
                             }
                             debug
                             {
-                                trace(format!"   '- Parsing YAML key '%s':"(yamlName));
+                                //trace(format!"   '- Parsing YAML key '%s':"(yamlName));
                             }
                             mixin("setValue(node[yamlName], section." ~ member ~ ", udaID);");
                         }
@@ -205,11 +205,11 @@ void parseSection(T)(ref Node node, ref T section) @system
                         {
                             debug
                             {
-                                trace(format!"  '- Parsing YamlSchema for member: %s"(member));
+                                //trace(format!"  '- Parsing YamlSchema for member: %s"(member));
                             }
                             debug
                             {
-                                trace(format!"   '- Parsing YAML key '%s':"(yamlName));
+                                //trace(format!"   '- Parsing YAML key '%s':"(yamlName));
                             }
                             mixin("setValueArray(node[yamlName], section." ~ member ~ ");");
                         }
