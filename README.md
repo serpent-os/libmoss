@@ -2,7 +2,7 @@
 
 A very small module to provide some shared utility APIs for the moss
 suite of tooling, as well as some C interfaces and encoding routines
-for projects like [moss-db](https://gitlab.com/serpent-os/core/moss-db.
+for projects like [moss-db](https://github.com/serpent-os/moss-db).
 
 ### License
 
