@@ -58,9 +58,15 @@ private static bool isElfFile(in string fullPath) @trusted
     }
 
     /* Check the magic */
-    ubyte[4] elfBuffer = [0, 0, 0, 0];
-    const auto firstBytes = fi.rawRead(elfBuffer);
+    ubyte[6] elfBuffer = [0, 0, 0, 0, 0, 0];
+    const auto firstBytes = fi.rawRead(elfBuffer)[0 .. 4];
     if (firstBytes != elfMagic)
+    {
+        return false;
+    }
+
+    /* We don't support big endian atm */
+    if (elfBuffer[5] != 1)
     {
         return false;
     }
