@@ -44,6 +44,16 @@ public const AttributeBuildID = "BuildID";
  */
 public const AttributeBitSize = "BitSize";
 
+/*
+ * It turns out that elf-d doesn't handle Big Endian at all.
+ * so we need to only return true if the file is an ELF file
+ * (has an ELF magic header and is at least 16 bytes long)
+ * and is in Little Endian format.
+ *
+ * The relevant ELF header properties are available in
+ * /usr/include/linux/elf.h
+ *
+ */
 private static bool isElfFile(in string fullPath) @trusted
 {
     auto fi = File(fullPath, "rb");
@@ -51,28 +61,32 @@ private static bool isElfFile(in string fullPath) @trusted
     {
         fi.close();
     }
-    /* Need at least a 16-byte file */
+
+    /* File is too small to contain a full ELF header */
     if (fi.size() < 16)
     {
         return false;
     }
 
+    enum ELFByteOrder : ubyte
+    {
+        None = 0,
+        LittleEndian = 1,
+        BigEndian = 2,
+    }
     /* Check the magic */
     ubyte[6] elfBuffer = [0, 0, 0, 0, 0, 0];
-    const auto firstBytes = fi.rawRead(elfBuffer)[0 .. 4];
-    if (firstBytes != elfMagic)
+    const auto first4Bytes = fi.rawRead(elfBuffer)[0 .. 4];
+
+    if (first4Bytes == elfMagic && elfBuffer[5] == ELFByteOrder.LittleEndian)
+    {
+        /* Legit looks like a Little Endian ELF file */
+        return true;
+    }
+    else
     {
         return false;
     }
-
-    /* We don't support big endian atm */
-    if (elfBuffer[5] != 1)
-    {
-        return false;
-    }
-
-    /* Legit looks like an ELF file */
-    return true;
 }
 
 /**
