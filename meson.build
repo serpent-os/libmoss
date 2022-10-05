@@ -1,7 +1,7 @@
 project(
 	'moss-core',
 	['d'],
-	version: '0.0.0',
+	version: '0.0.2',
 	license: [
 		'Zlib',
 	]
