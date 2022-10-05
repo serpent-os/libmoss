@@ -1,7 +1,7 @@
 project(
 	'moss-db',
 	['d'],
-	version: '0.0.0',
+	version: '0.0.4',
 	license: [
 		'Zlib',
 	]
