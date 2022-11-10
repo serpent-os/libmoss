@@ -21,6 +21,7 @@ public import moss.core.encoding;
 public import moss.core.util;
 public import moss.core.platform;
 public import moss.core.store;
+public import moss.core.sizing;
 
 public import std.stdint : uint8_t;
 
