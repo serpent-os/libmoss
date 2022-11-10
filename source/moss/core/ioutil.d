@@ -298,9 +298,11 @@ public struct IOUtil
         {
         case cstdlib.EXDEV:
             import std.file : copy, FileException;
+
             debug
             {
-                stderr.writeln(format!"%s: [EXDEV] Hardlinkinking %s to %s failed, trying to copy instead..."(__FUNCTION__, source, target));
+                stderr.writeln(format!"%s: [EXDEV] Hardlinkinking %s to %s failed, trying to copy instead..."(
+                        __FUNCTION__, source, target));
             }
             /* neither hardlink nor copy_file_range supports cross-mountpoint
                linking/copying so use a dumb(er) copy */
@@ -310,7 +312,7 @@ public struct IOUtil
                 copyRes = IOResult(true);
                 source.copy(target);
             }
-            catch(FileException e)
+            catch (FileException e)
             {
                 /* Be as helpful as possible wrt troubleshooting the problem */
                 stderr.writeln(format!"Copying %s to %s failed: %s"(source, target, e.msg));
@@ -323,7 +325,8 @@ public struct IOUtil
             {
                 /* Be as helpful as possible wrt troubleshooting the problem */
                 string errType = err != cstdlib.EMLINK ? "[EPERM]" : "[ELINK]";
-                stderr.writeln(format!"%s: %s Hardlinking %s to %s failed, trying to copy instead..."(__FUNCTION__, errType, source, target));
+                stderr.writeln(format!"%s: %s Hardlinking %s to %s failed, trying to copy instead..."(__FUNCTION__,
+                        errType, source, target));
             }
             return IOUtil.copyFile(source, target);
         case 0:
