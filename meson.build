@@ -15,21 +15,22 @@ endif
 
 # Package sources
 libmoss_core_sources = [
+	'source/moss/core/c.d',
 	'source/moss/core/cli/package.d',
 	'source/moss/core/download/manager.d',
 	'source/moss/core/download/package.d',
 	'source/moss/core/download/store.d',
-	'source/moss/core/platform.d',
-	'source/moss/core/store.d',
 	'source/moss/core/encoding.d',
 	'source/moss/core/errors.d',
-	'source/moss/core/package.d',
-	'source/moss/core/util.d',
-	'source/moss/core/ioutil.d',
-	'source/moss/core/c.d',
 	'source/moss/core/fetchcontext.d',
-	'source/moss/core/mounts.d',
+	'source/moss/core/ioutil.d',
 	'source/moss/core/logger.d',
+	'source/moss/core/mounts.d',
+	'source/moss/core/package.d',
+	'source/moss/core/platform.d',
+	'source/moss/core/sizing.d',
+	'source/moss/core/store.d',
+	'source/moss/core/util.d',
 ]
 
 # Expose source dependencies
