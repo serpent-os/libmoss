@@ -17,6 +17,7 @@ endif
 libmoss_core_sources = [
 	'source/moss/core/c.d',
 	'source/moss/core/cli/package.d',
+	'source/moss/core/cpuinfo.d',
 	'source/moss/core/download/manager.d',
 	'source/moss/core/download/package.d',
 	'source/moss/core/download/store.d',
@@ -25,6 +26,7 @@ libmoss_core_sources = [
 	'source/moss/core/fetchcontext.d',
 	'source/moss/core/ioutil.d',
 	'source/moss/core/logger.d',
+	'source/moss/core/memoryinfo.d',
 	'source/moss/core/mounts.d',
 	'source/moss/core/package.d',
 	'source/moss/core/platform.d',
