@@ -19,6 +19,7 @@
 module moss.core.cpuinfo;
 
 import std.algorithm : canFind, each, fold, map, sort;
+import std.array;
 import std.conv : to;
 import std.exception : enforce;
 import std.file : readText;
@@ -32,6 +33,7 @@ import std.typecons : tuple;
 
 private static immutable cpuinfoFile = "/proc/cpuinfo";
 private static immutable versionFile = "/proc/version";
+private static immutable loadavgFile = "/proc/loadavg";
 
 /* Note that 'pni' is 'prescott new instructions' aka SSE3 */
 private static immutable _x86_64_v2 = [
@@ -106,7 +108,7 @@ public final class CpuInfo
      */
     const bool x86_64_v2() @safe
     {
-        auto supported = _x86_64_v2.map!(s => canFind(_cpuFlags, s));
+        auto supported = _x86_64_v2.map!((s) => canFind(_cpuFlags, s));
         return supported.fold!((a, b) => a && b);
     }
 
@@ -117,7 +119,7 @@ public final class CpuInfo
      */
     pure const bool x86_64_v3() @safe
     {
-        auto supported = _x86_64_v3.map!(s => canFind(_cpuFlags, s));
+        auto supported = _x86_64_v3.map!((s) => canFind(_cpuFlags, s));
         return supported.fold!((a, b) => a && b);
     }
 
@@ -128,7 +130,7 @@ public final class CpuInfo
      */
     pure const bool x86_64_v3x() @safe
     {
-        auto supported = _x86_64_v3x.map!(s => canFind(_cpuFlags, s));
+        auto supported = _x86_64_v3x.map!((s) => canFind(_cpuFlags, s));
         return supported.fold!((a, b) => a && b);
     }
 
@@ -155,7 +157,6 @@ private:
         {
             string _kernel = buffer.strip;
         }
-
     }
 
     /**
@@ -167,36 +168,39 @@ private:
         auto buffer = readText(cpuinfoFile);
 
         /* Find first 'model name' occurence */
-        auto modelNameRegex = ctRegex!r"model name\s+:\s+(.*)\n";
-        auto m = matchFirst(buffer, modelNameRegex);
+        auto r = ctRegex!r"model name\s+:\s+(.*)\n";
+        auto m = matchFirst(buffer, r);
         enforce(m.captures[1], format!"CPU model name not listed in %s?"(cpuinfoFile));
         _modelName = m.captures[1].strip;
 
         /* Find first 'cpu cores' occurence */
-        auto numCoresRegex = ctRegex!r"cpu cores\s+:\s+(.*)\n";
-        m = matchFirst(buffer, numCoresRegex);
+        r = ctRegex!r"cpu cores\s+:\s+(.*)\n";
+        m = matchFirst(buffer, r);
         enforce(m.captures[1],
                 format!"Number of physical CPU cores not listed in %s?"(cpuinfoFile));
         _numCores = m.captures[1].strip.to!uint;
 
         /* Find first 'siblings' occurence */
-        auto numHWThreadsRegex = ctRegex!r"siblings\s+:\s+(.*)\n";
-        m = matchFirst(buffer, numHWThreadsRegex);
+        r = ctRegex!r"siblings\s+:\s+(.*)\n";
+        m = matchFirst(buffer, r);
         enforce(m.captures[1], format!"Number of CPU H/W threads not listed in %s?"(cpuinfoFile));
         _numHWThreads = m.captures[1].strip.to!uint;
 
         /* Find first 'flags' occurence */
-        auto cpuFlagsRegex = ctRegex!r"flags\s+:\s+(.*)\n";
-        m = matchFirst(buffer, cpuFlagsRegex);
+        r = ctRegex!r"flags\s+:\s+(.*)\n";
+        m = matchFirst(buffer, r);
         enforce(m.captures[1], format!"CPU flags not listed in %s?"(cpuinfoFile));
         _cpuFlags = m.captures[1].strip.split;
+        /* Makes for quicker searching */
         _cpuFlags.sort;
 
         /* parseISA() is run from the constructor */
         if (_ISA != "unknown")
         {
+            /* Re-use as the base ISA Level */
             _ISALevels ~= _ISA;
 
+            /* Higher x86_64 ISA Levels are extensions of lower ISA Levels */
             if (_ISA == "x86_64" && x86_64_v2)
             {
                 _ISALevels ~= "x86_64-v2";
@@ -231,9 +235,10 @@ public final class CpufreqInfo
      */
     this() @safe
     {
-        numCPU = totalCPUs();
-        _frequencies.reserve(totalCPUs);
-        _frequencies.length = totalCPUs;
+        /* this is the number of available hardware threads reported by the OS */
+        numHWThreads = totalCPUs();
+        _frequencies.reserve(numHWThreads);
+        _frequencies.length = numHWThreads;
 
         refresh();
     }
@@ -243,7 +248,7 @@ public final class CpufreqInfo
      */
     void refresh() @safe
     {
-        iota(0, totalCPUs).map!((i) => tuple!("cpu", "freq")(i,
+        iota(0, numHWThreads).map!((i) => tuple!("cpu", "freq")(i,
                 readText(format!"/sys/devices/system/cpu/cpu%d/cpufreq/scaling_cur_freq"(i))
                 .strip.to!double))
             .each!((cpu, freq) => _frequencies[cpu] = freq);
@@ -254,14 +259,52 @@ public final class CpufreqInfo
      */
     @property auto frequencies() @safe
     {
-        return _frequencies[0 .. numCPU];
+        return _frequencies[0 .. numHWThreads];
     }
 
-    /**
-     * This is a bit excessive, but its a 64-bit native datatype
-     */
-    ulong numCPU = 0;
+    uint numHWThreads = 0;
 
 private:
     double[] _frequencies;
+}
+
+public final class LoadavgInfo
+{
+    /**
+     *  Running Average
+     *   1m   5m   15m  runnable/total newestPID
+     *  "0.52 0.51 0.63 1/2505 1020465"
+     */
+    this() @safe
+    {
+        refresh();
+    }
+
+    void refresh() @trusted
+    {
+        auto buffer = readText(loadavgFile);
+        auto fields = buffer.strip.split;
+        _jobAvg1Minute = fields[0].to!float;
+        _jobAvg5Minutes = fields[1].to!float;
+        _jobAvg15Minutes = fields[2].to!float;
+        _schedulingEntities = fields[3].split("/").map!((i) => i.to!ulong).array;
+        _newestPID = fields[4].to!long;
+    }
+
+    /**
+     * Allow the consumer to use the raw floats
+     */
+    float[3] loadAvg() @safe
+    {
+        return [_jobAvg1Minute, _jobAvg5Minutes, _jobAvg15Minutes];
+    }
+
+private:
+    float _jobAvg1Minute = 0.0;
+    float _jobAvg5Minutes = 0.0;
+    float _jobAvg15Minutes = 0.0;
+    /* [0] is runnableEntities, [1] is totalEntities known to the Linux scheduler */
+    ulong[2] _schedulingEntities = [0, 0];
+    /* pid_t (3) mentions needing signed long */
+    long _newestPID = 0;
 }
