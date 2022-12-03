@@ -10,14 +10,13 @@
  * Access to CPU information via /proc/cpuinfo and to
  * kernel information via /proc/version on Linux
  *
- * TODO: Actually parse ISA instead of hardcoding it to x86_64
- *
  * Authors: Copyright © 2020-2022 Serpent OS Developers
  * License: Zlib
  */
 
 module moss.core.cpuinfo;
 
+import cstdlib = moss.core.c;
 import std.algorithm : canFind, each, fold, map, sort;
 import std.array;
 import std.conv : to;
@@ -28,7 +27,7 @@ import std.parallelism : totalCPUs;
 import std.range : iota;
 import std.regex;
 import std.stdio : File, writeln;
-import std.string : split, strip;
+import std.string : split, strip, stripRight;
 import std.typecons : tuple;
 
 private static immutable cpuinfoFile = "/proc/cpuinfo";
@@ -138,12 +137,12 @@ private:
 
     /**
      * Parse ISA from machine property in utsname struct from uname(2) syscall
-     *
-     * TODO: Actually parse the ISA! (we just hardcode to "x86_64" atm)
      */
     void parseISA() @trusted
     {
-        _ISA = "x86_64";
+        cstdlib.utsname* info = new cstdlib.utsname;
+        cstdlib.uname(info);
+        _ISA = stripRight(cast(string) info.machine, "\0");
     }
 
     /**
@@ -307,4 +306,11 @@ private:
     ulong[2] _schedulingEntities = [0, 0];
     /* pid_t (3) mentions needing signed long */
     long _newestPID = 0;
+}
+
+@("Test ISA detection")
+private unittest
+{
+    auto info = new CpuInfo;
+    assert(info.ISA() == "x86_64");
 }
