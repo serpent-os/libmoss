@@ -30,9 +30,9 @@ import std.stdio : File, writeln;
 import std.string : fromStringz, split, strip;
 import std.typecons : tuple;
 
-private static immutable cpuinfoFile = "/proc/cpuinfo";
-private static immutable versionFile = "/proc/version";
-private static immutable loadavgFile = "/proc/loadavg";
+private static immutable procCpuinfo = "/proc/cpuinfo";
+private static immutable procVersion = "/proc/version";
+private static immutable procLoadavg = "/proc/loadavg";
 
 /* Note that 'pni' is 'prescott new instructions' aka SSE3 */
 private static immutable _x86_64_v2 = [
@@ -148,7 +148,7 @@ private:
     /**
      * Parse /proc/version kernel version file
      */
-    void parseVersionFile() @trusted
+    void parseVersionFile(string versionFile = procVersion) @trusted
     {
         auto buffer = readText(versionFile);
         /* we expect a single line */
@@ -161,7 +161,7 @@ private:
     /**
      * Parse select fields in /proc/cpuinfo
      */
-    void parseCpuinfoFile() @trusted
+    void parseCpuinfoFile(string cpuinfoFile = procCpuinfo) @trusted
     {
         /* If we can't parse /proc/cpuinfo, bailing with an exception is ok */
         auto buffer = readText(cpuinfoFile);
@@ -247,6 +247,7 @@ public final class CpufreqInfo
      */
     void refresh() @safe
     {
+        /* TODO: is it ok to bail if /sys isn't mounted? */
         iota(0, numHWThreads).map!((i) => tuple!("cpu", "freq")(i,
                 readText(format!"/sys/devices/system/cpu/cpu%d/cpufreq/scaling_cur_freq"(i))
                 .strip.to!double))
@@ -279,7 +280,7 @@ public final class LoadavgInfo
         refresh();
     }
 
-    void refresh() @trusted
+    void refresh(string loadavgFile = procLoadavg) @trusted
     {
         auto buffer = readText(loadavgFile);
         auto fields = buffer.strip.split;
