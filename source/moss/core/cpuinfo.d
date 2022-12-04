@@ -30,10 +30,6 @@ import std.stdio : File, writeln;
 import std.string : fromStringz, split, strip;
 import std.typecons : tuple;
 
-private static immutable procCpuinfo = "/proc/cpuinfo";
-private static immutable procVersion = "/proc/version";
-private static immutable procLoadavg = "/proc/loadavg";
-
 /* Note that 'pni' is 'prescott new instructions' aka SSE3 */
 private static immutable _x86_64_v2 = [
     "cx16", "lahf_lm", "popcnt", "pni", "ssse3", "sse4_1", "sse4_2"
@@ -148,7 +144,7 @@ private:
     /**
      * Parse /proc/version kernel version file
      */
-    void parseVersionFile(string versionFile = procVersion) @trusted
+    void parseVersionFile(immutable string versionFile = "/proc/version") @trusted
     {
         auto buffer = readText(versionFile);
         /* we expect a single line */
@@ -161,7 +157,7 @@ private:
     /**
      * Parse select fields in /proc/cpuinfo
      */
-    void parseCpuinfoFile(string cpuinfoFile = procCpuinfo) @trusted
+    void parseCpuinfoFile(immutable string cpuinfoFile = "/proc/cpuinfo") @trusted
     {
         /* If we can't parse /proc/cpuinfo, bailing with an exception is ok */
         auto buffer = readText(cpuinfoFile);
@@ -280,7 +276,7 @@ public final class LoadavgInfo
         refresh();
     }
 
-    void refresh(string loadavgFile = procLoadavg) @trusted
+    void refresh(immutable string loadavgFile = "/proc/loadavg") @trusted
     {
         auto buffer = readText(loadavgFile);
         auto fields = buffer.strip.split;
