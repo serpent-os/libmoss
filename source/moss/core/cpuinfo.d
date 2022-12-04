@@ -16,7 +16,7 @@
 
 module moss.core.cpuinfo;
 
-import cstdlib = moss.core.c;
+import moss.core.c : uname, utsname;
 import std.algorithm : canFind, each, fold, map, sort;
 import std.array;
 import std.conv : to;
@@ -27,7 +27,7 @@ import std.parallelism : totalCPUs;
 import std.range : iota;
 import std.regex;
 import std.stdio : File, writeln;
-import std.string : split, strip, stripRight;
+import std.string : fromStringz, split, strip;
 import std.typecons : tuple;
 
 private static immutable cpuinfoFile = "/proc/cpuinfo";
@@ -67,9 +67,7 @@ public final class CpuInfo
     }
 
     /**
-     * Instruction Set Architecture
-     *
-     * Returns: string describing architecture
+     * Returns: string describing Instruction Set Architecture
      */
     pure const string ISA() nothrow @nogc @safe
     {
@@ -87,7 +85,7 @@ public final class CpuInfo
     }
 
     /**
-     * CPU model name
+     * Returns: CPU model name
      */
     pure const string modelName() nothrow @nogc @safe
     {
@@ -95,7 +93,7 @@ public final class CpuInfo
     }
 
     /**
-     * Useful string output for number of cores/hwthreads
+     * Returns: string of the format "cores / hwtreads"
      */
     pure const string numCoresThreads() @safe
     {
@@ -105,7 +103,7 @@ public final class CpuInfo
     /**
      * Does this CPU support the x86_64-v2 psABI?
      */
-    const bool x86_64_v2() @safe
+    pure const bool x86_64_v2() @safe
     {
         auto supported = _x86_64_v2.map!((s) => canFind(_cpuFlags, s));
         return supported.fold!((a, b) => a && b);
@@ -123,7 +121,7 @@ public final class CpuInfo
     }
 
     /**
-     * Does this CPU support the x86_64-v3 psABI + select  psABI?
+     * Does this CPU support the x86_64-v3x extended x86_64-v3 psABI?
      *
      * Note: This function does not check for x86_64-v2 nor x86_64-v3 psABI support
      */
@@ -140,9 +138,11 @@ private:
      */
     void parseISA() @trusted
     {
-        cstdlib.utsname* info = new cstdlib.utsname;
-        cstdlib.uname(info);
-        _ISA = stripRight(cast(string) info.machine, "\0");
+        /* need to call uname on a pointer to an initialised utsname struct */
+        utsname* _utsname = new utsname;
+        uname(_utsname);
+        /* C strings are null-terminated */
+        _ISA = cast(string) _utsname.machine.fromStringz;
     }
 
     /**
@@ -292,6 +292,8 @@ public final class LoadavgInfo
 
     /**
      * Allow the consumer to use the raw floats
+     *
+     * Returns: float array [loadavg1minute, loadavg5minutes, loadavg15minutes]
      */
     float[3] loadAvg() @safe
     {
