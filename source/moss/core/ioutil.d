@@ -301,7 +301,7 @@ public struct IOUtil
 
             debug
             {
-                stderr.writeln(format!"%s: [EXDEV] Hardlinkinking %s to %s failed, trying to copy instead..."(
+                stderr.writeln(format!"%s: [EXDEV] Hardlinking %s to %s failed, trying to copy instead..."(
                         __FUNCTION__, source, target));
             }
             /* neither hardlink nor copy_file_range supports cross-mountpoint
