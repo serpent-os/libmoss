@@ -26,24 +26,9 @@ import std.format : format;
 import std.parallelism : totalCPUs;
 import std.range : iota;
 import std.regex;
-import std.stdio : File, writeln;
+import std.stdio : File, writeln, writefln;
 import std.string : fromStringz, split, strip;
 import std.typecons : tuple;
-
-/* Note that 'pni' is 'prescott new instructions' aka SSE3 */
-private static immutable _x86_64_v2 = [
-    "cx16", "lahf_lm", "popcnt", "pni", "ssse3", "sse4_1", "sse4_2"
-];
-
-/* lzcnt is part of abm, osxsave is xsave (CBR4:18) */
-private static immutable _x86_64_v3 = [
-    "abm", "avx", "avx2", "bmi1", "bmi2", "f16c", "fma", "movbe", "xsave"
-];
-
-/* Serpent OS x86_64-v3 extended instruction set profile for improved performance */
-private static immutable _x86_64_v3x = [
-    "aes", "fsgsbase", "pclmulqdq", "rdrand", "xsaveopt"
-];
 
 /**
  * Polled once at startup
@@ -60,6 +45,18 @@ public final class CpuInfo
         parseISA();
         parseVersionFile();
         parseCpuinfoFile();
+    }
+
+    /**
+     * Suppoted ISAs + levels
+     */
+    enum ISALevel : string
+    {
+        unknown = "unknown",
+        x86_64 = "x86_64",
+        x86_64_v2 = "x86_64_v2",
+        x86_64_v3 = "x86_64_v3",
+        x86_64_v3x = "x86_64_v3x",
     }
 
     /**
@@ -81,6 +78,22 @@ public final class CpuInfo
     }
 
     /**
+     * Returns: Maximum supported ISALevel
+     */
+    pure string ISAMaxLevel() nothrow @nogc @safe
+    {
+        return cast(string) _ISAMaxLevel;
+    }
+
+    /**
+     * Returns: string from the contents of /proc/version
+     */
+    pure const string kernel() nothrow @nogc @safe
+    {
+        return _kernel;
+    }
+
+    /**
      * Returns: CPU model name
      */
     pure const string modelName() nothrow @nogc @safe
@@ -94,37 +107,6 @@ public final class CpuInfo
     pure const string numCoresThreads() @safe
     {
         return format!"%dc / %dt"(_numCores, _numHWThreads);
-    }
-
-    /**
-     * Does this CPU support the x86_64-v2 psABI?
-     */
-    pure const bool x86_64_v2() @safe
-    {
-        auto supported = _x86_64_v2.map!((s) => canFind(_cpuFlags, s));
-        return supported.fold!((a, b) => a && b);
-    }
-
-    /**
-     * Does this CPU support the x86_64-v3 psABI?
-     *
-     * Note: This function does not check for x86_64-v2 psABI support
-     */
-    pure const bool x86_64_v3() @safe
-    {
-        auto supported = _x86_64_v3.map!((s) => canFind(_cpuFlags, s));
-        return supported.fold!((a, b) => a && b);
-    }
-
-    /**
-     * Does this CPU support the x86_64-v3x extended x86_64-v3 psABI?
-     *
-     * Note: This function does not check for x86_64-v2 nor x86_64-v3 psABI support
-     */
-    pure const bool x86_64_v3x() @safe
-    {
-        auto supported = _x86_64_v3x.map!((s) => canFind(_cpuFlags, s));
-        return supported.fold!((a, b) => a && b);
     }
 
 private:
@@ -150,7 +132,7 @@ private:
         /* we expect a single line */
         if (buffer)
         {
-            string _kernel = buffer.strip;
+            _kernel = buffer.strip;
         }
     }
 
@@ -192,26 +174,96 @@ private:
         /* parseISA() is run from the constructor */
         if (_ISA != "unknown")
         {
-            /* Re-use as the base ISA Level */
-            _ISALevels ~= _ISA;
-
-            /* Higher x86_64 ISA Levels are extensions of lower ISA Levels */
-            if (_ISA == "x86_64" && x86_64_v2)
+            /* TODO: this can be changed to a switch block later */
+            if (_ISA == "x86_64")
             {
-                _ISALevels ~= "x86_64-v2";
-                if (x86_64_v3)
-                {
-                    _ISALevels ~= "x86_64-v3";
-                    if (x86_64_v3x)
-                    {
-                        _ISALevels ~= "x86_64-v3x";
-                    }
-                }
+                auto result = parseISALevelsX86_64();
+                _ISAMaxLevel = result.ISAMaxLevel;
+                _ISALevels = result.ISALevels;
             }
         }
     }
 
+    /**
+     * Returns: tuple(ISAMaxLevel, ISALevels)
+     */
+    auto parseISALevelsX86_64()
+    {
+        /* If we've reached this point, it's because _ISA == "x86_64" */
+        enforce(_ISA = "x86_64", "_ISA != x86_64? Did you remember to call parseCpuinfoFile before calling parseISALevelsX86?");
+
+        string[] ISALevels = [cast(string) ISALevel.x86_64];
+        auto ISAMaxLevel = ISALevel.x86_64;
+
+        /* Higher x86_64 ISA Levels are extensions of lower ISA Levels */
+        if (x86_64_v2)
+        {
+            ISALevels ~= cast(string) ISALevel.x86_64_v2;
+            ISAMaxLevel = ISALevel.x86_64_v2;
+
+            if (x86_64_v3)
+            {
+                ISALevels ~= cast(string) ISALevel.x86_64_v3;
+                ISAMaxLevel = ISALevel.x86_64_v3;
+
+                if (x86_64_v3x)
+                {
+                    ISALevels ~= cast(string) ISALevel.x86_64_v3x;
+                    ISAMaxLevel = ISALevel.x86_64_v3x;
+                }
+            }
+        }
+        return tuple!("ISAMaxLevel", "ISALevels")(ISAMaxLevel, ISALevels);
+    }
+
+    /* Note that 'pni' is 'prescott new instructions' aka SSE3 */
+    static immutable _x86_64_v2 = [
+        "cx16", "lahf_lm", "popcnt", "pni", "ssse3", "sse4_1", "sse4_2"
+    ];
+
+    /**
+     * Returns: bool indicating support for the x86_64-v2 psABI
+     */
+    pure const bool x86_64_v2() @safe
+    {
+        auto supported = _x86_64_v2.map!((s) => canFind(_cpuFlags, s));
+        return supported.fold!((a, b) => a && b);
+    }
+
+    /* lzcnt is part of abm, osxsave is xsave (CBR4:18) */
+    static immutable _x86_64_v3 = [
+        "abm", "avx", "avx2", "bmi1", "bmi2", "f16c", "fma", "movbe", "xsave"
+    ];
+
+    /**
+     * Returns: bool indicating support for the x86_64-v3 psABI
+     *
+     * Note: This function does not check for x86_64-v2 psABI support
+     */
+    pure const bool x86_64_v3() @safe
+    {
+        auto supported = _x86_64_v3.map!((s) => canFind(_cpuFlags, s));
+        return supported.fold!((a, b) => a && b);
+    }
+
+    /* Serpent OS x86_64-v3 extended instruction set profile for improved performance */
+    static immutable _x86_64_v3x = [
+        "aes", "fsgsbase", "pclmulqdq", "rdrand", "xsaveopt"
+    ];
+
+    /**
+     * Returns: bool indicating support for the x86_64-v3x extended x86_64-v3 psABI?
+     *
+     * Note: This function does not check for x86_64-v2 nor x86_64-v3 psABI support
+     */
+    pure const bool x86_64_v3x() @safe
+    {
+        auto supported = _x86_64_v3x.map!((s) => canFind(_cpuFlags, s));
+        return supported.fold!((a, b) => a && b);
+    }
+
     string _ISA = "unknown";
+    ISALevel _ISAMaxLevel = ISALevel.unknown;
     string[] _ISALevels = [];
     string[] _cpuFlags = [];
     string _kernel = "Linux version unknown";
@@ -219,6 +271,16 @@ private:
     uint _numCores = 0;
     uint _numHWThreads = 0;
 }
+@("Test CPU ISA detection")
+private unittest
+{
+    auto cpu = new CpuInfo;
+    /* FIXME: This is obviously sketchy, but let's leave it in for now */
+    assert(cpu.ISA == "x86_64");
+    writefln!"Currently running on CPU: %s (%s)\n supporting ISA Levels (max): %s (%s)\non top of kernel:\n%s"(
+        cpu.modelName, cpu.ISA, cpu.ISALevels, cpu.ISAMaxLevel, cpu.kernel);
+}
+
 
 /**
  * CPU Frequency information (polled frequently)
@@ -305,11 +367,4 @@ private:
     ulong[2] _schedulingEntities = [0, 0];
     /* pid_t (3) mentions needing signed long */
     long _newestPID = 0;
-}
-
-@("Test ISA detection")
-private unittest
-{
-    auto info = new CpuInfo;
-    assert(info.ISA() == "x86_64");
 }
