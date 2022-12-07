@@ -190,7 +190,8 @@ private:
     auto parseISALevelsX86_64()
     {
         /* If we've reached this point, it's because _ISA == "x86_64" */
-        enforce(_ISA = "x86_64", "_ISA != x86_64? Did you remember to call parseCpuinfoFile before calling parseISALevelsX86?");
+        enforce(_ISA = "x86_64",
+                "_ISA != x86_64? Did you remember to call parseCpuinfoFile before calling parseISALevelsX86?");
 
         string[] ISALevels = [cast(string) ISALevel.x86_64];
         auto ISAMaxLevel = ISALevel.x86_64;
@@ -271,6 +272,7 @@ private:
     uint _numCores = 0;
     uint _numHWThreads = 0;
 }
+
 @("Test CPU ISA detection")
 private unittest
 {
@@ -278,9 +280,8 @@ private unittest
     /* FIXME: This is obviously sketchy, but let's leave it in for now */
     assert(cpu.ISA == "x86_64");
     writefln!"Currently running on CPU: %s (%s)\n supporting ISA Levels (max): %s (%s)\non top of kernel:\n%s"(
-        cpu.modelName, cpu.ISA, cpu.ISALevels, cpu.ISAMaxLevel, cpu.kernel);
+            cpu.modelName, cpu.ISA, cpu.ISALevels, cpu.ISAMaxLevel, cpu.kernel);
 }
-
 
 /**
  * CPU Frequency information (polled frequently)
