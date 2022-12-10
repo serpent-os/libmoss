@@ -38,7 +38,7 @@ import std.typecons : tuple;
 public final class CpuInfo
 {
     /**
-     * Construct new CpuInfo using the local "/proc/cpuinfo" by default
+     * Construct new CpuInfo using the local "/proc/cpuinfo" file by default
      */
     this(string cpuinfoFile = "/proc/cpuinfo") @safe
     {
@@ -68,25 +68,25 @@ public final class CpuInfo
     }
 
     /**
-     * Supported ISA levels for rendering
+     * Make supported ISA levels available for client side rendering
      *
-     * Returns: string array of supported ISA levels
+     * Returns: string array of supported ISALevels
      */
-    pure string[] ISALevels() nothrow @nogc @safe
+    pure const string[] ISALevels() nothrow @nogc @safe
     {
         return _ISALevels;
     }
 
     /**
-     * Returns: Maximum supported ISALevel
+     * Returns: Maximum supported ISALevel for use in Smart System Management
      */
-    pure string ISAMaxLevel() nothrow @nogc @safe
+    pure const string ISAMaxLevel() nothrow @nogc @safe
     {
         return cast(string) _ISAMaxLevel;
     }
 
     /**
-     * Returns: string from the contents of /proc/version
+     * Returns: kernel compile-time string from the contents of /proc/version
      */
     pure const string kernel() nothrow @nogc @safe
     {
@@ -124,7 +124,7 @@ private:
     }
 
     /**
-     * Parse /proc/version kernel version file
+     * Read /proc/version kernel version file
      */
     void parseVersionFile(immutable string versionFile = "/proc/version") @trusted
     {
@@ -141,7 +141,7 @@ private:
      */
     void parseCpuinfoFile(immutable string cpuinfoFile) @trusted
     {
-        /* If we can't parse /proc/cpuinfo, bailing with an exception is ok */
+        /* If we can't parse the cpuinfoFile parameter, bailing with an exception is ok */
         auto buffer = readText(cpuinfoFile);
 
         /* Find first 'model name' occurence */
@@ -190,8 +190,7 @@ private:
     auto parseISALevelsX86_64()
     {
         /* If we've reached this point, it's because _ISA == "x86_64" */
-        enforce(_ISA = "x86_64",
-                "_ISA != x86_64? Did you remember to call parseCpuinfoFile before calling parseISALevelsX86?");
+        enforce(_ISA == "x86_64", "_ISA != x86_64?!");
 
         string[] ISALevels = [cast(string) ISALevel.x86_64];
         auto ISAMaxLevel = ISALevel.x86_64;
