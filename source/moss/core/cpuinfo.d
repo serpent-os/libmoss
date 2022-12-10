@@ -38,13 +38,13 @@ import std.typecons : tuple;
 public final class CpuInfo
 {
     /**
-     * Construct new CpuInfo
+     * Construct new CpuInfo using the local "/proc/cpuinfo" by default
      */
-    this() @safe
+    this(string cpuinfoFile = "/proc/cpuinfo") @safe
     {
         parseISA();
         parseVersionFile();
-        parseCpuinfoFile();
+        parseCpuinfoFile(cpuinfoFile);
     }
 
     /**
@@ -139,7 +139,7 @@ private:
     /**
      * Parse select fields in /proc/cpuinfo
      */
-    void parseCpuinfoFile(immutable string cpuinfoFile = "/proc/cpuinfo") @trusted
+    void parseCpuinfoFile(immutable string cpuinfoFile) @trusted
     {
         /* If we can't parse /proc/cpuinfo, bailing with an exception is ok */
         auto buffer = readText(cpuinfoFile);
