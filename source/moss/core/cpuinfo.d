@@ -60,7 +60,7 @@ public final class CpuInfo
     }
 
     /**
-     * Returns: string describing Instruction Set Architecture
+     * Returns: string describing Instruction Set Architecture of currently running kernel
      */
     pure const string ISA() nothrow @nogc @safe
     {
@@ -70,15 +70,15 @@ public final class CpuInfo
     /**
      * Make supported ISA levels available for client side rendering
      *
-     * Returns: string array of supported ISALevels
+     * Returns: string array of CPU ISALevels supported
      */
-    pure const string[] ISALevels() nothrow @nogc @safe
+    pure string[] ISALevels() nothrow @nogc @safe
     {
         return _ISALevels;
     }
 
     /**
-     * Returns: Maximum supported ISALevel for use in Smart System Management
+     * Returns: Maximum supported CPU ISALevel for use in Smart System Management
      */
     pure const string ISAMaxLevel() nothrow @nogc @safe
     {
@@ -94,7 +94,7 @@ public final class CpuInfo
     }
 
     /**
-     * Returns: CPU model name
+     * Returns: CPU model name as listed in /proc/cpuinfo
      */
     pure const string modelName() nothrow @nogc @safe
     {
