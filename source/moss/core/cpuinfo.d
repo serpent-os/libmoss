@@ -305,6 +305,10 @@ unittest
         (cpu.modelName, cpu.ISALevels, cpu.ISAMaxLevel);
     assert(cpu.ISAMaxLevel == cpu.ISALevel.x86_64_v2, format!"%s ISAMaxLevel != x86_64_v2?!"(cpu.modelName));
 
+    cpu = new CpuInfo("./cpuinfo-test-data/intel-i7-1065G7-cpuinfo.txt"); // ready
+    writefln!"--\nTesting %s /proc/cpuinfo capture:\n - supports %s\n - ISAMaxLevel == %s"
+        (cpu.modelName, cpu.ISALevels, cpu.ISAMaxLevel);
+    assert(cpu.ISAMaxLevel == cpu.ISALevel.x86_64_v3x, format!"%s ISAMaxLevel != x86_64_v3x?!"(cpu.modelName));
 /*
     cpu = new CpuInfo("./cpuinfo-test-data/AMD-R7-1700-cpuinfo.txt"); // got system, not yet captured
     assert(cpu.ISAMaxLevel == ISALevel.x86_64_v3x);
