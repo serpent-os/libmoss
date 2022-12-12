@@ -317,6 +317,7 @@ unittest
     testCpuinfoX86_64("./cpuinfo-test-data/AMD-R7-3700X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Zen 1 */
     testCpuinfoX86_64("./cpuinfo-test-data/AMD-Epyc-7571-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./cpuinfo-test-data/AMD-R7-1700-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Piledriver */
     testCpuinfoX86_64("./cpuinfo-test-data/AMD-FX-8350-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     /* Phenom II (unsupported in Serpent OS, but useful test nonetheless)*/
@@ -334,6 +335,8 @@ unittest
     testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-1065G7-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Cascade Lake */
     testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-8259CL-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    /* Skylake */
+    testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-6700K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Broadwell */
     testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-E5-2686v4-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Haswell */
