@@ -276,6 +276,7 @@ private:
 @("Test CPU ISA detection")
 unittest
 {
+    writefln!"Testing %s...\n--"(__MODULE__);
     /* local cpu */
     auto cpu = new CpuInfo;
     /* FIXME: This is obviously sketchy, but let's leave it in for now */
@@ -285,48 +286,45 @@ unittest
 
     /* FIXME: cpu.ISA for these tests needs to be the same as the individual /proc/cpuinfo captures */
     /* NOTE: the path is relative to the root of the directory in which `dub test` is run */
-    cpu = new CpuInfo("./cpuinfo-test-data/AMD-R9-5950X-cpuinfo.txt"); // ready
-    writefln!"--\nTesting %s /proc/cpuinfo capture:\n - supports %s\n - ISAMaxLevel == %s"
-        (cpu.modelName, cpu.ISALevels, cpu.ISAMaxLevel);
-    assert(cpu.ISAMaxLevel == cpu.ISALevel.x86_64_v3x, format!"%s ISAMaxLevel != x86_64_v3x?!"(cpu.modelName));
 
-    cpu = new CpuInfo("./cpuinfo-test-data/AMD-R9-3900X-cpuinfo.txt"); // ready
-    writefln!"--\nTesting %s /proc/cpuinfo capture:\n - supports %s\n - ISAMaxLevel == %s"
-        (cpu.modelName, cpu.ISALevels, cpu.ISAMaxLevel);
-    assert(cpu.ISAMaxLevel == cpu.ISALevel.x86_64_v3x, format!"%s ISAMaxLevel != x86_64_v3x?!"(cpu.modelName));
+    static void testCpuinfoX86_64(string cpuinfoFile, CpuInfo.ISALevel expected)
+    {
+        auto cpu = new CpuInfo(cpuinfoFile);
+        writefln!"--\nTesting %s (%s) /proc/cpuinfo capture:\n - supports ISALevels: %s\n - ISAMaxLevel == %s"
+            (cpu.modelName, cpu.numCoresThreads, cpu.ISALevels, cpu.ISAMaxLevel);
+        assert(cpu.ISAMaxLevel == expected, format!"%s ISAMaxLevel != %s as expected?!"(cpu.modelName, cast(string) expected));
+    }
 
-    cpu = new CpuInfo("./cpuinfo-test-data/AMD-R7-3700X-cpuinfo.txt"); // ready
-    writefln!"--\nTesting %s /proc/cpuinfo capture:\n - supports %s\n - ISAMaxLevel == %s"
-        (cpu.modelName, cpu.ISALevels, cpu.ISAMaxLevel);
-    assert(cpu.ISAMaxLevel == cpu.ISALevel.x86_64_v3x, format!"%s ISAMaxLevel != x86_64_v3x?!"(cpu.modelName));
+    /* AMD test cases
+     *
+     * Only very few AMD CPUs prior to 1st gen Zen and up support x86_64_v3x.
+     */
+    testCpuinfoX86_64("./cpuinfo-test-data/AMD-R9-5950X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./cpuinfo-test-data/AMD-R9-5950X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./cpuinfo-test-data/AMD-R9-3900X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./cpuinfo-test-data/AMD-R7-3700X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./cpuinfo-test-data/AMD-FX-8350-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
 
-    cpu = new CpuInfo("./cpuinfo-test-data/intel-i5-3350P-cpuinfo.txt"); // ready
-    writefln!"--\nTesting %s /proc/cpuinfo capture:\n - supports %s\n - ISAMaxLevel == %s"
-        (cpu.modelName, cpu.ISALevels, cpu.ISAMaxLevel);
-    assert(cpu.ISAMaxLevel == cpu.ISALevel.x86_64_v2, format!"%s ISAMaxLevel != x86_64_v2?!"(cpu.modelName));
+    /* Intel test cases
+     *
+     * Note that Intel CPUs up until Ivyy Bridge (Core i3/5/7-3xxx) (and just about all Atom-based cores)
+     * only support x86_64_v2.
+     */
+    testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-1065G7-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-3770K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
+    testCpuinfoX86_64("./cpuinfo-test-data/intel-i5-3350P-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
+    testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-2600K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
+    testCpuinfoX86_64("./cpuinfo-test-data/intel-i5-2500-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
 
-    cpu = new CpuInfo("./cpuinfo-test-data/intel-i7-1065G7-cpuinfo.txt"); // ready
-    writefln!"--\nTesting %s /proc/cpuinfo capture:\n - supports %s\n - ISAMaxLevel == %s"
-        (cpu.modelName, cpu.ISALevels, cpu.ISAMaxLevel);
-    assert(cpu.ISAMaxLevel == cpu.ISALevel.x86_64_v3x, format!"%s ISAMaxLevel != x86_64_v3x?!"(cpu.modelName));
 /*
     cpu = new CpuInfo("./cpuinfo-test-data/AMD-R7-1700-cpuinfo.txt"); // got system, not yet captured
     assert(cpu.ISAMaxLevel == ISALevel.x86_64_v3x);
     cpu = new CpuInfo("./cpuinfo-test-data/intel-i7-6700K-cpuinfo.txt"); // got system, not yet captured
     assert(cpu.ISAMaxLevel == ISALevel.x86_64_v3x);
-    cpu = new CpuInfo("./cpuinfo-test-data/intel-i5-4460-cpuinfo.txt"); // got system, not yet captured
-    assert(cpu.ISAMaxLevel == ISALevel.x86_64_v3x);
-    cpu = new CpuInfo("./cpuinfo-test-data/intel-i7-3770K-cpuinfo.txt"); // got system, not yet captured
-    assert(cpu.ISAMaxLevel == ISALevel.x86_64_v2);
-    cpu = new CpuInfo("./cpuinfo-test-data/intel-i7-2600K-cpuinfo.txt"); // got system, not yet captured
-    assert(cpu.ISAMaxLevel == ISALevel.x86_64_v2);
-    cpu = new CpuInfo("./cpuinfo-test-data/intel-i7-2500-cpuinfo.txt"); // got system, not yet captured
-    assert(cpu.ISAMaxLevel == ISALevel.x86_64_v2);
-    cpu = new CpuInfo("./cpuinfo-test-data/AMD-FX-8350-cpuinfo.txt"); // got system, not yet captured
-    assert(cpu.ISAMaxLevel == ISALevel.x86_64_v2);
     cpu = new CpuInfo("./cpuinfo-test-data/AMD-PhII-1090T-cpuinfo.txt"); // got system, not yet captured
     assert(cpu.ISAMaxLevel == ISALevel.x86_64);
 */
+    writefln!"Done testing %s"(__MODULE__);
 }
 
 /**
