@@ -281,8 +281,9 @@ unittest
     auto cpu = new CpuInfo;
     /* FIXME: This is obviously sketchy, but let's leave it in for now */
     assert(cpu.ISA == "x86_64");
-    writefln!"Currently running on %s (%s)\n - supports %s\n - ISAMaxLevel == %s\n--\nCurrently running on kernel:\n%s"(
-            cpu.modelName, cpu.ISA, cpu.ISALevels, cpu.ISAMaxLevel, cpu.kernel);
+    string status =  cpu.ISAMaxLevel == CpuInfo.ISALevel.x86_64 ? "unsupported in Serpent OS" : "supported by Serpent OS";
+    writefln!"Currently running on %s (%s)\n - supports %s\n - ISAMaxLevel == %s (%s)\n--\nCurrently running on kernel:\n%s"(
+            cpu.modelName, cpu.ISA, cpu.ISALevels, cpu.ISAMaxLevel, status, cpu.kernel);
 
     /* FIXME: cpu.ISA for these tests needs to be the same as the individual /proc/cpuinfo captures */
     /* NOTE: the path is relative to the root of the directory in which `dub test` is run */
@@ -290,14 +291,20 @@ unittest
     static void testCpuinfoX86_64(string cpuinfoFile, CpuInfo.ISALevel expected)
     {
         auto cpu = new CpuInfo(cpuinfoFile);
-        writefln!"--\nTesting %s (%s) /proc/cpuinfo capture:\n - supports ISALevels: %s\n - ISAMaxLevel == %s"
-            (cpu.modelName, cpu.numCoresThreads, cpu.ISALevels, cpu.ISAMaxLevel);
+        string status = cpu.ISAMaxLevel == CpuInfo.ISALevel.x86_64 ? "NOT supported by Serpent OS" : "supported by Serpent OS";
+        writefln!"--\nTesting %s (%s) /proc/cpuinfo capture:\n - supports ISALevels: %s\n - ISAMaxLevel == %s (%s)"
+            (cpu.modelName, cpu.numCoresThreads, cpu.ISALevels, cpu.ISAMaxLevel, status);
         assert(cpu.ISAMaxLevel == expected, format!"%s ISAMaxLevel != %s as expected?!"(cpu.modelName, cast(string) expected));
     }
 
+    /* NOTE: Test cases are group with AMD CPUs first,
+     *       with newest generations within each vendor at the top
+     *       CPUs listed in decreasing performance within each vendor generation.
+     */
+
     /* AMD test cases
      *
-     * Only very few AMD CPUs prior to 1st gen Zen and up support x86_64_v3x.
+     * Only very few AMD CPUs prior to 1st gen Zen support x86_64_v3x.
      */
     /* Zen 4 */
     testCpuinfoX86_64("./cpuinfo-test-data/AMD-R7-7700X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
@@ -310,8 +317,10 @@ unittest
     testCpuinfoX86_64("./cpuinfo-test-data/AMD-R7-3700X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Zen 1 */
     testCpuinfoX86_64("./cpuinfo-test-data/AMD-Epyc-7571-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
-    /* Bulldozer */
+    /* Piledriver */
     testCpuinfoX86_64("./cpuinfo-test-data/AMD-FX-8350-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
+    /* Phenom II (unsupported in Serpent OS, but useful test nonetheless)*/
+    testCpuinfoX86_64("./cpuinfo-test-data/AMD-PhII-1090T-cpuinfo.txt", CpuInfo.ISALevel.x86_64);
 
     /* Intel test cases
      *
@@ -337,6 +346,8 @@ unittest
     testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-E5-2665-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-2600K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     testCpuinfoX86_64("./cpuinfo-test-data/intel-i5-2500-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
+    /* Penryn (not supported by Serpent OS, but useful test nonetheless) */
+    testCpuinfoX86_64("./cpuinfo-test-data/intel-c2q-q9400-cpuinfo.txt", CpuInfo.ISALevel.x86_64);
 
 /*
     cpu = new CpuInfo("./cpuinfo-test-data/AMD-R7-1700-cpuinfo.txt"); // got system, not yet captured
