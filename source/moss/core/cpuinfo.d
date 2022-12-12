@@ -145,26 +145,26 @@ private:
         auto buffer = readText(cpuinfoFile);
 
         /* Find first 'model name' occurence */
-        auto r = ctRegex!r"model name\s+:\s+(.*)\n";
+        auto r = ctRegex!r"model name\s*:\s*(.*)";
         auto m = matchFirst(buffer, r);
         enforce(m.captures[1], format!"CPU model name not listed in %s?"(cpuinfoFile));
         _modelName = m.captures[1].strip;
 
         /* Find first 'cpu cores' occurence */
-        r = ctRegex!r"cpu cores\s+:\s+(.*)\n";
+        r = ctRegex!r"cpu cores\s+:\s+(.*)";
         m = matchFirst(buffer, r);
         enforce(m.captures[1],
                 format!"Number of physical CPU cores not listed in %s?"(cpuinfoFile));
         _numCores = m.captures[1].strip.to!uint;
 
         /* Find first 'siblings' occurence */
-        r = ctRegex!r"siblings\s+:\s+(.*)\n";
+        r = ctRegex!r"siblings\s+:\s+(.*)";
         m = matchFirst(buffer, r);
         enforce(m.captures[1], format!"Number of CPU H/W threads not listed in %s?"(cpuinfoFile));
         _numHWThreads = m.captures[1].strip.to!uint;
 
         /* Find first 'flags' occurence */
-        r = ctRegex!r"flags\s+:\s+(.*)\n";
+        r = ctRegex!r"flags\s+:\s+(.*)";
         m = matchFirst(buffer, r);
         enforce(m.captures[1], format!"CPU flags not listed in %s?"(cpuinfoFile));
         _cpuFlags = m.captures[1].strip.split;
@@ -272,14 +272,57 @@ private:
     uint _numHWThreads = 0;
 }
 
+///
 @("Test CPU ISA detection")
-private unittest
+unittest
 {
+    /* local cpu */
     auto cpu = new CpuInfo;
     /* FIXME: This is obviously sketchy, but let's leave it in for now */
     assert(cpu.ISA == "x86_64");
-    writefln!"Currently running on CPU: %s (%s)\n supporting ISA Levels (max): %s (%s)\non top of kernel:\n%s"(
+    writefln!"Currently running on %s (%s)\n - supports %s\n - ISAMaxLevel == %s\n--\nCurrently running on kernel:\n%s"(
             cpu.modelName, cpu.ISA, cpu.ISALevels, cpu.ISAMaxLevel, cpu.kernel);
+
+    /* FIXME: cpu.ISA for these tests needs to be the same as the individual /proc/cpuinfo captures */
+    /* NOTE: the path is relative to the root of the directory in which `dub test` is run */
+    cpu = new CpuInfo("./cpuinfo-test-data/AMD-R9-5950X-cpuinfo.txt"); // ready
+    writefln!"--\nTesting %s /proc/cpuinfo capture:\n - supports %s\n - ISAMaxLevel == %s"
+        (cpu.modelName, cpu.ISALevels, cpu.ISAMaxLevel);
+    assert(cpu.ISAMaxLevel == cpu.ISALevel.x86_64_v3x, format!"%s ISAMaxLevel != x86_64_v3x?!"(cpu.modelName));
+
+    cpu = new CpuInfo("./cpuinfo-test-data/AMD-R9-3900X-cpuinfo.txt"); // ready
+    writefln!"--\nTesting %s /proc/cpuinfo capture:\n - supports %s\n - ISAMaxLevel == %s"
+        (cpu.modelName, cpu.ISALevels, cpu.ISAMaxLevel);
+    assert(cpu.ISAMaxLevel == cpu.ISALevel.x86_64_v3x, format!"%s ISAMaxLevel != x86_64_v3x?!"(cpu.modelName));
+
+    cpu = new CpuInfo("./cpuinfo-test-data/AMD-R7-3700X-cpuinfo.txt"); // ready
+    writefln!"--\nTesting %s /proc/cpuinfo capture:\n - supports %s\n - ISAMaxLevel == %s"
+        (cpu.modelName, cpu.ISALevels, cpu.ISAMaxLevel);
+    assert(cpu.ISAMaxLevel == cpu.ISALevel.x86_64_v3x, format!"%s ISAMaxLevel != x86_64_v3x?!"(cpu.modelName));
+
+    cpu = new CpuInfo("./cpuinfo-test-data/intel-i5-3350P-cpuinfo.txt"); // ready
+    writefln!"--\nTesting %s /proc/cpuinfo capture:\n - supports %s\n - ISAMaxLevel == %s"
+        (cpu.modelName, cpu.ISALevels, cpu.ISAMaxLevel);
+    assert(cpu.ISAMaxLevel == cpu.ISALevel.x86_64_v2, format!"%s ISAMaxLevel != x86_64_v2?!"(cpu.modelName));
+
+/*
+    cpu = new CpuInfo("./cpuinfo-test-data/AMD-R7-1700-cpuinfo.txt"); // got system, not yet captured
+    assert(cpu.ISAMaxLevel == ISALevel.x86_64_v3x);
+    cpu = new CpuInfo("./cpuinfo-test-data/intel-i7-6700K-cpuinfo.txt"); // got system, not yet captured
+    assert(cpu.ISAMaxLevel == ISALevel.x86_64_v3x);
+    cpu = new CpuInfo("./cpuinfo-test-data/intel-i5-4460-cpuinfo.txt"); // got system, not yet captured
+    assert(cpu.ISAMaxLevel == ISALevel.x86_64_v3x);
+    cpu = new CpuInfo("./cpuinfo-test-data/intel-i7-3770K-cpuinfo.txt"); // got system, not yet captured
+    assert(cpu.ISAMaxLevel == ISALevel.x86_64_v2);
+    cpu = new CpuInfo("./cpuinfo-test-data/intel-i7-2600K-cpuinfo.txt"); // got system, not yet captured
+    assert(cpu.ISAMaxLevel == ISALevel.x86_64_v2);
+    cpu = new CpuInfo("./cpuinfo-test-data/intel-i7-2500-cpuinfo.txt"); // got system, not yet captured
+    assert(cpu.ISAMaxLevel == ISALevel.x86_64_v2);
+    cpu = new CpuInfo("./cpuinfo-test-data/AMD-FX-8350-cpuinfo.txt"); // got system, not yet captured
+    assert(cpu.ISAMaxLevel == ISALevel.x86_64_v2);
+    cpu = new CpuInfo("./cpuinfo-test-data/AMD-PhII-1090T-cpuinfo.txt"); // got system, not yet captured
+    assert(cpu.ISAMaxLevel == ISALevel.x86_64);
+*/
 }
 
 /**
