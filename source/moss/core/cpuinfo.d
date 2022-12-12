@@ -311,6 +311,7 @@ unittest
      * only support x86_64_v2.
      */
     testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-1065G7-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./cpuinfo-test-data/intel-i5-4460-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-3770K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     testCpuinfoX86_64("./cpuinfo-test-data/intel-i5-3350P-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-2600K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
