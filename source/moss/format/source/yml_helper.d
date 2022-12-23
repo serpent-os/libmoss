@@ -61,7 +61,7 @@ void setValue(T)(ref Node node, ref T value, YamlSchema schema)
         value = node.as!string;
         debug
         {
-            //trace("    '- <string>");
+            //trace(format!"    '- <string> (= '%s')"(value));
         }
         if (schema.acceptableValues.length < 1)
         {
