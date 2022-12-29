@@ -18,11 +18,12 @@ module moss.deps.analysis.analyser;
 public import moss.deps.analysis.bucket;
 public import moss.deps.analysis.chain;
 
-import std.exception : enforce;
-import std.string : format;
 import std.container.rbtree;
+import std.exception : enforce;
+import std.parallelism : parallel, taskPool, totalCPUs;
+import std.range : empty;
+import std.string : format;
 import std.typecons : Nullable;
-import std.parallelism : taskPool, totalCPUs, parallel;
 import xxhash : XXH3_128;
 
 /**
@@ -104,6 +105,20 @@ public final class Analyser
             }
             _buckets[file.target] = new AnalysisBucket(file.target);
         }
+    }
+
+    /**
+     * Forcibly include a file, bypassing chains + safety!
+     */
+    void forceAddFile(ref FileInfo file)
+    {
+        enforce(file.target != "" && file.target !is null, "FileInfo has no target");
+        enforce(pendingFiles.empty, "Pending files!");
+
+        auto bucket = _buckets[file.target];
+        auto localHelper = hashHelpers[taskPool.workerIndex];
+        localHelper.reset();
+        bucket.add(file, localHelper);
     }
 
     /**
