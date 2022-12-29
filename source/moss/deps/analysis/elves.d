@@ -200,7 +200,8 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, ref FileInfo fileInf
             {
                 /* We support XXHASH_3 64 bit (8 bytes) and SHA1 160 bit (20 bytes) Build IDs */
                 enforce(note.descriptor.length == 8 || note.descriptor.length == 20,
-                        format!"Unrecognised .note.gnu.build-id hash length of %s bytes"(note.descriptor.length));
+                        format!"Unrecognised .note.gnu.build-id hash length of %s bytes"(
+                            note.descriptor.length));
                 fileInfo.buildID = note.descriptor.toHexString!(LetterCase.lower)();
             }
             break;
