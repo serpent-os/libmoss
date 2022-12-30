@@ -34,6 +34,7 @@ private static DependencyType[string] depLookupTable;
 shared static this()
 {
     depLookupTable["binary"] = DependencyType.BinaryName;
+    depLookupTable["sysbinary"] = DependencyType.SystemBinaryName;
     depLookupTable["cmake"] = DependencyType.CmakeName;
     depLookupTable["name"] = DependencyType.PackageName;
     depLookupTable["pkgconfig"] = DependencyType.PkgconfigName;
@@ -82,7 +83,7 @@ package auto dependencyToString(in DependencyType type, in string target)
     case DependencyType.BinaryName:
         return format!"binary(%s)"(target);
     case DependencyType.SystemBinaryName:
-        return format!"sbinary(%s)"(target);
+        return format!"sysbinary(%s)"(target);
     }
 }
 /**
