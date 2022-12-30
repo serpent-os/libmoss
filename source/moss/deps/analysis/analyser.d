@@ -113,12 +113,18 @@ public final class Analyser
     void forceAddFile(ref FileInfo file)
     {
         enforce(file.target != "" && file.target !is null, "FileInfo has no target");
-        enforce(pendingFiles.empty, "Pending files!");
+        synchronized (this)
+        {
+            if (!(file.target in _buckets))
+            {
+                _buckets[file.target] = new AnalysisBucket(file.target);
+            }
 
-        auto bucket = _buckets[file.target];
-        auto localHelper = hashHelpers[taskPool.workerIndex];
-        localHelper.reset();
-        bucket.add(file, localHelper);
+            auto bucket = _buckets[file.target];
+            auto localHelper = hashHelpers[taskPool.workerIndex];
+            localHelper.reset();
+            bucket.add(file, localHelper);
+        }
     }
 
     /**
