@@ -334,7 +334,6 @@ public:
     {
         auto context = ParseContext();
         import std.string : format;
-        import std.algorithm : map, findSplitBefore;
 
         string lastLine;
         char lastChar = '\0';
@@ -402,9 +401,7 @@ public:
             context.reset();
         }
 
-        auto lines = input.splitLines()
-                     /* only return line content left of # character */
-                     .map!(l => findSplitBefore(l, "#")[0]);
+        auto lines = input.splitLines();
 
         foreach (const ref line; lines)
         {
@@ -511,10 +508,10 @@ public:
 private:
 
     char macroStart = '%';
-    char commentStart = '#';
 
     string defineStart = "%(";
     string defineEnd = ")";
+    string commentStart = "#";
 
     string[string] mapping;
     string[string] exports;
