@@ -2,7 +2,7 @@
 	"authors": [
 		"Serpent OS Developers"
 	],
-	"copyright": "Copyright © 2020-2022 Serpent OS Developers",
+	"copyright": "Copyright © 2020-2023 Serpent OS Developers",
 	"description": "Nested key-value database abstraction",
 	"license": "Zlib",
 	"name": "moss-db",

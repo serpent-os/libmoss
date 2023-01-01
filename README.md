@@ -7,7 +7,7 @@ This is a [D Lang](https://dlang.org/) module to trivially add persistent storag
 
 ### License
 
-Copyright &copy; 2020-2022 [Serpent OS](https://serpentos.com) Developers.
+Copyright &copy; 2020-2023 [Serpent OS](https://serpentos.com) Developers.
 
 Available under the terms of the [Zlib](https://opensource.org/licenses/Zlib) license.
 
