@@ -6,6 +6,6 @@ for projects like [moss-db](https://github.com/serpent-os/moss-db).
 
 ### License
 
-Copyright &copy; 2020-2022 [Serpent OS](https://serpentos.com) Developers.
+Copyright &copy; 2020-2023 [Serpent OS](https://serpentos.com) Developers.
 
 Available under the terms of the [Zlib](https://opensource.org/licenses/Zlib) license.
