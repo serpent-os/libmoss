@@ -18,7 +18,7 @@ module moss.deps.registry.manager;
 public import moss.deps.registry.plugin;
 public import moss.deps.registry.transaction;
 
-import std.algorithm : each, filter, joiner, map;
+import std.algorithm : each, filter, joiner, map, sort;
 
 @trusted:
 
@@ -33,6 +33,7 @@ public final class RegistryManager
     void addPlugin(RegistryPlugin plugin)
     {
         plugins ~= plugin;
+        shufflePlugins();
     }
 
     /**
@@ -43,6 +44,7 @@ public final class RegistryManager
         import std.algorithm : remove;
 
         plugins = plugins.remove!((s) => s == plugin);
+        shufflePlugins();
     }
 
     /**
@@ -122,6 +124,14 @@ public final class RegistryManager
     }
 
 private:
+
+    /**
+     * Highest priority first. Allow natural filtering of first-hit policy
+     */
+    void shufflePlugins() @safe
+    {
+        plugins.sort!"a.priority > b.priority";
+    }
 
     RegistryPlugin[] plugins;
 }
