@@ -271,6 +271,7 @@ private:
 
         /* Add the incoming vertices */
         RegistryItem[] workItems = cast(RegistryItem[]) items;
+        string[string] nameSet;
 
         /* Keep processing all items until we've built all edges */
         while (workItems.length > 0)
@@ -297,11 +298,23 @@ private:
                         continue;
                     }
 
+                    /* A package for this name already spoke up, some effed up fallthrough dependency that
+                     * should NOT be selected */
+                    auto candidateName = chosenOne.info.name;
+                    auto taken = candidateName in nameSet;
+                    if (taken && *taken != chosenOne.pkgID)
+                    {
+                        _problems ~= TransactionProblem.missingDependency(item, dep);
+                        continue;
+                    }
+
                     if (!dag.hasVertex(chosenOne.get))
                     {
                         dag.addVertex(chosenOne.get);
                         next ~= chosenOne.get;
                     }
+
+                    nameSet[item.info.name] = item.pkgID;
                     dag.addEdge(item, chosenOne.get);
                 }
             }
