@@ -68,6 +68,9 @@ public final class LMDBDriver : Driver
             }
         }
 
+        /* Do not employ TLS */
+        cFlags |= MDB_NOTLS;
+
         /* Read-only? */
         if ((flags & DatabaseFlags.ReadOnly) == DatabaseFlags.ReadOnly)
         {
