@@ -40,32 +40,13 @@ public struct FormattedSize
     string suffix;
 
     /**
-     * Default pretty print of size (12 characters wide including suffix)
+     * Basic emission of the formatted size
      *
-     * Example:
-     * "      100  B"
-     * "    1,023  B"
-     * "    1.00 KiB"
-     * "  999.99 Kib"
-     * "    1.00 MiB"
-     *     (...)
-     * "  999.99 TiB"
-     * "9,999.99 TiB"
-     *
-     * Returns: String representation of this FormattedSize
+     * Returns: newly allocated string
      */
     auto toString() @safe const
     {
-        if (suffix != "B")
-        {
-            /* ensure that very large sizes have enough room */
-            return format!"%7,.2f %-3s"(numUnits, suffix);
-        }
-        else
-        {
-            /* match up bytes nicely without a dot separator */
-            return format!"%8,.0f %2s"(numUnits, suffix);
-        }
+        return format!"%.2f %s"(numUnits, suffix);
     }
 }
 
@@ -81,4 +62,36 @@ pure FormattedSize formattedSize(scope const ref double inp) @safe @nogc nothrow
     immutable bytes = max(inp, 0);
     immutable power = min(floor((bytes > 0 ? log(bytes) : 0) / unitSize), suffixN);
     return FormattedSize(bytes / pow(1024, power), suffixes[cast(ulong) power]);
+}
+
+/**
+ * Default pretty print of size (12 characters wide including suffix)
+ *
+ * Example:
+ * "      100  B"
+ * "    1,023  B"
+ * "    1.00 KiB"
+ * "  999.99 Kib"
+ * "    1.00 MiB"
+ *     (...)
+ * "  999.99 TiB"
+ * "9,999.99 TiB"
+ *
+ * Params:
+ *      inp = Double precision size
+ * Returns: String representation of this FormattedSize
+ */
+pure auto formattedSizePadding(scope const ref double inp) @safe
+{
+    immutable formatted = formattedSize(inp);
+    if (formatted.suffix != "B")
+    {
+        /* ensure that very large sizes have enough room */
+        return format!"%7,.2f %-3s"(formatted.numUnits, formatted.suffix);
+    }
+    else
+    {
+        /* match up bytes nicely without a dot separator */
+        return format!"%8,.0f %2s"(formatted.numUnits, formatted.suffix);
+    }
 }
