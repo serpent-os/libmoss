@@ -274,6 +274,10 @@ private:
         ret = curl_easy_setopt(handle, CurlOption.writedata, this);
         enforce(ret == CurlError.ok, "FetchWorker.setupHandle(): Failed to set WRITEDATA");
 
+        /* No user-agent results in 403 on certain mirrors */
+        ret = curl_easy_setopt(handle, CurlOption.useragent, "moss-fetcher/0.1".toStringz);
+        enforce(ret == CurlError.ok, "FetchWorker.setupHandle(): Failed to set USERAGENT");
+
         /* Setup progress callback */
         ret = curl_easy_setopt(handle, CurlOption.progressfunction, &mossFetchWorkerProgress);
         enforce(ret == CurlError.ok, "FetchWorker.setupHandle(): Failed to set PROGRESSFUNCTION");
