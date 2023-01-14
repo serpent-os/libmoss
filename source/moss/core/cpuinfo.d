@@ -281,7 +281,8 @@ unittest
     auto cpu = new CpuInfo;
     /* FIXME: This is obviously sketchy, but let's leave it in for now */
     assert(cpu.ISA == "x86_64");
-    string status =  cpu.ISAMaxLevel == CpuInfo.ISALevel.x86_64 ? "unsupported in Serpent OS" : "supported by Serpent OS";
+    string status = cpu.ISAMaxLevel == CpuInfo.ISALevel.x86_64
+        ? "unsupported in Serpent OS" : "supported by Serpent OS";
     writefln!"Currently running on %s (%s)\n - supports %s\n - ISAMaxLevel == %s (%s)\n--\nCurrently running on kernel:\n%s"(
             cpu.modelName, cpu.ISA, cpu.ISALevels, cpu.ISAMaxLevel, status, cpu.kernel);
 
@@ -291,10 +292,12 @@ unittest
     static void testCpuinfoX86_64(string cpuinfoFile, CpuInfo.ISALevel expected)
     {
         auto cpu = new CpuInfo(cpuinfoFile);
-        string status = cpu.ISAMaxLevel == CpuInfo.ISALevel.x86_64 ? "NOT supported by Serpent OS" : "supported by Serpent OS";
-        writefln!"--\nTesting %s (%s) /proc/cpuinfo capture:\n - supports ISALevels: %s\n - ISAMaxLevel == %s (%s)"
-            (cpu.modelName, cpu.numCoresThreads, cpu.ISALevels, cpu.ISAMaxLevel, status);
-        assert(cpu.ISAMaxLevel == expected, format!"%s ISAMaxLevel != %s as expected?!"(cpu.modelName, cast(string) expected));
+        string status = cpu.ISAMaxLevel == CpuInfo.ISALevel.x86_64
+            ? "NOT supported by Serpent OS" : "supported by Serpent OS";
+        writefln!"--\nTesting %s (%s) /proc/cpuinfo capture:\n - supports ISALevels: %s\n - ISAMaxLevel == %s (%s)"(
+                cpu.modelName, cpu.numCoresThreads, cpu.ISALevels, cpu.ISAMaxLevel, status);
+        assert(cpu.ISAMaxLevel == expected,
+                format!"%s ISAMaxLevel != %s as expected?!"(cpu.modelName, cast(string) expected));
     }
 
     /* NOTE: Test cases are group with AMD CPUs first,
@@ -331,28 +334,34 @@ unittest
     /* Alder Lake */
     testCpuinfoX86_64("./cpuinfo-test-data/intel-i5-1230U-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Ice Lake */
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-8375C-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-1065G7-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-8375C-cpuinfo.txt",
+            CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-1065G7-cpuinfo.txt",
+            CpuInfo.ISALevel.x86_64_v3x);
     /* Cascade Lake */
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-8259CL-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-8259CL-cpuinfo.txt",
+            CpuInfo.ISALevel.x86_64_v3x);
     /* Skylake */
     testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-6700K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Broadwell */
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-E5-2686v4-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-E5-2686v4-cpuinfo.txt",
+            CpuInfo.ISALevel.x86_64_v3x);
     /* Haswell */
     testCpuinfoX86_64("./cpuinfo-test-data/intel-i5-4460-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Ivy Bridge */
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-E5-2670v2-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
+    testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-E5-2670v2-cpuinfo.txt",
+            CpuInfo.ISALevel.x86_64_v2);
     testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-3770K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     testCpuinfoX86_64("./cpuinfo-test-data/intel-i5-3350P-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     /* Sandy Bridge */
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-E5-2665-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
+    testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-E5-2665-cpuinfo.txt",
+            CpuInfo.ISALevel.x86_64_v2);
     testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-2600K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     testCpuinfoX86_64("./cpuinfo-test-data/intel-i5-2500-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     /* Penryn (not supported by Serpent OS, but useful test nonetheless) */
     testCpuinfoX86_64("./cpuinfo-test-data/intel-c2q-q9400-cpuinfo.txt", CpuInfo.ISALevel.x86_64);
 
-/*
+    /*
     cpu = new CpuInfo("./cpuinfo-test-data/AMD-R7-1700-cpuinfo.txt"); // got system, not yet captured
     assert(cpu.ISAMaxLevel == ISALevel.x86_64_v3x);
     cpu = new CpuInfo("./cpuinfo-test-data/intel-i7-6700K-cpuinfo.txt"); // got system, not yet captured
