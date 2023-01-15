@@ -26,6 +26,7 @@ import std.range : chunks;
 import std.stdio : File;
 import zstd.c.symbols;
 import zstd.c.typedefs;
+import std.mmfile;
 
 /**
  * The ZstdWriterToken is responsible for zstd stream encoding
@@ -92,11 +93,13 @@ final class ZstdWriterToken : WriterToken
     override void appendFile(in string path) @trusted
     {
         File fi = File(path, "rb");
+        scope mm = new MmFile(fi);
         scope (exit)
         {
             fi.close();
         }
-        fi.byChunk(readSize).each!((b) => encodingHelper(b));
+        auto rangedData = cast(ubyte[]) mm[0..$];
+        rangedData.chunks(readSize).each!((b) => encodingHelper(b));
     }
 
     /**
