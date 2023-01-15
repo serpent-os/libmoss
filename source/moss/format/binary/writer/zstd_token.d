@@ -20,7 +20,10 @@ import core.stdc.stdio : FILE;
 
 import moss.format.binary.payload.header;
 public import moss.format.binary.writer.token;
-import zstd : Compressor;
+import zstd.c.symbols;
+import zstd.c.typedefs;
+import std.range : chunks;
+import std.exception : enforce;
 
 /**
  * The ZstdWriterToken is responsible for zstd stream encoding
@@ -37,7 +40,25 @@ final class ZstdWriterToken : WriterToken
     {
         super(fp);
 
-        compressor = new Compressor(16);
+        ctx = ZSTD_createCCtx();
+        ZSTD_CCtx_setParameter(ctx, CompressionParameter.CompressionLevel, 16);
+
+        /* TODO: Port reader token to C APIs
+        ZSTD_CCtx_setParameter(ctx, CompressionParameter.EnableLongDistanceMatching, 1);
+        ZSTD_CCtx_setParameter(ctx, CompressionParameter.WindowLog, 31); */
+
+        /* Output */
+        immutable outLength = ZSTD_CStreamOutSize();
+        outBuf.reserve(outLength);
+        outBuf.length = outLength;
+
+        /* Input */
+        readSize = ZSTD_CStreamInSize();
+    }
+
+    ~this()
+    {
+        ZSTD_freeCCtx(ctx);
     }
 
     /**
@@ -45,7 +66,28 @@ final class ZstdWriterToken : WriterToken
      */
     override ubyte[] encodeData(ref ubyte[] data) @trusted
     {
-        return compressor.compress(data);
+        bool finished;
+        ubyte[] ret;
+
+        immutable readSize = ZSTD_CStreamInSize();
+        foreach (element; data.chunks(readSize))
+        {
+            InBuffer input = InBuffer(element.ptr, element.length, 0);
+            do
+            {
+                OutBuffer output = OutBuffer(outBuf.ptr, outBuf.length, 0);
+                auto remaining = ZSTD_compressStream2(ctx, &output, &input,
+                        EndDirective.Continue);
+                enforce(remaining >= 0, "Compression failure");
+                finished = element.length < readSize ? remaining == 0 : input.pos == input.size;
+
+                /* TODO: Stop copying this and dump straight to the file */
+                ret ~= outBuf[0 .. output.pos];
+            }
+            while (!finished);
+        }
+
+        return ret;
     }
 
     /**
@@ -53,11 +95,28 @@ final class ZstdWriterToken : WriterToken
      */
     override ubyte[] flushData() @trusted
     {
-        return compressor.finish();
+        bool finished;
+        ubyte[] ret;
+
+        InBuffer nullBuffer = InBuffer(null, 0, 0);
+
+        do
+        {
+            OutBuffer output = OutBuffer(outBuf.ptr, outBuf.length, 0);
+            auto remaining = ZSTD_compressStream2(ctx, &output, &nullBuffer, EndDirective.End);
+            enforce(remaining >= 0, "Flush failure");
+
+            /* TODO: Again, stop copying, directly write it **/
+            ret ~= outBuf[0 .. output.pos];
+            finished = remaining == 0;
+        }
+        while (!finished);
+        return ret;
     }
 
 private:
+    ZSTD_CCtx* ctx;
+    ubyte[] outBuf;
+    size_t readSize;
 
-    /* Used for zstd APIS */
-    Compressor compressor;
 }
