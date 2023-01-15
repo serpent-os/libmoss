@@ -64,6 +64,19 @@ final class ZstdWriterToken : WriterToken
     }
 
     /**
+     * Update the pledged size passed to zstd. When 0, no pledged size is passed.
+     */
+    @property void pledgedSize(uint64_t newSize) @trusted
+    {
+        if (newSize == _pledgedSize || newSize == 0)
+        {
+            return;
+        }
+        this._pledgedSize = newSize;
+        enforce(ZSTD_CCtx_setPledgedSrcSize(ctx, newSize) == 0, "Failed to update pledged size");
+    }
+
+    /**
      * Encode data via the zstd APIs
      */
     override void appendData(ubyte[] data) @trusted
@@ -130,5 +143,5 @@ private:
     ZSTD_CCtx* ctx;
     ubyte[] outBuf;
     size_t readSize;
-
+    uint64_t _pledgedSize = 0;
 }
