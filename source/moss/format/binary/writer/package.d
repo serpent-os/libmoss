@@ -146,6 +146,8 @@ public:
             pHdr.numRecords = p.recordCount;
 
             correctedHeaders ~= pHdr;
+            wk.destroy();
+            wk = null;
         }
 
         /* Rewind the archive */
