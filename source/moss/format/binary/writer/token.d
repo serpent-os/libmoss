@@ -18,6 +18,8 @@ module moss.format.binary.writer.token;
 
 import core.stdc.stdio : FILE;
 import xxhash : XXH3_64;
+import std.stdio : File;
+import std.algorithm : each;
 
 import moss.format.binary.payload.header;
 
@@ -38,6 +40,15 @@ public abstract class WriterToken
         this._fp = fp;
         checksumHelper = new XXH3_64();
     }
+
+    /**
+     * Copy an entire input file, performing any modifications or
+     * compression.
+     *
+     * This is largely provided for the zstd implementation to optimise
+     * compression of the large content payload.
+     */
+    abstract void appendFile(in string path);
 
     /**
      * Implementations must perform their encoding logic and
@@ -189,6 +200,19 @@ final class PlainWriterToken : WriterToken
     this(FILE* fp) @safe
     {
         super(fp);
+    }
+
+    /**
+     * Merge file (by chunks) into underlying stream
+     */
+    override void appendFile(in string path)
+    {
+        File fi = File(path, "rb");
+        scope (exit)
+        {
+            fi.close();
+        }
+        fi.byChunk(128 * 1024).each!((b) => super.updateStream(b.length, b));
     }
 
     override void appendData(ubyte[] data)

@@ -68,7 +68,7 @@ public:
     {
         import std.algorithm : each;
 
-        encoderQueue.each!((e) => encodeOne(e, wr));
+        encoderQueue.each!((e) => wr.appendFile(e.originPath));
     }
 
     /**

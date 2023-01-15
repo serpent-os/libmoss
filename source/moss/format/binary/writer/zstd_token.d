@@ -18,12 +18,14 @@ module moss.format.binary.writer.zstd_token;
 
 import core.stdc.stdio : FILE;
 
-import moss.format.binary.payload.header;
 public import moss.format.binary.writer.token;
+import moss.format.binary.payload.header;
+import std.algorithm : each;
+import std.exception : enforce;
+import std.range : chunks;
+import std.stdio : File;
 import zstd.c.symbols;
 import zstd.c.typedefs;
-import std.range : chunks;
-import std.exception : enforce;
 
 /**
  * The ZstdWriterToken is responsible for zstd stream encoding
@@ -66,25 +68,20 @@ final class ZstdWriterToken : WriterToken
      */
     override void appendData(ubyte[] data) @trusted
     {
-        bool finished;
+        data.chunks(readSize).each!((b) => encodingHelper(b));
+    }
 
-        immutable readSize = ZSTD_CStreamInSize();
-        foreach (element; data.chunks(readSize))
+    /**
+     * Continously chunk a file through compression
+     */
+    override void appendFile(in string path) @trusted
+    {
+        File fi = File(path, "rb");
+        scope (exit)
         {
-            InBuffer input = InBuffer(element.ptr, element.length, 0);
-            do
-            {
-                OutBuffer output = OutBuffer(outBuf.ptr, outBuf.length, 0);
-                auto remaining = ZSTD_compressStream2(ctx, &output, &input,
-                        EndDirective.Continue);
-                enforce(remaining >= 0, "Compression failure");
-                finished = element.length < readSize ? remaining == 0 : input.pos == input.size;
-
-                super.updateStream(input.size, outBuf[0 .. output.pos]);
-            }
-            while (!finished);
+            fi.close();
         }
-
+        fi.byChunk(readSize).each!((b) => encodingHelper(b));
     }
 
     /**
@@ -110,6 +107,26 @@ final class ZstdWriterToken : WriterToken
     }
 
 private:
+
+    /**
+     * Internal helper for encoding blocks
+     */
+    void encodingHelper(ubyte[] element) @trusted
+    {
+        bool finished;
+        InBuffer input = InBuffer(element.ptr, element.length, 0);
+        do
+        {
+            OutBuffer output = OutBuffer(outBuf.ptr, outBuf.length, 0);
+            auto remaining = ZSTD_compressStream2(ctx, &output, &input, EndDirective.Continue);
+            enforce(remaining >= 0, "Compression failure");
+            finished = element.length < readSize ? remaining == 0 : input.pos == input.size;
+
+            super.updateStream(input.size, outBuf[0 .. output.pos]);
+        }
+        while (!finished);
+    }
+
     ZSTD_CCtx* ctx;
     ubyte[] outBuf;
     size_t readSize;
