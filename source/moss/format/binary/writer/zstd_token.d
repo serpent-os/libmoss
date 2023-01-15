@@ -45,9 +45,6 @@ final class ZstdWriterToken : WriterToken
 
         ctx = ZSTD_createCCtx();
         ZSTD_CCtx_setParameter(ctx, CompressionParameter.CompressionLevel, 18);
-        ZSTD_CCtx_setParameter(ctx, CompressionParameter.EnableLongDistanceMatching, 1);
-        ZSTD_CCtx_setParameter(ctx, CompressionParameter.WindowLog, 30);
-        ZSTD_CCtx_setParameter(ctx, CompressionParameter.MinMatch, 4);
 
         /* TODO: Port reader token to C APIs
         ZSTD_CCtx_setParameter(ctx, CompressionParameter.WindowLog, 31); */
