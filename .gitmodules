@@ -10,9 +10,6 @@
 [submodule "xxhash-d"]
 	path = subprojects/xxhash-d
 	url = https://github.com/serpent-os/xxhash-d.git
-[submodule "zstd"]
-	path = vendor/zstd/zstd
-	url = https://github.com/repeatedly/zstd-d.git
 [submodule "subprojects/lmdb-d"]
 	path = subprojects/lmdb-d
 	url = https://github.com/serpent-os/lmdb-d.git
