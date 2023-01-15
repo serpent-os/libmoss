@@ -36,9 +36,6 @@ enum PayloadCompression : uint8_t
 
     /** Payload uses ZSTD compression */
     Zstd = 2,
-
-    /** Payload uses zlib decompression */
-    Zlib = 3,
 }
 
 /**

@@ -128,9 +128,6 @@ public:
             case PayloadCompression.None:
                 wk = new PlainWriterToken(_file.getFP());
                 break;
-            case PayloadCompression.Zlib:
-                wk = new ZlibWriterToken(_file.getFP());
-                break;
             case PayloadCompression.Zstd:
                 wk = new ZstdWriterToken(_file.getFP());
                 break;
@@ -207,5 +204,4 @@ private:
 }
 
 public import moss.format.binary.writer.token;
-public import moss.format.binary.writer.zlib_token;
 public import moss.format.binary.writer.zstd_token;

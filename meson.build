@@ -73,7 +73,6 @@ formatBinary_sources = [
     'source/moss/format/binary/repo/repo_writer.d',
     'source/moss/format/binary/writer/package.d',
     'source/moss/format/binary/writer/token.d',
-    'source/moss/format/binary/writer/zlib_token.d',
     'source/moss/format/binary/writer/zstd_token.d',
 ]
 
