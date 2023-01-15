@@ -90,15 +90,21 @@ final class ZstdWriterToken : WriterToken
     /**
      * Continously chunk a file through compression
      */
-    override void appendFile(in string path) @trusted
+    override void appendFile(in string path, uint64_t knownSize) @trusted
     {
         File fi = File(path, "rb");
-        scope mm = new MmFile(fi);
-        scope (exit)
+
+        /* Small files aren't worth mmapping */
+        static immutable mmapBoundary = 16 * 1024;
+        if (knownSize < mmapBoundary)
         {
+            fi.byChunk(readSize).each!((b) => encodingHelper(b));
             fi.close();
+            return;
         }
-        auto rangedData = cast(ubyte[]) mm[0..$];
+
+        scope mm = new MmFile(fi);
+        auto rangedData = cast(ubyte[]) mm[0 .. $];
         rangedData.chunks(readSize).each!((b) => encodingHelper(b));
     }
 

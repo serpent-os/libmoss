@@ -48,7 +48,7 @@ public abstract class WriterToken
      * This is largely provided for the zstd implementation to optimise
      * compression of the large content payload.
      */
-    abstract void appendFile(in string path);
+    abstract void appendFile(in string path, uint64_t knownSize);
 
     /**
      * Implementations must perform their encoding logic and
@@ -205,7 +205,7 @@ final class PlainWriterToken : WriterToken
     /**
      * Merge file (by chunks) into underlying stream
      */
-    override void appendFile(in string path)
+    override void appendFile(in string path, uint64_t knownSize)
     {
         File fi = File(path, "rb");
         scope (exit)

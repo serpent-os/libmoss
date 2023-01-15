@@ -32,6 +32,7 @@ package struct ContentEntry
 {
     ubyte[16] digest;
     string originPath;
+    uint64_t contentLength;
 }
 /**
  * A ContentPayload is responsible for storing the actual content of a moss
@@ -79,7 +80,7 @@ public:
             tracef(format!"zstd: pledged size %s"(formattedSize(displaySize)));
             impl.pledgedSize = this.pledgedSize;
         }
-        encoderQueue.each!((e) => wr.appendFile(e.originPath));
+        encoderQueue.each!((e) => wr.appendFile(e.originPath, e.contentLength));
     }
 
     /**
@@ -98,6 +99,7 @@ public:
         ContentEntry queueable;
         queueable.digest = digest;
         queueable.originPath = path;
+        queueable.contentLength = fileLength;
         encoderQueue ~= queueable;
 
         pledgedSize += fileLength;
