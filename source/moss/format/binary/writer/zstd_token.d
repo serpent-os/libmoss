@@ -64,10 +64,9 @@ final class ZstdWriterToken : WriterToken
     /**
      * Encode data via the zstd APIs
      */
-    override ubyte[] encodeData(ref ubyte[] data) @trusted
+    override void appendData(ubyte[] data) @trusted
     {
         bool finished;
-        ubyte[] ret;
 
         immutable readSize = ZSTD_CStreamInSize();
         foreach (element; data.chunks(readSize))
@@ -81,22 +80,19 @@ final class ZstdWriterToken : WriterToken
                 enforce(remaining >= 0, "Compression failure");
                 finished = element.length < readSize ? remaining == 0 : input.pos == input.size;
 
-                /* TODO: Stop copying this and dump straight to the file */
-                ret ~= outBuf[0 .. output.pos];
+                super.updateStream(input.size, outBuf[0 .. output.pos]);
             }
             while (!finished);
         }
 
-        return ret;
     }
 
     /**
      * Flush data via the zstd APIs
      */
-    override ubyte[] flushData() @trusted
+    override void flush() @trusted
     {
         bool finished;
-        ubyte[] ret;
 
         InBuffer nullBuffer = InBuffer(null, 0, 0);
 
@@ -107,11 +103,10 @@ final class ZstdWriterToken : WriterToken
             enforce(remaining >= 0, "Flush failure");
 
             /* TODO: Again, stop copying, directly write it **/
-            ret ~= outBuf[0 .. output.pos];
+            super.updateStream(0, outBuf[0 .. output.pos]);
             finished = remaining == 0;
         }
         while (!finished);
-        return ret;
     }
 
 private:

@@ -40,75 +40,38 @@ public abstract class WriterToken
     }
 
     /**
-     * Implementations should simply override encodeData to return the newly
-     * compressed data using whatever method is deemed appropriate.
-     * For "no compression" we just return the same data.
+     * Implementations must perform their encoding logic and
+     * then call updateStream with the encoded data.
      */
-    abstract ubyte[] encodeData(ref ubyte[] data) @trusted
-    {
-        return data;
-    }
+    abstract void appendData(ubyte[] data);
 
-    /**
-     * Flush all encodings, returning the remainder
+    /** 
+     * Implementations must append any buffered data now
      */
-    abstract ubyte[] flushData() @trusted
-    {
-        return null;
-    }
-
-    /**
-     * Append data to the stream, updating the known sizes + checksum
-     */
-    final void appendData(ubyte[] data)
-    {
-        import std.exception : enforce;
-        import core.stdc.stdio : fwrite;
-
-        _sizePlain += data.length;
-        auto encoded = encodeData(data);
-        _sizeCompressed += encoded.length;
-        checksumHelper.put(encoded);
-
-        enforce(fp !is null, "WriterToken.appendData(): No file pointer!");
-
-        /* Dump what we have to the stream */
-        enforce(fwrite(encoded.ptr, ubyte.sizeof, encoded.length,
-                fp) == encoded.length, "WriterToken.appendData(): Failed to write data");
-    }
-
-    /**
-     * Flush any remaining data to the stream
-     */
-    final void flush()
-    {
-        import core.stdc.stdio : fwrite;
-        import std.exception : enforce;
-
-        auto flushedSet = flushData();
-        if (flushedSet is null || flushedSet.length < 1)
-        {
-            return;
-        }
-
-        /* Got something left to write... */
-        _sizeCompressed += flushedSet.length;
-        checksumHelper.put(flushedSet);
-
-        enforce(fp !is null, "WriterToken.flush(): No file pointer!");
-
-        /* Dump what we have to the stream */
-        enforce(fwrite(flushedSet.ptr, ubyte.sizeof, flushedSet.length,
-                fp) == flushedSet.length, "WriterToken.end(): Failed to write data");
-    }
+    abstract void flush();
 
     /**
      * Append a single byte to the stream.
      */
     final void appendData(ubyte datum)
     {
-        ubyte[1] data = [datum];
-        appendData(data);
+        appendData([datum]);
+    }
+
+    final void updateStream(ulong uncompressedLength, ubyte[] compressedData)
+    {
+        import std.exception : enforce;
+        import core.stdc.stdio : fwrite;
+
+        _sizePlain += uncompressedLength;
+        _sizeCompressed += compressedData.length;
+        checksumHelper.put(compressedData);
+
+        enforce(fp !is null, "WriterToken.updateStream(): No file pointer!");
+
+        /* Dump what we have to the stream */
+        enforce(fwrite(compressedData.ptr, ubyte.sizeof, compressedData.length,
+                fp) == compressedData.length, "WriterToken.updateStream(): Failed to write data");
     }
 
 package:
@@ -228,13 +191,16 @@ final class PlainWriterToken : WriterToken
         super(fp);
     }
 
-    override ubyte[] encodeData(ref ubyte[] data) @safe @nogc nothrow
+    override void appendData(ubyte[] data)
     {
-        return data;
+        super.updateStream(data.length, data);
     }
 
-    override ubyte[] flushData() @safe @nogc nothrow
+    /**
+     * No-op
+     */
+    override void flush()
     {
-        return null;
+
     }
 }
