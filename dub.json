@@ -40,7 +40,7 @@
                                "xxhash-d": {
                                        "path": "../moss-vendor/subprojects/xxhash-d"
                                },
-                               "zstd": {
+                               "zstd-d": {
                                        "path": "../moss-vendor/subprojects/zstdoubledee"
                                }
                        }
