@@ -13,3 +13,6 @@
 [submodule "subprojects/lmdb-d"]
 	path = subprojects/lmdb-d
 	url = https://github.com/serpent-os/lmdb-d.git
+[submodule "subprojects/zstdoubledee"]
+	path = subprojects/zstdoubledee
+	url = https://github.com/serpent-os/zstdoubledee.git
