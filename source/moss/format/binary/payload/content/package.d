@@ -16,7 +16,12 @@
 module moss.format.binary.payload.content;
 
 public import moss.format.binary.payload;
+import std.algorithm : each;
 import std.experimental.logger;
+import std.stdint : uint64_t;
+import moss.core.sizing;
+import std.string : format;
+import moss.format.binary.writer.zstd_token : ZstdWriterToken;
 
 /**
  * The currently writing version for ContentPayload
@@ -66,8 +71,14 @@ public:
      */
     override void encode(scope WriterToken wr) @trusted
     {
-        import std.algorithm : each;
-
+        /* If being encoded with zstd - pass a hint along to assist with the algorithm */
+        auto impl = cast(ZstdWriterToken) wr;
+        if (impl !is null)
+        {
+            double displaySize = cast(double) pledgedSize;
+            tracef(format!"zstd: pledged size %s"(formattedSize(displaySize)));
+            impl.pledgedSize = this.pledgedSize;
+        }
         encoderQueue.each!((e) => wr.appendFile(e.originPath));
     }
 
@@ -82,12 +93,14 @@ public:
     /**
      * Enqueue a file for processing/encoding
      */
-    void addFile(in ubyte[16] digest, in string path) @trusted
+    void addFile(in ubyte[16] digest, in string path, in uint64_t fileLength) @trusted
     {
         ContentEntry queueable;
         queueable.digest = digest;
         queueable.originPath = path;
         encoderQueue ~= queueable;
+
+        pledgedSize += fileLength;
 
         recordCount = cast(uint32_t) encoderQueue.length;
     }
@@ -109,4 +122,7 @@ public:
 private:
 
     ContentEntry[] encoderQueue;
+
+    /* Track the full length of content being added. */
+    uint64_t pledgedSize = 0;
 }
