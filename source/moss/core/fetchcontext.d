@@ -32,6 +32,11 @@ public enum FetchType
      * destination path and remember to read it back again
      */
     TemporaryFile,
+
+    /**
+     * Mirror cloning (`git clone --mirror`) a Git repository.
+     */
+    GitRepository,
 }
 
 /**
