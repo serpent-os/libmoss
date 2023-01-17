@@ -201,7 +201,17 @@ public final class DirectedAcyclicalGraph(B)
         enforce(!match.empty, "Cannot find node: ");
 
         () @trusted { match.front.edges.insert(v); }();
+    }
 
+    /**
+     * Returns: Number of edges on a vertex
+     */
+    ulong countEdges(LabelType label) @safe
+    {
+        scope desc = new VertexDescriptor(label);
+        auto match = () @trusted { return vertices.equalRange(desc); }();
+        enforce(!match.empty, "Cannot find node");
+        return match.front.edges.length;
     }
 
     /**
