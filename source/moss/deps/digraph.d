@@ -15,6 +15,7 @@
  */
 module moss.deps.digraph;
 
+import std.array : array;
 import std.container.rbtree;
 import std.exception : enforce;
 import std.string : format;
@@ -212,6 +213,20 @@ public final class DirectedAcyclicalGraph(B)
         auto match = () @trusted { return vertices.equalRange(desc); }();
         enforce(!match.empty, "Cannot find node");
         return match.front.edges.length;
+    }
+
+    /**
+     * Returns: Duplicate edges for the vertex
+     *
+     * Params:
+     *   label = The vertex in question
+     */
+    auto edges(LabelType label) @safe
+    {
+        scope desc = new VertexDescriptor(label);
+        auto match = () @trusted { return vertices.equalRange(desc); }();
+        enforce(!match.empty, "Cannot find node");
+        return () @trusted { return match.front.edges[].array; }();
     }
 
     /**
