@@ -196,6 +196,9 @@ private:
      */
     FetchResult process(ref Fetchable fetchable)
     {
+        import std.file : exists, mkdirRecurse;
+        import std.path : dirName;
+
         CURLcode ret;
         CError foundError;
         throttleMarker = Clock.currTime();
@@ -203,8 +206,10 @@ private:
         final switch (fetchable.type)
         {
         case FetchType.RegularFile:
-            outputFD = IOUtil.create(fetchable.destinationPath)
-                .match!((int fd) => fd, (err) { foundError = err; return -1; });
+            outputFD = IOUtil.create(fetchable.destinationPath).match!((int fd) => fd, (err) {
+                foundError = err;
+                return -1;
+            });
             break;
         case FetchType.TemporaryFile:
             outputFD = IOUtil.createTemporary(fetchable.destinationPath).match!((TemporaryFile t) {
@@ -212,10 +217,16 @@ private:
                 return t.fd;
             }, (err) { foundError = err; return -1; });
             break;
+        case FetchType.GitRepository:
+            if (!fetchable.destinationPath.dirName.exists())
+            {
+                fetchable.destinationPath.dirName.mkdirRecurse();
+            }
+            break;
         }
 
         /* Make sure we can continue now */
-        if (outputFD < 0)
+        if (fetchable.type != FetchType.GitRepository && outputFD < 0)
         {
             return FetchResult(FetchError(foundError.errorCode,
                     FetchErrorDomain.CStdlib, fetchable.destinationPath));
@@ -224,38 +235,91 @@ private:
         /* Ensure we close the file again */
         scope (exit)
         {
-            cstdlib.close(outputFD);
-            outputFD = -1;
-        }
-
-        /* Allow redirection */
-        ret = curl_easy_setopt(handle, CurlOption.followlocation, 1);
-        if (ret != CurlError.ok)
-        {
-            return FetchResult(FetchError(ret, FetchErrorDomain.CurlEasy, fetchable.sourceURI));
-        }
-
-        /* Set up the URL */
-        ret = curl_easy_setopt(handle, CurlOption.url, fetchable.sourceURI.toStringz);
-        if (ret != CurlError.ok)
-        {
-            return FetchResult(FetchError(ret, FetchErrorDomain.CurlEasy, fetchable.sourceURI));
-        }
-
-        /* try to download now */
-        ret = curl_easy_perform(handle);
-        if (ret != CurlError.ok)
-        {
-            return FetchResult(FetchError(ret, FetchErrorDomain.CurlEasy, fetchable.sourceURI));
+            if (fetchable.type != FetchType.GitRepository)
+            {
+                cstdlib.close(outputFD);
+                outputFD = -1;
+            }
         }
 
         long statusCode = 0;
-        curl_easy_getinfo(handle, CurlInfo.response_code, &statusCode);
 
-        /* Force the total to 100 now */
-        double dltotal = 0;
-        curl_easy_getinfo(handle, CurlInfo.size_download, &dltotal);
-        reportProgress(dltotal, dltotal, true);
+        /* Use the git command-line to mirror clone requested the repository. */
+        if (fetchable.type == FetchType.GitRepository)
+        {
+            import std.process;
+
+            string[] cmd;
+            string[string] env;
+            string workdir;
+
+            /**
+             * If the destination path (directory in this case) already exists,
+             * this means that it has been previously fetched before. In this
+             * case, we simply need to fetch the new commits. Otherwise, do a
+             * fresh new clone.
+             */
+            if (fetchable.destinationPath.exists)
+            {
+                cmd = ["git", "fetch"];
+                workdir = fetchable.destinationPath;
+            }
+            else
+            {
+                cmd = [
+                    "git", "clone", "--mirror", "--", fetchable.sourceURI,
+                    fetchable.destinationPath,
+                ];
+            }
+
+            auto p = spawnProcess(cmd, env, Config.none, workdir);
+            statusCode = p.wait();
+
+            /**
+             * Currently, there's no way to report progress with pure Git
+             * command-line...
+             */
+            reportProgress(100, 100, true);
+
+            /**
+             * Note that we need to return a status code as if we're doing HTTP
+             * requests, so we should return 200 when the command succeeds.
+             */
+            if (statusCode == 0)
+            {
+                statusCode = 200;
+            }
+        }
+        else
+        {
+            /* Allow redirection */
+            ret = curl_easy_setopt(handle, CurlOption.followlocation, 1);
+            if (ret != CurlError.ok)
+            {
+                return FetchResult(FetchError(ret, FetchErrorDomain.CurlEasy, fetchable.sourceURI));
+            }
+
+            /* Set up the URL */
+            ret = curl_easy_setopt(handle, CurlOption.url, fetchable.sourceURI.toStringz);
+            if (ret != CurlError.ok)
+            {
+                return FetchResult(FetchError(ret, FetchErrorDomain.CurlEasy, fetchable.sourceURI));
+            }
+
+            /* try to download now */
+            ret = curl_easy_perform(handle);
+            if (ret != CurlError.ok)
+            {
+                return FetchResult(FetchError(ret, FetchErrorDomain.CurlEasy, fetchable.sourceURI));
+            }
+
+            curl_easy_getinfo(handle, CurlInfo.response_code, &statusCode);
+
+            /* Force the total to 100 now */
+            double dltotal = 0;
+            curl_easy_getinfo(handle, CurlInfo.size_download, &dltotal);
+            reportProgress(dltotal, dltotal, true);
+        }
 
         /* All went well? */
         return FetchResult(statusCode);
