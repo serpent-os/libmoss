@@ -206,10 +206,8 @@ private:
         final switch (fetchable.type)
         {
         case FetchType.RegularFile:
-            outputFD = IOUtil.create(fetchable.destinationPath).match!((int fd) => fd, (err) {
-                foundError = err;
-                return -1;
-            });
+            outputFD = IOUtil.create(fetchable.destinationPath)
+                .match!((int fd) => fd, (err) { foundError = err; return -1; });
             break;
         case FetchType.TemporaryFile:
             outputFD = IOUtil.createTemporary(fetchable.destinationPath).match!((TemporaryFile t) {
