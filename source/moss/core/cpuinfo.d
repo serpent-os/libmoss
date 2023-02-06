@@ -145,26 +145,26 @@ private:
         auto buffer = readText(cpuinfoFile);
 
         /* Find first 'model name' occurence */
-        auto r = ctRegex!r"model name\s*:\s*(.*)";
+        auto r = regex(r"model name\s*:\s*(.*)");
         auto m = matchFirst(buffer, r);
         enforce(m.captures[1], format!"CPU model name not listed in %s?"(cpuinfoFile));
         _modelName = m.captures[1].strip;
 
         /* Find first 'cpu cores' occurence */
-        r = ctRegex!r"cpu cores\s+:\s+(.*)";
+        r = regex(r"cpu cores\s+:\s+(.*)");
         m = matchFirst(buffer, r);
         enforce(m.captures[1],
                 format!"Number of physical CPU cores not listed in %s?"(cpuinfoFile));
         _numCores = m.captures[1].strip.to!uint;
 
         /* Find first 'siblings' occurence */
-        r = ctRegex!r"siblings\s+:\s+(.*)";
+        r = regex(r"siblings\s+:\s+(.*)");
         m = matchFirst(buffer, r);
         enforce(m.captures[1], format!"Number of CPU H/W threads not listed in %s?"(cpuinfoFile));
         _numHWThreads = m.captures[1].strip.to!uint;
 
         /* Find first 'flags' occurence */
-        r = ctRegex!r"flags\s+:\s+(.*)";
+        r = regex(r"flags\s+:\s+(.*)");
         m = matchFirst(buffer, r);
         enforce(m.captures[1], format!"CPU flags not listed in %s?"(cpuinfoFile));
         _cpuFlags = m.captures[1].strip.split;
