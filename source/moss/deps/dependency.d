@@ -17,11 +17,11 @@ module moss.deps.dependency;
 
 public import std.stdint : uint8_t;
 
-import std.exception : enforce;
 import moss.core.encoding;
-import std.string : format;
-import std.regex : ctRegex, matchAll;
 import std.array : array;
+import std.exception : enforce;
+import std.regex : ctRegex, matchAll;
+import std.string : format;
 
 /**
  * Regex to capture type(target) dependency/provider strings
@@ -220,7 +220,7 @@ public struct Dependency
 
 /**
  * A Provider is virtually identical to a Dependency but we have a solid definition
- * for type safe purposes
+ * for type safety purposes
  */
 public struct Provider
 {
@@ -267,7 +267,7 @@ public struct Provider
     }
 
     /**
-     * Return the hash code for the prvider
+     * Return the hash code for the provider
      */
     ulong toHash() @safe nothrow const
     {
