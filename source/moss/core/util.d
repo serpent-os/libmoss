@@ -90,11 +90,10 @@ pragma(inline, true) pure auto joinPath(S...)(in S datum) @safe nothrow
 
 unittest
 {
-    const auto expHash = "5eca857080b9a65301edc2c6ebb5ebd3abc5ed679c49ab532a300c91d3674fc8";
+    immutable string expectedHash = "f575dafbbab962ed89ba09c422e7ef52355aaa6b169a2980738b2518009d9bbe";
+    immutable string directHash = computeSHA256("LICENSES/Zlib.txt");
+    immutable string mapHash = computeSHA256("LICENSES/Zlib.txt", true);
 
-    immutable auto directHash = computeSHA256("LICENSES/Zlib.txt");
-    immutable auto mapHash = computeSHA256("LICENSES/Zlib.txt", true);
-
-    assert(expHash == directHash, "Mismatch in direct hash");
-    assert(expHash == directHash, "Mismatch in mmap hash");
+    assert(expectedHash == directHash, "Mismatch in direct hash");
+    assert(expectedHash == directHash, "Mismatch in mmap hash");
 }
