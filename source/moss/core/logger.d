@@ -52,9 +52,9 @@ public enum ColorLoggerFlags
  */
 public static void configureLogger(ColorLoggerFlags flags = ColorLoggerFlags.Color) @trusted nothrow
 {
-    __gshared ColorLogger logger;
+    __gshared shared(ColorLogger) logger;
     assumeWontThrow(() @trusted {
-        sharedLog = initOnce!logger(new ColorLogger(flags));
+        sharedLog = initOnce!logger(new shared ColorLogger(flags));
         globalLogLevel = LogLevel.info;
     }());
 }
@@ -130,7 +130,7 @@ final class ColorLogger : Logger
      * Params:
      *      loggerFlags = Flags to enable capabilities
      */
-    this(ColorLoggerFlags loggerFlags = ColorLoggerFlags.Color) @trusted
+    shared this(ColorLoggerFlags loggerFlags = ColorLoggerFlags.Color) @trusted
     {
         super(LogLevel.all);
         this.loggerFlags = loggerFlags;
