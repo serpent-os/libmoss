@@ -8,7 +8,11 @@
 	"name": "moss-db",
 	"targetType": "autodetect",
 	"dependencies": {
-		"moss-core": ">=0.0.1",
-		"lmdb-d": ">=0.0.1"
+		"moss-core": {
+            "path": "../moss-core"
+        },
+		"lmdb-d": {
+            "path": "../lmdb-d"
+        },
 	},
 }
