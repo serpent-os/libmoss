@@ -300,7 +300,7 @@ unittest
                 format!"%s ISAMaxLevel != %s as expected?!"(cpu.modelName, cast(string) expected));
     }
 
-    /* NOTE: Test cases are group with AMD CPUs first,
+    /* NOTE: Test cases are grouped with AMD CPUs first,
      *       with newest generations within each vendor at the top
      *       CPUs listed in decreasing performance within each vendor generation.
      */
@@ -361,14 +361,6 @@ unittest
     /* Penryn (not supported by Serpent OS, but useful test nonetheless) */
     testCpuinfoX86_64("./cpuinfo-test-data/intel-c2q-q9400-cpuinfo.txt", CpuInfo.ISALevel.x86_64);
 
-    /*
-    cpu = new CpuInfo("./cpuinfo-test-data/AMD-R7-1700-cpuinfo.txt"); // got system, not yet captured
-    assert(cpu.ISAMaxLevel == ISALevel.x86_64_v3x);
-    cpu = new CpuInfo("./cpuinfo-test-data/intel-i7-6700K-cpuinfo.txt"); // got system, not yet captured
-    assert(cpu.ISAMaxLevel == ISALevel.x86_64_v3x);
-    cpu = new CpuInfo("./cpuinfo-test-data/AMD-PhII-1090T-cpuinfo.txt"); // got system, not yet captured
-    assert(cpu.ISAMaxLevel == ISALevel.x86_64);
-*/
     writefln!"Done testing %s"(__MODULE__);
 }
 
