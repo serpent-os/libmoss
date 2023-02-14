@@ -87,11 +87,10 @@ pure auto stringifyNonDecodableType(T)() @safe nothrow
 pure public ImmutableDatum mossEncode(T)(in T s) @trusted if (is(T == string))
 {
     import std.string : toStringz;
-    import core.stdc.string : strlen;
 
     auto stringC = s.toStringz;
     /* '+ 1' because nul terminator extends string length by 1 */
-    return cast(ImmutableDatum) stringC[0 .. strlen(stringC) + 1];
+    return cast(ImmutableDatum) stringC[0 .. s.length + 1];
 }
 
 /**
