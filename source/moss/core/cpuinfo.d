@@ -318,6 +318,8 @@ unittest
     /* Zen 2 */
     testCpuinfoX86_64("./cpuinfo-test-data/AMD-R9-3900X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     testCpuinfoX86_64("./cpuinfo-test-data/AMD-R7-3700X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    /* Zen 1+ */
+    testCpuinfoX86_64("./cpuinfo-test-data/AMD-R7-2700X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Zen 1 */
     testCpuinfoX86_64("./cpuinfo-test-data/AMD-Epyc-7571-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     testCpuinfoX86_64("./cpuinfo-test-data/AMD-R7-1700-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
