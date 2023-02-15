@@ -153,12 +153,14 @@ public final class Reader
     /**
      * Flush and close the underlying file.
      */
-    void close() @safe
+    void close() @trusted
     {
         if (!_file.isOpen())
         {
             return;
         }
+        mappedFile.destroy!false;
+        mappedFile = null;
         _file.close();
     }
 
