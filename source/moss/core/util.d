@@ -27,6 +27,7 @@ import std.string : toLower;
 import std.mmfile;
 import std.algorithm : each;
 import moss.core : ChunkSize;
+import core.internal.container.common;
 
 /**
  * Returns true if the path exists and is writable
@@ -43,13 +44,8 @@ string computeSHA256(in string path, bool useMmap = false)
 {
     auto sha = makeDigest!SHA256();
     auto inp = File(path, "rb");
-    MmFile mapped = null;
+    scope MmFile mapped = null;
     ubyte[] dataMap;
-
-    scope (exit)
-    {
-        inp.close();
-    }
 
     if (!useMmap)
     {
@@ -62,7 +58,14 @@ string computeSHA256(in string path, bool useMmap = false)
         dataMap.chunks(ChunkSize).each!((b) => sha.put(b));
     }
 
-    return toHexString(sha.finish()).toLower().dup;
+    /* For GC sanity, destroy explicitly! Otherwise OOM/mmap failure */
+    auto ret = toHexString(sha.finish()).toLower().dup;
+    if (useMmap)
+    {
+        destroy!false(mapped);
+    }
+    inp.close();
+    return cast(string) ret;
 }
 
 /**
