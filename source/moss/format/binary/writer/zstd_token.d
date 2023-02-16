@@ -43,7 +43,7 @@ final class ZstdWriterToken : WriterToken
     {
         super(fp);
 
-        ctx = ZSTD_createCCtx();
+        ZSTD_CCtx_reset(ctx, ResetDirective.Session_only);
         ZSTD_CCtx_setParameter(ctx, CompressionParameter.CompressionLevel, 18);
 
         /* TODO: Port reader token to C APIs
@@ -58,7 +58,12 @@ final class ZstdWriterToken : WriterToken
         readSize = ZSTD_CStreamInSize();
     }
 
-    ~this()
+    static this()
+    {
+        ctx = ZSTD_createCCtx();
+    }
+
+    static ~this()
     {
         ZSTD_freeCCtx(ctx);
     }
@@ -148,7 +153,7 @@ private:
         while (!finished);
     }
 
-    ZSTD_CCtx* ctx;
+    static ZSTD_CCtx* ctx;
     ubyte[] outBuf;
     size_t readSize;
     uint64_t _pledgedSize = 0;
