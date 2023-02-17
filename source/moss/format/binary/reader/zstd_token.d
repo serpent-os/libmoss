@@ -17,7 +17,13 @@ module moss.format.binary.reader.zstd_token;
 
 public import moss.format.binary.reader.token;
 
-import zstd.highlevel.context : DecompressionStream;
+import zstd.c.typedefs;
+import zstd.c.symbols;
+import zstd.common;
+import std.exception : enforce;
+import std.string : format, fromStringz;
+
+extern (C) size_t ZSTD_decompressStream(ZSTD_DCtx* ctx, OutBuffer* output, InBuffer* input);
 
 /**
  * The ZstdReaderToken provides a zstd-stream-decompression aware ReaderToken
@@ -34,7 +40,22 @@ public final class ZstdReaderToken : ReaderToken
     this(ref ubyte[] rangedData)
     {
         super(rangedData);
-        decompressor = new DecompressionStream();
+        ZSTD_DCtx_reset(ctx, ResetDirective.Session_only);
+    }
+
+    static this()
+    {
+        ctx = ZSTD_createDCtx();
+        ZSTD_DCtx_setParameter(ctx, DecompressionParameter.WindowLogMax, 31);
+        readSize = ZSTD_DStreamInSize();
+        writeSize = ZSTD_DStreamOutSize();
+        outBuffer.reserve(writeSize);
+        outBuffer.length = writeSize;
+    }
+
+    static ~this()
+    {
+        ZSTD_freeDCtx(ctx);
     }
 
     /**
@@ -44,31 +65,47 @@ public final class ZstdReaderToken : ReaderToken
     {
         while (availableStorage < length)
         {
-            /* How much can we currently read? */
-            auto readableSize = remainingBytes <= chunkSize ? remainingBytes : chunkSize;
-            auto bytesRead = decompressor.decompress(readRaw(readableSize));
-            bufferStorage ~= bytesRead;
-            availableStorage += bytesRead.length;
+            readChunk();
         }
 
-        auto retStore = bufferStorage[0 .. length];
-        scope (exit)
-        {
-            bufferStorage = bufferStorage[length .. $];
-            availableStorage -= length;
-        }
-        return retStore;
+        auto ret = cachedStorage[0 .. length];
+        cachedStorage = cachedStorage[length .. $];
+        availableStorage -= length;
+        return ret;
     }
 
 private:
 
-    DecompressionStream decompressor;
+    /** 
+     * Read the next (readSize) chunk of zstd data and cache via GC
+     * TODO: Use a dynamic RingBuffer and pop the front
+     */
+    void readChunk() @trusted
+    {
+        /* How much needs reading? */
+        immutable chunkSize = remainingBytes <= readSize ? remainingBytes : readSize;
 
-    /* Saved bytes from decompression runs */
-    ubyte[] bufferStorage;
+        /* Read a single chunk */
+        auto rawBytes = readRaw(chunkSize);
 
-    /* How many bytes to bulk process */
-    static const uint chunkSize = 128 * 1024;
+        auto input = InBuffer(rawBytes.ptr, rawBytes.length, 0);
 
-    ulong availableStorage = 0;
+        while (input.pos < input.size)
+        {
+            auto output = OutBuffer(outBuffer.ptr, writeSize, 0);
+            const ret = ZSTD_decompressStream(ctx, &output, &input);
+            enforce(!ZSTD_isError(ret), format!"zstd: %s"(ZSTD_getErrorName(ret).fromStringz));
+            availableStorage += output.pos;
+            cachedStorage ~= outBuffer[0 .. output.pos];
+        }
+    }
+
+    /* How much is cached? */
+    ulong availableStorage;
+    ubyte[] cachedStorage;
+
+    static ZSTD_DCtx* ctx;
+    static ulong readSize;
+    static ulong writeSize;
+    static ubyte[] outBuffer;
 }
