@@ -93,16 +93,12 @@ package:
     {
         import std.exception : enforce;
 
-        /* Ensure we update the filePointer on successful reads */
-        scope (exit)
-        {
-            filePointer += length;
-        }
-
         enforce(filePointer + length <= rangedData.length,
                 "ReaderToken.readRaw(): Cannot pull additional bytes past EOF");
 
-        return rangedData[filePointer .. $];
+        auto ret = rangedData[filePointer .. filePointer + length];
+        filePointer += length;
+        return ret;
     }
 
     /**
