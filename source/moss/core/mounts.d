@@ -47,7 +47,7 @@ public struct Mount
      */
     string filesystem;
 
-    /** 
+    /**
      * Default to normal mount flags
      */
     MountFlags mountFlags = MountFlags.None;
@@ -136,8 +136,15 @@ public struct Mount
         return MountReturn();
     }
 
-private:
+    /**
+     * setData sets additional mounting directives whose
+     * context depends on the target file system.
+     */
+    void setData(immutable(void)* data)
+    {
+        this.data = data;
+    }
 
-    /* Always NULL, never used in our implementation */
-    static void* data = null;
+private:
+    immutable(void)* data = null;
 }
