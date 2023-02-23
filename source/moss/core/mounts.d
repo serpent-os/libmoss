@@ -104,13 +104,7 @@ public struct Mount
             return MountReturn();
         }
 
-        /* Remount read-only, preserve bind-flag */
-        auto newFlags = MountFlags.ReadOnly | MountFlags.Remount;
-        if ((mountFlags & MountFlags.Bind) == MountFlags.Bind)
-        {
-            newFlags |= MountFlags.Bind;
-        }
-
+        auto newFlags = targetMountFlags(this.target) | MountFlags.Remount;
         /* Perform the remount */
         ret = cstdlib.mount(fsSource, fsDest, fsType, cast(ulong) newFlags, data);
         if (ret != 0)
@@ -147,4 +141,44 @@ public struct Mount
 
 private:
     immutable(void)* data = null;
+    libmnt_table* mountTable = null;
+
+    ulong targetMountFlags(string mountTarget) nothrow
+    {
+        if (this.mountTable == null)
+        {
+            this.mountTable = mnt_new_table();
+            mnt_table_parse_mtab(this.mountTable, null)
+        }
+        auto mountPoint = mnt_table_find_target(this.mountTable, mountTarget.toStringz(), MNT_ITER_BACKWARD);
+        auto mountOptions = mnt_fs_get_options(mountPoint);
+        ulong flags;
+        mnt_optstr_get_flags(mountOptions, &flags, mnt_get_builtin_optmap(MNT_LINUX_MAP));
+        return flags;
+    }
+}
+
+/* libmount symbols. */
+extern (C) nothrow @nogc
+{
+    struct libmnt_table;
+    struct libmnt_fs;
+    struct libmnt_optmap;
+    enum
+    {
+        MNT_ITER_FORWARD = 0,
+        MNT_ITER_BACKWARD
+    };
+    enum
+    {
+        MNT_LINUX_MAP = 1,
+        MNT_USERSPACE_MAP
+    };
+
+    libmnt_table* mnt_new_table();
+    int mnt_table_parse_mtab(libmnt_table* tb, const char* filename);
+    libmnt_fs* mnt_table_find_target(libmnt_table* tb, const char* path, int direction);
+    immutable(char*) mnt_fs_get_options(libmnt_fs* fs);
+    int mnt_optstr_get_flags(const char* optstr, ulong* flags, const libmnt_optmap* map);
+    immutable(libmnt_optmap*) mnt_get_builtin_optmap(int id);
 }
