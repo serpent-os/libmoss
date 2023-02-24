@@ -105,11 +105,13 @@ public struct Mount
             return MountReturn();
         }
 
-        auto newFlags = targetMountFlags(this.target) | MountFlags.Remount;
+        auto newFlags = targetMountFlags(this.target);
         if (newFlags < 0)
         {
             return MountReturn(CError(cast(int)(-newFlags)));
         }
+        /* Was it a bind mount? If so, pass the bind flag again. */
+        newFlags |= MountFlags.Remount | (mountFlags & (MountFlags.Bind | MountFlags.Rec));
         /* Perform the remount */
         ret = cstdlib.mount(fsSource, fsDest, fsType, cast(ulong) newFlags, data);
         if (ret != 0)
