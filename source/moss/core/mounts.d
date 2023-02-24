@@ -20,6 +20,7 @@ public import moss.core.ioutil : CError;
 public import std.typecons : Nullable;
 public import moss.core.c : MountFlags, UnmountFlags;
 
+import core.stdc.errno : ENOENT;
 import std.string : empty, toStringz;
 
 /**
@@ -105,6 +106,10 @@ public struct Mount
         }
 
         auto newFlags = targetMountFlags(this.target) | MountFlags.Remount;
+        if (newFlags < 0)
+        {
+            return MountReturn(CError(cast(int)(-newFlags)));
+        }
         /* Perform the remount */
         ret = cstdlib.mount(fsSource, fsDest, fsType, cast(ulong) newFlags, data);
         if (ret != 0)
@@ -143,17 +148,34 @@ private:
     immutable(void)* data = null;
     libmnt_table* mountTable = null;
 
+    /**
+     * targetMountFlags returns mount flags for an already-mounted target path,
+     * or a negative number on error. The mount flags are OR-ed like they were passed to mount(2).
+     * The error, if any, is a negative errno value.
+     */
     ulong targetMountFlags(string mountTarget) nothrow
     {
         if (this.mountTable == null)
         {
             this.mountTable = mnt_new_table();
-            mnt_table_parse_mtab(this.mountTable, null)
+            auto err = mnt_table_parse_mtab(this.mountTable, null);
+            if (err < 0)
+            {
+                return err;
+            }
         }
         auto mountPoint = mnt_table_find_target(this.mountTable, mountTarget.toStringz(), MNT_ITER_BACKWARD);
+        if (mountPoint == null)
+        {
+            return -ENOENT;
+        }
         auto mountOptions = mnt_fs_get_options(mountPoint);
-        ulong flags;
-        mnt_optstr_get_flags(mountOptions, &flags, mnt_get_builtin_optmap(MNT_LINUX_MAP));
+        ulong flags = 0;
+        auto err = mnt_optstr_get_flags(mountOptions, &flags, mnt_get_builtin_optmap(MNT_LINUX_MAP));
+        if (err < 0)
+        {
+            return err;
+        }
         return flags;
     }
 }
