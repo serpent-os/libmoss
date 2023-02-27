@@ -31,7 +31,7 @@ private static auto reDep = ctRegex!reDepString;
 
 private static DependencyType[string] depLookupTable;
 
-shared static this()
+static this()
 {
     depLookupTable["binary"] = DependencyType.BinaryName;
     depLookupTable["sysbinary"] = DependencyType.SystemBinaryName;
