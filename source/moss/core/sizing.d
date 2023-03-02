@@ -71,7 +71,7 @@ pure FormattedSize formattedSize(scope const ref double inp) @safe @nogc nothrow
  * "      100  B"
  * "    1,023  B"
  * "    1.00 KiB"
- * "  999.99 Kib"
+ * "  999.99 KiB"
  * "    1.00 MiB"
  *     (...)
  * "  999.99 TiB"
