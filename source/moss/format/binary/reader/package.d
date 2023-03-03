@@ -153,7 +153,7 @@ public final class Reader
     /**
      * Flush and close the underlying file.
      */
-    void close() @trusted
+    void close() return @trusted
     {
         if (!_file.isOpen())
         {

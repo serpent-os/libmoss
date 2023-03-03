@@ -85,7 +85,7 @@ public:
     /**
      * Flush and close the underlying file.
      */
-    void close() @safe
+    void close() return @safe
     {
         if (!_file.isOpen())
         {
@@ -98,7 +98,7 @@ public:
     /**
      * Flush all payloads to disk.
      */
-    void flush() @trusted
+    void flush() return @trusted
     {
         import std.exception : enforce;
         import core.stdc.stdio : fseek, SEEK_CUR, SEEK_SET;
