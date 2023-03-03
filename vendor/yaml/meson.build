@@ -11,6 +11,7 @@ libmoss_vendor_yaml_sources = [
     'dyaml/source/dyaml/exception.d',
     'dyaml/source/dyaml/linebreak.d',
     'dyaml/source/dyaml/loader.d',
+    'dyaml/source/dyaml/node.d',
     'dyaml/source/dyaml/package.d',
     'dyaml/source/dyaml/parser.d',
     'dyaml/source/dyaml/queue.d',
@@ -19,10 +20,10 @@ libmoss_vendor_yaml_sources = [
     'dyaml/source/dyaml/resolver.d',
     'dyaml/source/dyaml/scanner.d',
     'dyaml/source/dyaml/serializer.d',
+    'dyaml/source/dyaml/stdsumtype.d',
     'dyaml/source/dyaml/style.d',
     'dyaml/source/dyaml/tagdirective.d',
-    'dyaml/source/dyaml/token.d',
-    'dyaml/source/dyaml/node.d',
+    'dyaml/source/dyaml/token.d'
 ]
 
 libmoss_vendor_yaml_includes = [
