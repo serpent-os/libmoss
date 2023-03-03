@@ -166,14 +166,16 @@ private:
                 return err;
             }
         }
-        auto mountPoint = mnt_table_find_target(this.mountTable, mountTarget.toStringz(), MNT_ITER_BACKWARD);
+        auto mountPoint = mnt_table_find_target(this.mountTable,
+                mountTarget.toStringz(), MNT_ITER_BACKWARD);
         if (mountPoint == null)
         {
             return -ENOENT;
         }
         auto mountOptions = mnt_fs_get_options(mountPoint);
         ulong flags = 0;
-        auto err = mnt_optstr_get_flags(mountOptions, &flags, mnt_get_builtin_optmap(MNT_LINUX_MAP));
+        auto err = mnt_optstr_get_flags(mountOptions, &flags,
+                mnt_get_builtin_optmap(MNT_LINUX_MAP));
         if (err < 0)
         {
             return err;
