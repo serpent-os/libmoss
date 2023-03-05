@@ -13,8 +13,6 @@ if meson.is_subproject()
 	installFiles = false
 endif
 
-dep_mount = dependency('mount')
-
 # Package sources
 libmoss_core_sources = [
 	'source/moss/core/c.d',
@@ -46,7 +44,6 @@ libmoss_core_includes = [
 libmoss_core = static_library(
 	'moss-core',
 	libmoss_core_sources,
-	dependencies: [dep_mount],
 	install: installFiles,
 	include_directories: libmoss_core_includes,
 )

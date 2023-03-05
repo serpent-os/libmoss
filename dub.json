@@ -5,6 +5,5 @@
 	"copyright": "Copyright © 2020-2023 Serpent OS Developers",
 	"description": "Moss Shared APIs",
 	"license": "Zlib",
-	"name": "moss-core",
-	"libs": ["mount"]
+	"name": "moss-core"
 }
