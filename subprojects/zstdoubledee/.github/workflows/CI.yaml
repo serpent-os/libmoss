@@ -1,0 +1,31 @@
+name: Run tests
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Tests
+    strategy:
+      matrix:
+        os: [macOS-11]
+        compiler: [dmd-latest, ldc-latest]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install D compiler
+        uses: dlang-community/setup-dlang@v1
+        with:
+          compiler: ${{ matrix.compiler }}
+
+      - name: Install dependencies on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install meson zstd
+
+      - name: Run tests with Dub
+        run: dub -q test
+
+      - name: Run tests with Meson
+        run: |
+          meson setup build && meson test -C build
