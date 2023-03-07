@@ -1,7 +1,7 @@
 # Required components
 components = [
     'core',
-    # 'config',
+    'config',
     # 'db',
     # 'deps',
     # 'fetcher',
