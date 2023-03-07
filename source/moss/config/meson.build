@@ -21,7 +21,7 @@ libmoss_config = static_library(
 )
 
 link_libmoss_config = declare_dependency(
-    link_with: libmoss_config,
+    link_whole: libmoss_config,
     include_directories: [root_includedir],
     dependencies: [
         link_libyaml,

@@ -29,7 +29,7 @@ libmoss_db = static_library(
 )
 
 link_libmoss_db = declare_dependency(
-	link_with: libmoss_db,
+	link_whole: libmoss_db,
 	include_directories: [root_includedir],
 	dependencies: [link_libmoss_core, link_lmdb],
 )

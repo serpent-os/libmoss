@@ -50,6 +50,7 @@ endif
 if with_moss_format_binary
     zstdoubledee = subproject('zstdoubledee')
     link_zstd = zstdoubledee.get_variable('link_libzstdoubledee')
+    dep_zstd = zstdoubledee.get_variable('dep_zstd')
 endif
 
 # yaml / elf-d dependencies, we encapsulate in our own meson.builds

@@ -33,7 +33,7 @@ if with_moss_format_source
     )
 
     link_libmoss_format_source = declare_dependency(
-        link_with: libmoss_format_source,
+        link_whole: libmoss_format_source,
         include_directories: [root_includedir],
         dependencies: [
             link_libmoss_core,
@@ -80,12 +80,13 @@ if with_moss_format_binary
             link_libmoss_core,
             link_xxhash,
             link_zstd,
+            dep_zstd,
         ],
         include_directories: [root_includedir],
     )
 
     link_libmoss_format_binary = declare_dependency(
-        link_with: [libmoss_format_binary],
+        link_whole: [libmoss_format_binary],
         dependencies: [
             link_libmoss_core,
             link_xxhash,
@@ -98,7 +99,7 @@ endif
 # Unified dependency
 if with_moss_format_binary and with_moss_format_source
     link_libmoss_format = declare_dependency(
-        link_with: [libmoss_format_binary, libmoss_format_source],
+        link_whole: [libmoss_format_binary, libmoss_format_source],
         include_directories: [root_includedir],
         dependencies: [
             link_libmoss_core,

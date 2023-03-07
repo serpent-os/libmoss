@@ -30,6 +30,6 @@ libmoss_core = static_library(
 
 # Allow individually linking to libmosscore
 link_libmoss_core = declare_dependency(
-    link_with: libmoss_core,
+    link_whole: libmoss_core,
     include_directories: [root_includedir]
 )
