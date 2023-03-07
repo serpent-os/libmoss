@@ -1,0 +1,34 @@
+{
+	"authors": [
+		"Serpent OS Developers"
+	],
+	"copyright": "Copyright © 2020-2023 Serpent OS Developers",
+	"description": "Unified moss libraries",
+	"license": "Zlib",
+	"version": "0.2.0",
+	"name": "libmoss",
+	"toolchainRequirements": {
+		"ldc": ">=1.31.0"
+	},
+	"targetType": "autodetect",
+	"dependencies": {
+		"dyaml": {
+			"path": "vendor/dyaml"
+		},
+		"tinyendian": {
+			"path": "vendor/tinyendian"
+		},
+		"lmdb-d": {
+			"path": "subprojects/lmdb-d"
+		},
+		"xxhash-d": {
+			"path": "subprojects/xxhash-d"
+		},
+		"elf-d": {
+			"path": "vendor/elf-d"
+		},
+		"zstd-d": {
+			"path": "subprojects/zstdoubledee"
+		}
+	}
+}
