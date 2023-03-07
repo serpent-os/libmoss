@@ -7,6 +7,9 @@ project(
     ]
 )
 
+# set up convenient debugging flags for mixins
+add_project_arguments('--mixin=mixin_generated_code.txt', language : 'd')
+
 # lmdb binding
 lmdb = subproject('lmdb-d')
 link_lmdb = lmdb.get_variable('link_liblmdb')

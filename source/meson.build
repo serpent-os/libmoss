@@ -5,7 +5,7 @@ components = [
     'db',
     'deps',
     'fetcher',
-    # 'format'
+    'format'
 ]
 
 # dlang -I from source/*
