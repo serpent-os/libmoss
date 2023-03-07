@@ -47,3 +47,19 @@ link_zstd = zstdoubledee.get_variable('link_libzstdoubledee')
 subdir('vendor')
 
 subdir('source')
+
+report = [
+    '    Build configuration:',
+    '    ====================',
+    '',
+    '    moss-core:                              always',
+    '    moss-config:                            @0@'.format(with_moss_config),
+    '    moss-db:                                @0@'.format(with_moss_db),
+    '    moss-deps:                              @0@'.format(with_moss_deps),
+    '    moss-format (binary):                   @0@'.format(with_moss_format_binary),
+    '    moss-format (source):                   @0@'.format(with_moss_format_source),
+    '    moss-fetcher:                           @0@'.format(with_moss_fetcher),
+]
+
+# Output some stuff to validate the build config
+message('\n\n\n' + '\n'.join(report) + '\n\n')
