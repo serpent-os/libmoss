@@ -30,5 +30,11 @@
 		"zstd-d": {
 			"path": "subprojects/zstdoubledee"
 		}
-	}
+	},
+	"libs": [
+		"libcurl",
+		"lmdb",
+		"libxxhash",
+		"libzstd"
+	]
 }
