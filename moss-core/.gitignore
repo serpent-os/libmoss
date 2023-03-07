@@ -1,5 +1,0 @@
-*.a
-*.o
-/.dub
-/dub.selections.json
-moss-core-test-library
