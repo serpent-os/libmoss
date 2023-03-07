@@ -18,4 +18,7 @@ foreach project : external_projects
     subproject(project)
 endforeach
 
+# yaml dependencies, we encapsulate in our own meson.builds
+subdir('vendor')
+
 subdir('source')
