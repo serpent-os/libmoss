@@ -19,7 +19,7 @@ link_xxhash = xxhash.get_variable('link_libxxhash')
 zstdoubledee = subproject('zstdoubledee')
 link_zstd = zstdoubledee.get_variable('link_libzstdoubledee')
 
-# yaml dependencies, we encapsulate in our own meson.builds
+# yaml / elf-d dependencies, we encapsulate in our own meson.builds
 subdir('vendor')
 
 subdir('source')
