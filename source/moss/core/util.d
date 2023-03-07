@@ -93,7 +93,7 @@ pragma(inline, true) pure auto joinPath(S...)(in S datum) @safe nothrow
 
 unittest
 {
-    immutable string expectedHash = "f575dafbbab962ed89ba09c422e7ef52355aaa6b169a2980738b2518009d9bbe";
+    immutable string expectedHash = "5eca857080b9a65301edc2c6ebb5ebd3abc5ed679c49ab532a300c91d3674fc8";
     immutable string directHash = computeSHA256("LICENSES/Zlib.txt");
     immutable string mapHash = computeSHA256("LICENSES/Zlib.txt", true);
 

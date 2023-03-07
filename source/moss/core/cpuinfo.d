@@ -310,23 +310,23 @@ unittest
      * Only very few AMD CPUs prior to 1st gen Zen support x86_64_v3x.
      */
     /* Zen 4 */
-    testCpuinfoX86_64("./cpuinfo-test-data/AMD-R7-7700X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/AMD-R7-7700X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Zen 3 */
-    testCpuinfoX86_64("./cpuinfo-test-data/AMD-Epyc-7R13-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
-    testCpuinfoX86_64("./cpuinfo-test-data/AMD-R9-5950X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
-    testCpuinfoX86_64("./cpuinfo-test-data/AMD-R7-5850U-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/AMD-Epyc-7R13-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/AMD-R9-5950X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/AMD-R7-5850U-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Zen 2 */
-    testCpuinfoX86_64("./cpuinfo-test-data/AMD-R9-3900X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
-    testCpuinfoX86_64("./cpuinfo-test-data/AMD-R7-3700X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/AMD-R9-3900X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/AMD-R7-3700X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Zen 1+ */
-    testCpuinfoX86_64("./cpuinfo-test-data/AMD-R7-2700X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/AMD-R7-2700X-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Zen 1 */
-    testCpuinfoX86_64("./cpuinfo-test-data/AMD-Epyc-7571-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
-    testCpuinfoX86_64("./cpuinfo-test-data/AMD-R7-1700-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/AMD-Epyc-7571-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/AMD-R7-1700-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Piledriver */
-    testCpuinfoX86_64("./cpuinfo-test-data/AMD-FX-8350-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
+    testCpuinfoX86_64("./tests/core/AMD-FX-8350-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     /* Phenom II (unsupported in Serpent OS, but useful test nonetheless)*/
-    testCpuinfoX86_64("./cpuinfo-test-data/AMD-PhII-1090T-cpuinfo.txt", CpuInfo.ISALevel.x86_64);
+    testCpuinfoX86_64("./tests/core/AMD-PhII-1090T-cpuinfo.txt", CpuInfo.ISALevel.x86_64);
 
     /* Intel test cases
      *
@@ -334,34 +334,34 @@ unittest
      * only support x86_64_v2.
      */
     /* Alder Lake */
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-i5-1230U-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/intel-i5-1230U-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Ice Lake */
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-8375C-cpuinfo.txt",
+    testCpuinfoX86_64("./tests/core/intel-Xeon-8375C-cpuinfo.txt",
             CpuInfo.ISALevel.x86_64_v3x);
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-1065G7-cpuinfo.txt",
+    testCpuinfoX86_64("./tests/core/intel-i7-1065G7-cpuinfo.txt",
             CpuInfo.ISALevel.x86_64_v3x);
     /* Cascade Lake */
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-8259CL-cpuinfo.txt",
+    testCpuinfoX86_64("./tests/core/intel-Xeon-8259CL-cpuinfo.txt",
             CpuInfo.ISALevel.x86_64_v3x);
     /* Skylake */
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-6700K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/intel-i7-6700K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Broadwell */
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-E5-2686v4-cpuinfo.txt",
+    testCpuinfoX86_64("./tests/core/intel-Xeon-E5-2686v4-cpuinfo.txt",
             CpuInfo.ISALevel.x86_64_v3x);
     /* Haswell */
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-i5-4460-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/intel-i5-4460-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Ivy Bridge */
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-E5-2670v2-cpuinfo.txt",
+    testCpuinfoX86_64("./tests/core/intel-Xeon-E5-2670v2-cpuinfo.txt",
             CpuInfo.ISALevel.x86_64_v2);
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-3770K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-i5-3350P-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
+    testCpuinfoX86_64("./tests/core/intel-i7-3770K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
+    testCpuinfoX86_64("./tests/core/intel-i5-3350P-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     /* Sandy Bridge */
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-Xeon-E5-2665-cpuinfo.txt",
+    testCpuinfoX86_64("./tests/core/intel-Xeon-E5-2665-cpuinfo.txt",
             CpuInfo.ISALevel.x86_64_v2);
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-i7-2600K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-i5-2500-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
+    testCpuinfoX86_64("./tests/core/intel-i7-2600K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
+    testCpuinfoX86_64("./tests/core/intel-i5-2500-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     /* Penryn (not supported by Serpent OS, but useful test nonetheless) */
-    testCpuinfoX86_64("./cpuinfo-test-data/intel-c2q-q9400-cpuinfo.txt", CpuInfo.ISALevel.x86_64);
+    testCpuinfoX86_64("./tests/core/intel-c2q-q9400-cpuinfo.txt", CpuInfo.ISALevel.x86_64);
 
     writefln!"Done testing %s"(__MODULE__);
 }
