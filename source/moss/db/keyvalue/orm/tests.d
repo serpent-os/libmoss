@@ -138,7 +138,7 @@ debug
                 immutable acct = UserAccount(0, format!"User %d"(i), i == 3
                     ? ["canEat(chickens)", "canView(chickens"] : [
                         "canView(chickens)"
-                    ]);
+                ]);
                 auto err = acct.save(tx);
                 if (!err.isNull)
                 {
