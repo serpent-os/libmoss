@@ -3,7 +3,7 @@ components = [
     'core',
     'config',
     'db',
-    # 'deps',
+    'deps',
     # 'fetcher',
     # 'format'
 ]
