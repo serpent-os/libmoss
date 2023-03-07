@@ -4,7 +4,7 @@ components = [
     'config',
     'db',
     'deps',
-    # 'fetcher',
+    'fetcher',
     # 'format'
 ]
 
