@@ -10,6 +10,27 @@ project(
 # set up convenient debugging flags for mixins
 add_project_arguments('--mixin=mixin_generated_code.txt', language : 'd')
 
+# Grab our config
+with_moss_config = get_option('with-config')
+with_moss_db = get_option('with-db')
+with_moss_deps = get_option('with-deps')
+with_moss_fetcher = get_option('with-fetcher')
+with_moss_format = get_option('with-format')
+with_moss_format_binary = false
+with_moss_format_source = false
+
+# Determine moss-format build config
+if with_moss_format == 'both'
+    with_moss_format_binary = true
+    with_moss_format_source = true
+elif with_moss_format == 'source'
+    with_moss_format_binary = false
+    with_moss_format_source = true
+else
+    with_moss_format_binary = true
+    with_moss_format_source = false
+endif
+
 # lmdb binding
 lmdb = subproject('lmdb-d')
 link_lmdb = lmdb.get_variable('link_liblmdb')
