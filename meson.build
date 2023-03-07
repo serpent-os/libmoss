@@ -7,16 +7,17 @@ project(
     ]
 )
 
-# Bindings for db/format functionality
-external_projects = [
-    'lmdb-d',
-    'xxhash-d',
-    'zstdoubledee'
-]
+# lmdb binding
+lmdb = subproject('lmdb-d')
+link_lmdb = lmdb.get_variable('link_liblmdb')
 
-foreach project : external_projects
-    subproject(project)
-endforeach
+# xxhash binding
+xxhash = subproject('xxhash-d')
+link_xxhash = xxhash.get_variable('link_libxxhash')
+
+# zstd binding
+zstdoubledee = subproject('zstdoubledee')
+link_zstd = zstdoubledee.get_variable('link_libzstdoubledee')
 
 # yaml dependencies, we encapsulate in our own meson.builds
 subdir('vendor')
