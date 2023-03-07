@@ -1,0 +1,17 @@
+{
+	"name": "elf-d",
+	"description": "A library to introspect elf binaries",
+	"copyright": "Copyright © 2014, Yazan Dabain, Copyright © 2020-2022, Rune Morling",
+	"authors": ["Yazan Dabain", "Rune Morling"],
+	"license": "BSL 1.0",
+
+	"targetType": "staticLibrary",
+	"targetPath": "bin",
+
+	"sourcePaths": ["source"],
+
+	"subPackages": [
+		"example",
+		"scanelf"
+	]
+}

@@ -1,0 +1,18 @@
+{
+	"name": "scanelf",
+	"description": "An example application which can print ABI info for ELF files",
+	"copyright": "Copyright © 2021-2022, Rune Morling",
+	"authors": ["Rune Morling"],
+	"license": "BSL 1.0",
+
+	"targetName": "scanelf",
+	"targetType": "executable",
+	"targetPath": "../bin/",
+
+	"sourceFiles": ["scanelf.d"],
+	"mainSourceFile": "scanelf.d",
+
+	"dependencies": {
+		"elf-d": {"path": "../", "version": "~dynamiclinking"}
+	}
+}
