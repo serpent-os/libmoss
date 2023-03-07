@@ -23,7 +23,7 @@ jobs:
     - uses: dlang-community/setup-dlang@4c99aa991ce7d19dd3064de0a4f2f6b2f152e2d7
     - name: 'Install deps'
       run: |
-        sudo apt-get install libcurl-dev liblmdb-dev libxxhash-dev libzstd-dev
+        sudo apt-get install libcurl4-openssl-dev liblmdb-dev libxxhash-dev libzstd-dev
     - name: 'Build & Test'
       run: |
         # Build and run tests, as defined by `unittest` configuration
