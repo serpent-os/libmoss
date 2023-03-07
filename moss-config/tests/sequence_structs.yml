@@ -1,0 +1,16 @@
+#
+# Testing sequence of structs within singular struct
+#
+
+mainKey: "mainValue"
+people:
+    - Bob:
+        interests:
+            - Working
+            - Sleeping
+        age: 40
+    - Rupert:
+        interests:
+            - Sleeping
+            - Sleeping
+        age: 0
