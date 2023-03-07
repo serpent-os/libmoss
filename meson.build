@@ -20,28 +20,37 @@ with_moss_format_binary = false
 with_moss_format_source = false
 
 # Determine moss-format build config
-if with_moss_format == 'both'
+if with_moss_format == 'true'
     with_moss_format_binary = true
     with_moss_format_source = true
 elif with_moss_format == 'source'
     with_moss_format_binary = false
     with_moss_format_source = true
-else
+elif with_moss_format == 'binary'
     with_moss_format_binary = true
+    with_moss_format_source = false
+else
+    with_moss_format_binary = false
     with_moss_format_source = false
 endif
 
 # lmdb binding
-lmdb = subproject('lmdb-d')
-link_lmdb = lmdb.get_variable('link_liblmdb')
+if with_moss_db
+    lmdb = subproject('lmdb-d')
+    link_lmdb = lmdb.get_variable('link_liblmdb')
+endif
 
 # xxhash binding
-xxhash = subproject('xxhash-d')
-link_xxhash = xxhash.get_variable('link_libxxhash')
+if with_moss_format_binary or with_moss_deps
+    xxhash = subproject('xxhash-d')
+    link_xxhash = xxhash.get_variable('link_libxxhash')
+endif
 
 # zstd binding
-zstdoubledee = subproject('zstdoubledee')
-link_zstd = zstdoubledee.get_variable('link_libzstdoubledee')
+if with_moss_format_binary
+    zstdoubledee = subproject('zstdoubledee')
+    link_zstd = zstdoubledee.get_variable('link_libzstdoubledee')
+endif
 
 # yaml / elf-d dependencies, we encapsulate in our own meson.builds
 subdir('vendor')
