@@ -18,16 +18,16 @@ D_FILES='\.d$'
 
 function noisyFail ()
 {
-    if [[ -z "$1" ]]; then
-       echo ""
-       echo "\033[1;31mERROR:\033[0m\033[1m  No message parameter specified for noisyFail?\033[0m"
-       echo ""
-       exit 1
-    fi
     # set up terminal colours
     BOLDRED="\033[1;31m"
     BOLD="\033[1m"
     RESET="\033[0m"
+    if [[ -z "$1" ]]; then
+       echo ""
+       echo "${BOLDRED}ERROR:${RESET}${BOLD}  No message parameter specified for noisyFail?${RESET}"
+       echo ""
+       exit 1
+    fi
     ERRMSG="${BOLDRED}ERROR:${RESET}${BOLD}  ${1}${RESET}"
     echo ""
     echo -e "${ERRMSG}"
@@ -73,7 +73,7 @@ function rejectForbiddenPatterns ()
 {
     git diff --cached --name-only --diff-filter=d | \
         grep -E "${D_FILES}" | \
-        grep -Ev '^moss-vendor' | \
+        grep -Ev '^vendor' | \
         xargs gawk -- '
 # we need this for exit status
 BEGIN { matches = 0; }
