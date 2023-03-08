@@ -80,7 +80,6 @@ if with_moss_format_binary
             link_libmoss_core,
             link_xxhash,
             link_zstd,
-            dep_zstd,
         ],
         include_directories: [root_includedir],
     )

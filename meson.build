@@ -1,7 +1,7 @@
 project(
     'libmoss',
     ['c', 'd'],
-    version: '0.1.0',
+    version: '1.1.0',
     license: [
         'Zlib'
     ]
@@ -36,21 +36,29 @@ endif
 
 # lmdb binding
 if with_moss_db
-    lmdb = subproject('lmdb-d')
+    lmdb = subproject('lmdb-d',
+        default_options: [
+            'default_library=static'
+        ])
     link_lmdb = lmdb.get_variable('link_liblmdb')
 endif
 
 # xxhash binding
 if with_moss_format_binary or with_moss_deps
-    xxhash = subproject('xxhash-d')
+    xxhash = subproject('xxhash-d',
+        default_options: [
+            'default_library=static'
+        ])
     link_xxhash = xxhash.get_variable('link_libxxhash')
 endif
 
 # zstd binding
 if with_moss_format_binary
-    zstdoubledee = subproject('zstdoubledee')
+    zstdoubledee = subproject('zstdoubledee',
+        default_options: [
+            'default_library=static'
+        ])
     link_zstd = zstdoubledee.get_variable('link_libzstdoubledee')
-    dep_zstd = zstdoubledee.get_variable('dep_zstd')
 endif
 
 # yaml / elf-d dependencies, we encapsulate in our own meson.builds
