@@ -16,14 +16,14 @@ module moss.config.io.configuration;
 
 import moss.config.io.snippet;
 
+import moss.config.io.schema;
+import std.algorithm : find, filter, each, map, uniq, sort, joiner;
+import std.array : array, join;
 import std.exception : enforce;
+import std.file : dirEntries, DirEntry, exists, isDir, readLink, isSymlink, isFile, SpanMode;
+import std.range : chain, empty;
 import std.string : format, endsWith;
 import std.traits : getUDAs, isArray, FieldNameTuple;
-import moss.config.io.schema;
-import std.range : chain, empty;
-import std.file : dirEntries, DirEntry, exists, isDir, readLink, isSymlink, isFile, SpanMode;
-import std.array : array, join;
-import std.algorithm : find, filter, each, map, uniq, sort, joiner;
 
 /**
  * If a symlink points to /dev/null - it's "masked"
@@ -74,7 +74,7 @@ public static immutable(string) configDir = ".conf.d";
  */
 package enum Directories : string
 {
-    Vendor = "usr/share",
+    Vendor = "share",
     Admin = "etc"
 }
 
@@ -89,7 +89,7 @@ public class Configuration(C)
     /**
      * Construct a new Configuration
      */
-    this()
+    this(string vendorPrefix = "usr")
     {
         enum udas = getUDAs!(ElemType, ConfigurationDomain);
         static assert(udas.length == 1,
@@ -99,12 +99,12 @@ public class Configuration(C)
                 "Configuration!" ~ C.stringof ~ "ApplicationID is empty");
         _domain = udas[0];
 
-        paths = [
+        _paths = [
             /* Vendor possible paths */
-            SearchPath(format!"%s/%s/%s%s"(cast(string) Directories.Vendor,
+            SearchPath(format!"%s/%s/%s/%s%s"(vendorPrefix, cast(string) Directories.Vendor,
                     domain.applicationIdentity, domain.domain, configSuffix),
                     ConfigType.File | ConfigType.Vendor),
-            SearchPath(format!"%s/%s/%s%s"(cast(string) Directories.Vendor,
+            SearchPath(format!"%s/%s/%s/%s%s"(vendorPrefix, cast(string) Directories.Vendor,
                     domain.applicationIdentity, domain.domain, configDir),
                     ConfigType.Directory | ConfigType.Vendor),
 
@@ -116,6 +116,14 @@ public class Configuration(C)
                     domain.applicationIdentity, domain.domain, configDir),
                     ConfigType.Directory | ConfigType.Admin),
         ];
+    }
+
+    /**
+     * Return the active SearchPath[] for this configuration
+     */
+    pragma(inline, true) pure @property const(SearchPath[]) paths() @safe @nogc nothrow
+    {
+        return _paths;
     }
 
     /**
@@ -140,7 +148,7 @@ public class Configuration(C)
         }
 
         /* Iterate potential search paths */
-        foreach (path; paths)
+        foreach (path; _paths)
         {
             /* Build path and ensure it is usable */
             immutable auto searchPath = join([rootDirectory, path.path], "/");
@@ -365,7 +373,7 @@ private:
         return target == maskTarget;
     }
 
-    SearchPath[] paths;
+    SearchPath[] _paths;
     SnippetType[] _snippets;
 
     /* Separation of snippet types */
