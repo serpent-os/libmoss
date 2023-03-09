@@ -32,6 +32,9 @@ struct CompilerFlags
     /** The CXXFLAGS variable to export */
     @YamlSchema("cxx") string cxxflags = null;
 
+    /** The DFLAGS variable to export */
+    @YamlSchema("d") string dflags = null;
+
     /** The LDFLAGS variable to export */
     @YamlSchema("ld") string ldflags = null;
 }
@@ -99,6 +102,23 @@ struct TuningFlag
             return llvm.cxxflags;
         }
         return root.cxxflags;
+    }
+
+    /**
+     * Return the DFLAGS
+     */
+    pure @property string dflags(Toolchain toolchain) @safe @nogc nothrow
+    {
+        /* FIXME: Uncomment this when we default to GDC for gcc D builds */
+        /*if (toolchain == Toolchain.GNU && gnu.dflags != null)
+        {
+            return gnu.dflags;
+        } else */
+        if (toolchain == Toolchain.LLVM && llvm.dflags != null)
+        {
+            return llvm.dflags;
+        }
+        return root.dflags;
     }
 
     /**
