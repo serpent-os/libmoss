@@ -334,6 +334,7 @@ unittest
      * only support x86_64_v2.
      */
     /* Alder Lake */
+    testCpuinfoX86_64("./tests/core/intel-i9-12900HK-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     testCpuinfoX86_64("./tests/core/intel-i5-1230U-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Ice Lake */
     testCpuinfoX86_64("./tests/core/intel-Xeon-8375C-cpuinfo.txt",
