@@ -100,7 +100,7 @@ else
 }
 
 /**
- * Currently druntime lacks the following constants on Linux
+ * Currently druntime lacks the following symbols on Linux.
  */
 version (linux)
 {
@@ -111,84 +111,142 @@ version (linux)
     enum O_DIRECTORY = 0x20000;
 
     /**
-     * Pass to unlinkat() for rmdir() behaviour.
+     * These values replicate AT_* in https://github.com/torvalds/linux/blob/master/include/uapi/linux/fcntl.h
      */
-    enum AT_REMOVEDIR = 0x200;
+    enum AT
+    {
+        /**
+         * NONE is not technically an existing value in the Linux kernel sources,
+         * but can be used to signal the absence of an AT_* value.
+         */
+        NONE = 0,
+
+        /**
+        * Pass to unlinkat() for rmdir() behaviour.
+        */
+        REMOVEDIR = 0x200,
+
+        /**
+        * (Do) follow symlinks
+        */
+        SYMLINK_FOLLOW = 0x400,
+
+        /**
+        * Suppress terminal automount traversal
+        */
+        NO_AUTOMOUNT = 0x800,
+
+        EMPTY_PATH = 0x1000,
+        RECURSIVE = 0x8000,
+    }
 
     /**
-     * Suppress terminal automount traversal
+     * MS sets how a mount point is created or altered.
+     * Multiple values can be passed by OR-ing them together, when compatible.
+     * These values replicate MS_* in https://github.com/torvalds/linux/blob/v6.2/include/uapi/linux/mount.h
      */
-    enum AT_NO_AUTOMOUNT = 0x800;
+    public enum MS : ulong
+    {
+        /**
+         * NONE is not technically an existing value in the Linux kernel sources,
+         * but can be used to signal the absence of a MS_* value.
+         */
+        NONE = 0,
+        BIND = 4096,
+        REC = 16384,
+        UNBINDABLE = 1<<17,
+        PRIVATE = 1<<18,
+        SLAVE = 1<<19,
+        SHARED = 1<<20,
+    }
 
     /**
-     * (Do) follow symlinks
+     * MOUNT_ATTR sets the permissions of an existing mount point.
+     * Multiple values can be passed by OR-ing them together.
+     * These values replicate MOUNT_ATTR_* in https://github.com/torvalds/linux/blob/v6.2/include/uapi/linux/mount.h
      */
-    enum AT_SYMLINK_FOLLOW = 0x400;
+    public enum MOUNT_ATTR : ulong
+    {
+        RELATIME = 0x0,
+        RDONLY = 0x1,
+        NOSUID = 0x2,
+        NODEV = 0x4,
+        NOEXEC = 0x8,
+        NOATIME = 0x10,
+        _ATIME = 0x70,
+    }
+
+    public struct mount_attr
+    {
+        MOUNT_ATTR attr_set; /* Mount attributes to set. */
+        MOUNT_ATTR attr_clr; /* Mount attributes to clear. */
+        MS propagation; /* Mount propagation type. */
+        ulong userns_fd; /* User namespace file descriptor. */
+    };
+
+    /**
+     * MNT sets the umount options.
+     * Multiple values can be passed by OR-ing them together, when compatible.
+     * These values replicate MNT_* in https://github.com/torvalds/linux/blob/v6.2/include/linux/fs.h
+     */
+    public enum MNT
+    {
+        /**
+         * NONE is not technically an existing value in the Linux kernel sources,
+         * but can be used to signal the absence of a MNT_* value.
+         */
+        NONE = 0,
+        FORCE = 1,
+        DETACH = 2,
+    }
+
+    /**
+     * OPEN_TREE sets how open_tree opens a directory tree.
+     * Multiple values can be passed by OR-ing them together, when compatible.
+     * These values replicate OPEN_TREE_* in https://github.com/torvalds/linux/blob/v6.2/include/uapi/linux/mount.h
+     */
+    enum OPEN_TREE
+    {
+        TREE_CLONE = 1,
+    }
+
+    /**
+     * Mount the filesystem specified by source to the location specified
+     * by dir.
+     *
+     * Returns: 0 on success otherwise consult errno
+     */
+    extern (C) int mount(const(char*) specialFile, const(char*) dir,
+                         const(char*) fstype, MS mountFlags, const void* data) @system @nogc nothrow;
+
+    /**
+     * Unmount the specialFile
+     *
+     * Returns: 0 on success otherwise consult errno
+     */
+    extern (C) int umount(const(char*) specialFile) @system @nogc nothrow;
+
+    /**
+     * Alternative call to umount specifiying some flags
+     *
+     * Returns: 0 on success otherwise consult errno
+     */
+    extern (C) int umount2(const(char*) specialFile, MNT flags) @system @nogc nothrow;
+
+    int open_tree(int dirfd, immutable(char*) pathname, AT flags) @system @nogc nothrow
+    {
+        immutable int SYS_OPEN_TREE = 428;
+        return cast(int) syscall(SYS_OPEN_TREE, dirfd, pathname, flags);
+    }
+
+    int mount_setattr(int dirfd, immutable(char*) pathname, AT flags, mount_attr* attr, size_t size) @system @nogc nothrow
+    {
+        immutable int SYS_MOUNT_SETATTR = 442;
+        return cast(int) syscall(SYS_MOUNT_SETATTR, dirfd, pathname, flags, attr, size);
+    }
 }
 
-/**
- * Set mount specific options
- */
-public enum MountFlags : ulong
-{
-    None = 0,
-    ReadOnly = 1,
-    NoSuid = 2,
-    NoDev = 4,
-    NoExec = 8,
-    Synchronous = 16,
-    Remount = 32,
-    MandatoryLock = 64,
-    DirSync = 128,
-    NoAccessTime = 1024,
-    NoDirectoryAccessTime = 2048,
-    Bind = 4096,
-    Move = 8192,
-    Rec = 16_384,
-    Silent = 32_768,
-    PosixACL = 1 << 16,
-    Unbindable = 1 << 17,
-    Private = 1 << 18,
-    Slave = 1 << 19,
-    Shared = 1 << 20,
-    RelativeAccessTime = 1 << 21,
-    KernMount = 1 << 22,
-    IVersion = 1 << 23,
-    StrictAtime = 1 << 24,
-    LazyTime = 1 << 25,
-    Active = 1 << 30,
-    NoUser = 1 << 31,
-}
-
-public enum UnmountFlags : int
-{
-    None = 0,
-    Force = 1,
-    Detach = 2,
-}
-
-/**
- * Mount the filesystem specified by source to the location specified
- * by dir.
- *
- * Returns: 0 on success otherwise consult errno
- */
-extern (C) int mount(const(char*) specialFile, const(char*) dir,
-        const(char*) fstype, ulong mountFlags, const void* data) @system @nogc nothrow;
-
-/**
- * Unmount the specialFile
- *
- * Returns: 0 on success otherwise consult errno
- */
-extern (C) int umount(const(char*) specialFile) @system @nogc nothrow;
-
-/**
- * Alternative call to umount specifiying some flags
- *
- * Returns: 0 on success otherwise consult errno
- */
-extern (C) int umount2(const(char*) specialFile, int flags) @system @nogc nothrow;
+extern (C) long syscall(long number, ...) @system @nogc nothrow;
 
 @("Test mkdirat/fstatat/unlinkat")
 private unittest

@@ -14,13 +14,20 @@
  */
 module moss.core.mounts;
 
-import cstdlib = moss.core.c;
-public import moss.core.ioutil : CError;
-
-public import std.typecons : Nullable;
-public import moss.core.c : MountFlags, UnmountFlags;
-
+public import std.typecons : Nullable, nullable;
+import core.stdc.errno : ENOENT;
+import core.sys.posix.unistd : close;
+import std.exception : ErrnoException;
+import std.stdio : File;
 import std.string : empty, toStringz;
+
+public import moss.core.ioutil : CError;
+public import moss.core.c :
+    MNT,
+    MOUNT_ATTR,
+    MS,
+    mount_attr;
+import cstdlib = moss.core.c;
 
 /**
  * A null return from mount/umount/umount2 is "good" for us.
@@ -47,22 +54,30 @@ public struct Mount
      */
     string filesystem;
 
-    /** 
-     * Default to normal mount flags
+    /**
+     * mountMode defines how this mount point will be mounted.
+     * If unspecified, the kernel will use its default mode.
      */
-    MountFlags mountFlags = MountFlags.None;
+    cstdlib.MS mountMode;
+
+    /**
+     * mountAttr optionally defines additional properties of this mount point.
+     * They will be set after the `mount` syscall.
+     * If unspecified, the kernel will use its default mode.
+     */
+    Nullable!(cstdlib.mount_attr) mountAttr;
 
     /**
      * Default to normal umount flags
      */
-    UnmountFlags unmountFlags = UnmountFlags.None;
+    cstdlib.MNT unmountFlags;
 
     /**
      * Returns: A new tmpfs mount at the given destination
      */
     static Mount tmpfs(in string destination)
     {
-        return Mount("tmpfs", destination, "tmpfs", MountFlags.NoDev);
+        return Mount("", destination, "tmpfs", cstdlib.MS.NONE, cstdlib.mount_attr(cstdlib.MOUNT_ATTR.NODEV).nullable);
     }
 
     /**
@@ -70,7 +85,7 @@ public struct Mount
      */
     static Mount bindRW(in string source, in string destination)
     {
-        return Mount(source, destination, null, MountFlags.Bind);
+        return Mount(source, destination, null, cstdlib.MS.BIND);
     }
 
     /**
@@ -78,7 +93,7 @@ public struct Mount
      */
     static Mount bindRO(in string source, in string destination)
     {
-        return Mount(source, destination, null, MountFlags.Bind | MountFlags.ReadOnly);
+        return Mount(source, destination, null, cstdlib.MS.BIND, cstdlib.mount_attr(cstdlib.MOUNT_ATTR.RDONLY).nullable);
     }
 
     /**
@@ -92,33 +107,27 @@ public struct Mount
         scope const char* fsSource = source.empty ? null : source.toStringz;
         scope const char* fsDest = target.empty ? null : target.toStringz;
 
-        auto ret = cstdlib.mount(fsSource, fsDest, fsType, cast(ulong) mountFlags, data);
+        auto ret = cstdlib.mount(fsSource, fsDest, fsType, mountMode, data);
         if (ret != 0)
         {
             return MountReturn(CError(cstdlib.errno));
         }
-
-        /* We need read-only? */
-        if ((mountFlags & MountFlags.ReadOnly) != MountFlags.ReadOnly)
+        if (mountAttr.isNull())
         {
             return MountReturn();
         }
-
-        /* Remount read-only, preserve bind-flag */
-        auto newFlags = MountFlags.ReadOnly | MountFlags.Remount;
-        if ((mountFlags & MountFlags.Bind) == MountFlags.Bind)
+        try
         {
-            newFlags |= MountFlags.Bind;
+            ret = this.mountSetAttr();
         }
-
-        /* Perform the remount */
-        ret = cstdlib.mount(fsSource, fsDest, fsType, cast(ulong) newFlags, data);
+        catch (Exception)
+        {
+            ret = -1;
+        }
         if (ret != 0)
         {
             return MountReturn(CError(cstdlib.errno));
         }
-
-        /* All went well */
         return MountReturn();
     }
 
@@ -136,8 +145,41 @@ public struct Mount
         return MountReturn();
     }
 
-private:
+    /**
+     * setData sets additional mounting directives whose
+     * context depends on the target file system.
+     */
+    void setData(immutable(void)* data)
+    {
+        this.data = data;
+    }
 
-    /* Always NULL, never used in our implementation */
-    static void* data = null;
+private:
+    immutable(void)* data = null;
+
+    int mountSetAttr()
+    {
+        auto fd = cstdlib.open_tree(
+            -1,
+            target.toStringz(),
+            cstdlib.AT.NONE
+        );
+        if (fd < 0)
+        {
+            return fd;
+        }
+        scope(exit)
+        {
+            close(fd);
+        }
+        auto attrs = this.mountAttr.get();
+        auto ret = cstdlib.mount_setattr(
+            fd,
+            "".toStringz,
+            cstdlib.AT.EMPTY_PATH | cstdlib.AT.RECURSIVE,
+            &attrs,
+            attrs.sizeof,
+        );
+        return ret;
+    }
 }
