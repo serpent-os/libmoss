@@ -337,28 +337,22 @@ unittest
     testCpuinfoX86_64("./tests/core/intel-i9-12900HK-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     testCpuinfoX86_64("./tests/core/intel-i5-1230U-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Ice Lake */
-    testCpuinfoX86_64("./tests/core/intel-Xeon-8375C-cpuinfo.txt",
-            CpuInfo.ISALevel.x86_64_v3x);
-    testCpuinfoX86_64("./tests/core/intel-i7-1065G7-cpuinfo.txt",
-            CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/intel-Xeon-8375C-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/intel-i7-1065G7-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Cascade Lake */
-    testCpuinfoX86_64("./tests/core/intel-Xeon-8259CL-cpuinfo.txt",
-            CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/intel-Xeon-8259CL-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Skylake */
     testCpuinfoX86_64("./tests/core/intel-i7-6700K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Broadwell */
-    testCpuinfoX86_64("./tests/core/intel-Xeon-E5-2686v4-cpuinfo.txt",
-            CpuInfo.ISALevel.x86_64_v3x);
+    testCpuinfoX86_64("./tests/core/intel-Xeon-E5-2686v4-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Haswell */
     testCpuinfoX86_64("./tests/core/intel-i5-4460-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v3x);
     /* Ivy Bridge */
-    testCpuinfoX86_64("./tests/core/intel-Xeon-E5-2670v2-cpuinfo.txt",
-            CpuInfo.ISALevel.x86_64_v2);
+    testCpuinfoX86_64("./tests/core/intel-Xeon-E5-2670v2-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     testCpuinfoX86_64("./tests/core/intel-i7-3770K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     testCpuinfoX86_64("./tests/core/intel-i5-3350P-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     /* Sandy Bridge */
-    testCpuinfoX86_64("./tests/core/intel-Xeon-E5-2665-cpuinfo.txt",
-            CpuInfo.ISALevel.x86_64_v2);
+    testCpuinfoX86_64("./tests/core/intel-Xeon-E5-2665-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     testCpuinfoX86_64("./tests/core/intel-i7-2600K-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     testCpuinfoX86_64("./tests/core/intel-i5-2500-cpuinfo.txt", CpuInfo.ISALevel.x86_64_v2);
     /* Penryn (not supported by Serpent OS, but useful test nonetheless) */
