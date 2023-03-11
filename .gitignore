@@ -1,2 +1,4 @@
 build/
 *.a
+.dub
+libmoss-test-library
