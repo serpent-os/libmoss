@@ -6,6 +6,7 @@ libmoss_core_sources = [
     'download/package.d',
     'download/store.d',
     'c.d',
+    'ftw.d',
     'cpuinfo.d',
     'encoding.d',
     'errors.d',
