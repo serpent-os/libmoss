@@ -61,6 +61,7 @@ package final class FauxSource : RegistryPlugin
         case ProviderType.Interpreter:
         case ProviderType.BinaryName:
         case ProviderType.SystemBinaryName:
+        case ProviderType.Pkgconfig32Name:
             return [];
         case ProviderType.PackageName:
             return packages.values

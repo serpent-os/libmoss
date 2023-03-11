@@ -38,6 +38,7 @@ static this()
     depLookupTable["cmake"] = DependencyType.CmakeName;
     depLookupTable["name"] = DependencyType.PackageName;
     depLookupTable["pkgconfig"] = DependencyType.PkgconfigName;
+    depLookupTable["pkgconfig32"] = DependencyType.Pkgconfig32Name;
     depLookupTable["python"] = DependencyType.PythonName;
     depLookupTable["soname"] = DependencyType.SharedLibraryName;
     depLookupTable.rehash();
@@ -84,6 +85,8 @@ package auto dependencyToString(in DependencyType type, in string target)
         return format!"binary(%s)"(target);
     case DependencyType.SystemBinaryName:
         return format!"sysbinary(%s)"(target);
+    case DependencyType.Pkgconfig32Name:
+        return format!"pkgconfig32(%s)"(target);
     }
 }
 /**
@@ -132,6 +135,11 @@ public enum DependencyType : uint8_t
      * A binary exported from the /usr/sbin tree
      */
     SystemBinaryName,
+
+    /**
+     * Special case pkgconfig file in /usr/lib32
+     */
+    Pkgconfig32Name,
 }
 
 /**
