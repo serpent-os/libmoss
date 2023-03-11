@@ -5,7 +5,7 @@
 	"copyright": "Copyright © 2020-2023 Serpent OS Developers",
 	"description": "Unified moss libraries",
 	"license": "Zlib",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"name": "libmoss",
 	"toolchainRequirements": {
 		"ldc": ">=1.31.0"
