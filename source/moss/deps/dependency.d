@@ -26,7 +26,7 @@ import std.string : format;
 /**
  * Regex to capture type(target) dependency/provider strings
  */
-private static immutable auto reDepString = `^([a-z]+)\(([a-zA-Z0-9_\-\.]+)\)$`;
+private static immutable auto reDepString = `^([a-z0-9]+)\(([a-zA-Z0-9_\-\.]+)\)$`;
 private static auto reDep = ctRegex!reDepString;
 
 private static DependencyType[string] depLookupTable;
