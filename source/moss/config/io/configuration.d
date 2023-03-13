@@ -135,9 +135,9 @@ public class Configuration(C)
     }
 
     /**
-     * Load from the specific system paths within the given rootDirectory
+     * Load from the specific system paths within the given rootPrefix
      */
-    void load(in string rootDirectory)
+    void load(in string rootPrefix)
     {
         /**
          * Placeholder; Eventually handle masking logic based on Vendor vs Admin path
@@ -151,7 +151,7 @@ public class Configuration(C)
         foreach (path; _paths)
         {
             /* Build path and ensure it is usable */
-            immutable auto searchPath = join([rootDirectory, path.path], "/");
+            immutable auto searchPath = join([rootPrefix, path.path], "/");
             if (!searchPath.exists)
             {
                 continue;
