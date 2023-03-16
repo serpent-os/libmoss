@@ -21,7 +21,7 @@ import std.string : format;
 
 private static immutable suffixes = ["B", "KiB", "MiB", "GiB", "TiB"];
 private static immutable ulong suffixN = cast(ulong)((cast(long) suffixes.length) - 1);
-private static immutable unitSize = log(1024);
+private static immutable unitSize = log(1024.0);
 
 /**
  * A FormattedSize encapsulates the suffix and power-reduced
