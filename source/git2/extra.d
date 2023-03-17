@@ -14,6 +14,18 @@ extern(C):
 int git_remote_fetch (
     scope git_remote* remote,
     scope ref git_strarray refspecs,
+    scope git_fetch_options* opts,
+    const(char)* reflog_message = null);
+
+int git_remote_fetch (
+    scope git_remote* remote,
+    scope git_strarray* refspecs,
+    scope ref git_fetch_options opts,
+    const(char)* reflog_message = null);
+
+int git_remote_fetch (
+    scope git_remote* remote,
+    scope ref git_strarray refspecs,
     scope ref git_fetch_options opts,
     const(char)* reflog_message = null);
 

@@ -2930,8 +2930,8 @@ int git_remote_update_tips (
 
 int git_remote_fetch (
     scope git_remote* remote,
-    scope ref git_strarray refspecs,
-    scope git_fetch_options* opts,
+    scope git_strarray* refspecs = null,
+    scope git_fetch_options* opts = null,
     const(char)* reflog_message = null);
 
 int git_remote_prune (
