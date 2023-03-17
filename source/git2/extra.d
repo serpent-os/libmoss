@@ -11,8 +11,14 @@ import git2.bindings;
 @safe:
 extern(C):
 
+int git_remote_fetch (
+    scope git_remote* remote,
+    scope ref git_strarray refspecs,
+    scope ref git_fetch_options opts,
+    const(char)* reflog_message = null);
+
 int git_clone (
     scope out git_repository* out_,
     const(char)* url,
     const(char)* local_path,
-    scope const(git_clone_options)* options = null);
+    scope ref git_clone_options options);

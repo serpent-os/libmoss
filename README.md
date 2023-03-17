@@ -4,6 +4,15 @@
 
 ## Maintainers' notes
 
+This is an incomplete binding, meaning we polish it as we use it. Right now, you
+may use the binding directly if you're fine with writing non-safe functions or
+breaking `dip1000`. Note that the functions themselves are marked as `@safe`;
+it's just that some function parameters are simply un-obtainable in an `@safe`
+context (e.g. cannot take address of local variable or a pointer to a pointer).
+By polishing, we modify the function signatures and add attributes according to
+the rules outlined in the [Making It Ergonomic](#Making-It-Ergonomic) section
+so that they can be used smoothly in Safe-D.
+
 ### Generating Bindings
 
 This shouldn't be required. When updating the bindings to new versions, consult
@@ -39,19 +48,40 @@ section.
 
 ### Making It Ergonomic
 
-1. All pointers should be replaced with the `scope ref` attribute as much as
-   possible.
+1. At the very least, all pointer parameters should have the `scope` attribute
+   except for
+   `const(char)*`-type parameters, where we're expected to pass a string using
+   `someString.toStringz()`. If you're only adding a `scope` attribute, you may
+   just edit it in the `bindings.d` file.
 2. If a parameter is passed to be assigned (e.g. `git_clone`,
-   `git_XXX_option_init`), use the `scope out` attribute instead. You can
-   usually infer this through the API documentation or the paramter name (i.e.
-   `out_`).
-3. Anything with `ref`/`out` disallows passing lvalues to it, therefore rule (1)
+   `git_remote_lookup`), use the `scope out` attribute instead. You can
+   usually infer this through the API documentation or the paramter (e.g.
+   an `out**`). If you're only replacing a pointer-to-pointer with a
+   `scope out` pointer parameter, you may just edit it in the `bindings.d` file.
+3. All pointer parameters should be replaced with `scope ref` as much as
+   possible. This primarily applies
+   to structs that have a declared body (such as all structs with the form
+   `git_x_options`). If you're only replacing a pointer with `scope ref`, you
+   may just edit it in the `bindings.d` file. However, note for exceptions as
+   outlined in the rule below.
+   - The `git_x_options` structs are particularly forgiving in that there are
+     two identical functions for initializing them
+     (`git_x_init_options` and `git_x_options_init`). In this case, we choose
+     to exempt the `git_x_options_init` functions from rule (3) and only apply
+     rule (3) on the `git_x_init_options` functions).
+4. Some structs, particularly structs who do not have a declared body and are
+   assigned through a pointer-to-pointer or a ref to a pointer (such as
+   `git_repository` and `git_remote`), cannot be passed as `ref` since they must
+   be declared as a pointer. In these cases, ignore rule (3) and follow rule
+   (1).
+5. Anything with `ref`/`out` disallows passing lvalues to it, therefore rule (3)
    will break any function that intends you to pass `null` to indicate an
-   optional parameter. When this happens, copy the function into the `extra.d`
-   file and only add a `scope` attribute to that particular parameter. Any other
-   parameter can be annotated according to rule (1) and (2).
-   (for reference, search for the definition of the two `git_clone`
-   functions). 
+   optional parameter. When this happens, copy the edited function into the
+   `extra.d` file and follow rule (1) for that parameter. For the original
+   function in the
+   `bindings.d` file, you may add a `=null` default value to that parameter if
+   desired. For reference, search for the definition
+   of the two `git_clone` functions.
 
 On the ABI level, the signature of the functions are not changed. This is
 only for the purpose of satisfying the compiler and adhereing to Safe-D.
