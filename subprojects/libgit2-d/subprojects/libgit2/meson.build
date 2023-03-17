@@ -17,7 +17,7 @@ sha256_backend = get_option('sha256')
 
 git2_include = include_directories('include')
  
-defines = ['-DLIBGIT2_NO_FEATURES_H=']
+defines = ['-DLIBGIT2_NO_FEATURES_H=', '-DGIT_HTTPS=1']
 srcs = files(
   # libgit2 itself
   'src/libgit2/odb.c',
