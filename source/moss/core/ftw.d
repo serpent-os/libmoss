@@ -38,11 +38,11 @@ enum TypeFlag
 enum NftwFlags
 {
     // dfmt off
-    FTW_PHYS,           /* Perform physical walk, ignore symlinks. */
-    FTW_MOUNT,          /* Report only files on same file system as the argument. */
-    FTW_CHDIR,          /* Change to current directory while processing it. */
-    FTW_DEPTH,          /* Report files in directory before directory itself. */
-    FTW_ACTIONRETVAL,   /* (GNU) Assume callback to return FTW_* values instead of zero to continue and non-zero to terminate. */
+    FTW_PHYS = 1,           /* Perform physical walk, ignore symlinks. */
+    FTW_MOUNT = 2,          /* Report only files on same file system as the argument. */
+    FTW_CHDIR = 4,          /* Change to current directory while processing it. */
+    FTW_DEPTH = 8,          /* Report files in directory before directory itself. */
+    FTW_ACTIONRETVAL = 16,  /* (GNU) Assume callback to return FTW_* values instead of zero to continue and non-zero to terminate. */
     // dfmt on
 }
 
@@ -52,10 +52,10 @@ enum NftwFlags
 enum RetVal
 {
     // dfmt off
-    FTW_CONTINUE,       /* Continue with next sibling or for FTW_D with the first child. */
-    FTW_STOP,           /* Return from `ftw' or `nftw' with FTW_STOP as return value. */
-    FTW_SKIP_SUBTREE,   /* Only meaningful for FTW_D: Don't walk through the subtree, instead just continue with its next sibling. */
-    FTW_SKIP_SIBLINGS,  /* Continue with FTW_DP callback for current directory (if FTW_DEPTH) and then its siblings. */
+    FTW_CONTINUE = 0,       /* Continue with next sibling or for FTW_D with the first child. */
+    FTW_STOP = 1,           /* Return from `ftw' or `nftw' with FTW_STOP as return value. */
+    FTW_SKIP_SUBTREE = 2,   /* Only meaningful for FTW_D: Don't walk through the subtree, instead just continue with its next sibling. */
+    FTW_SKIP_SIBLINGS = 3,  /* Continue with FTW_DP callback for current directory (if FTW_DEPTH) and then its siblings. */
     // dfmt on
 }
 
@@ -206,7 +206,7 @@ else
     {
         switch (typeflag)
         {
-        case TypeFlag.FTW_D:
+        case TypeFlag.FTW_DP:
             dirs++;
             break;
         case TypeFlag.FTW_SL:
@@ -222,8 +222,7 @@ else
     /* No. of open file descriptors, if it's exceeded it'll be slower */
     enum nopenfd = 32;
     /* Ensure custom flags are working */
-    int flags;
-    flags |= NftwFlags.FTW_DEPTH | NftwFlags.FTW_PHYS | NftwFlags.FTW_ACTIONRETVAL;
+    int flags = NftwFlags.FTW_DEPTH | NftwFlags.FTW_PHYS | NftwFlags.FTW_ACTIONRETVAL;
     /* Walk the path */
     const ret = nftw(path.toStringz, &nftwhandler, nopenfd, flags);
 
@@ -232,7 +231,7 @@ else
         rmdirRecurse(path);
     }
 
-    assert(ret == 0);
+    assert(ret == RetVal.FTW_CONTINUE);
     assert(dirs == 3);
     assert(syms == 1);
 
