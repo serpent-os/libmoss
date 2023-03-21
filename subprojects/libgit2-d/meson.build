@@ -16,8 +16,8 @@ if meson.is_subproject()
 endif
 
 # Dependencies
-openssl = dependency('openssl')
-zlib = dependency('zlib')
+openssl = dependency('openssl', static: get_option('default_library') == 'static')
+zlib = dependency('zlib', static: get_option('default_library') == 'static')
 
 # Setup cmake subproject
 cmake = import('cmake')
@@ -68,9 +68,9 @@ libgit2 = static_library(
 # Allow linking to us
 link_libgit2 = declare_dependency(
 	link_whole: libgit2,
-	include_directories: libgit2_includes,
     link_with: [libgit2_tgt],
 	dependencies: [openssl, zlib],
+	include_directories: libgit2_includes,
 )
 
 # Installed system-wide?

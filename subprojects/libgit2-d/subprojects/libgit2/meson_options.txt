@@ -1,4 +1,0 @@
-option('regex', type: 'combo', choices: ['builtin', 'pcre', 'pcre2', 'regcomp', 'regcomp_l'], value: 'builtin')
-option('sha1', type: 'combo', choices: ['generic', 'openssl', 'win32', 'mbedtls', 'collision_detection'], value: 'collision_detection')
-option('sha256', type: 'combo', choices: ['builtin', 'generic', 'openssl', 'win32', 'mbedtls'], value: 'builtin')
-option('threadsafe', type: 'boolean', value: true)
