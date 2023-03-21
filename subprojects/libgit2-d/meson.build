@@ -15,11 +15,33 @@ if meson.is_subproject()
 	installFiles = false
 endif
 
-libgit2 = subproject(
-  'libgit2',
-  default_options: ['default_library=static'],
+# Dependencies
+openssl = dependency('openssl')
+zlib = dependency('zlib')
+
+# Setup cmake subproject
+cmake = import('cmake')
+opt_var = cmake.subproject_options()
+opt_var.add_cmake_defines({
+    'USE_HTTP_PARSER': 'builtin',
+    'USE_HTTPS': 'OpenSSL',
+    'REGEX_BACKEND': 'builtin',
+    'USE_BUNDLED_ZLIB': false,
+    'USE_SSH': false,
+    'BUILD_TESTS': false,
+    'BUILD_SHARED_LIBS': false,
+})
+opt_var.set_override_option('c_std', 'gnu89')
+opt_var.set_override_option('warning_level', '0')
+
+# Call the cmake subproject and extract the target
+libgit2 = cmake.subproject(
+    'libgit2',
+    options: opt_var,
 )
-libgit2_dep = libgit2.get_variable('libgit2_dep')
+# We're not using dependency because it will pass the C headers to the D
+# compiler
+libgit2_tgt = libgit2.target('libgit2package')
 
 # Package sources
 deps_sources = [
@@ -38,9 +60,8 @@ libgit2 = static_library(
 	'libgit2-d',
 	deps_sources,
 	install: installFiles,
-	dependencies: [
-		libgit2_dep,
-	],
+    link_with: [libgit2_tgt],
+	dependencies: [openssl, zlib],
 	include_directories: libgit2_includes,
 )
 
@@ -48,9 +69,8 @@ libgit2 = static_library(
 link_libgit2 = declare_dependency(
 	link_whole: libgit2,
 	include_directories: libgit2_includes,
-	dependencies: [
-        libgit2_dep
-	],
+    link_with: [libgit2_tgt],
+	dependencies: [openssl, zlib],
 )
 
 # Installed system-wide?
