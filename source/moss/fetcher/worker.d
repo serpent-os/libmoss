@@ -28,6 +28,7 @@ import std.datetime;
 import cstdlib = moss.core.c;
 import moss.core.ioutil;
 import std.stdint : uint64_t;
+version(libgit2) import git2;
 
 import std.concurrency : locate, Tid, thisTid, receiveOnly, receive, send;
 
@@ -100,6 +101,13 @@ package final class FetchWorker : Thread
         handle = curl_easy_init();
         enforce(handle !is null, "FetchWorker(): curl_easy_init() failure");
         setupHandle();
+ 
+        version(libgit2)
+        {
+            /* Initialize libgit2 */
+            int err = git_libgit2_init();
+            enforce(err >= 0, "FetchWorker(): git_libgit2_init() failure");
+        }
     }
 
     /**
@@ -131,6 +139,13 @@ package final class FetchWorker : Thread
 
         curl_easy_cleanup(handle);
         handle = null;
+
+        version(libgit2)
+        {
+            /* Just quitting is too severe, maybe warning is better */
+            int err = git_libgit2_shutdown();
+            enforce(err >= 0, "FetchWorker(): git_libgit2_shutdown() failure");
+        }
     }
 
     /**
@@ -245,47 +260,84 @@ private:
         /* Use the git command-line to mirror clone requested the repository. */
         if (fetchable.type == FetchType.GitRepository)
         {
-            import std.process;
-
-            string[] cmd;
-            string[string] env;
-            string workdir;
-
-            /**
-             * If the destination path (directory in this case) already exists,
-             * this means that it has been previously fetched before. In this
-             * case, we simply need to fetch the new commits. Otherwise, do a
-             * fresh new clone.
-             */
-            if (fetchable.destinationPath.exists)
+            /* Do nothing if we're not built against libgit2 */
+            version(libgit2)
             {
-                cmd = ["git", "fetch"];
-                workdir = fetchable.destinationPath;
-            }
-            else
-            {
-                cmd = [
-                    "git", "clone", "--mirror", "--", fetchable.sourceURI,
-                    fetchable.destinationPath,
-                ];
-            }
+                // () @safe {
+                import core.stdc.stdio : fprintf, stderr;
 
-            auto p = spawnProcess(cmd, env, Config.none, workdir);
-            statusCode = p.wait();
+                scope git_repository* repo;
+                scope(exit) git_repository_free(repo);
 
-            /**
-             * Currently, there's no way to report progress with pure Git
-             * command-line...
-             */
-            reportProgress(100, 100, true);
+                git_fetch_options fetch_opts;
+                git_fetch_init_options(fetch_opts, 1);
+                fetch_opts.callbacks.transfer_progress = &mossGitFetchWorkerProgress;
+                fetch_opts.callbacks.payload = (() @trusted { return cast(void*)this; } )() ;
 
-            /**
-             * Note that we need to return a status code as if we're doing HTTP
-             * requests, so we should return 200 when the command succeeds.
-             */
-            if (statusCode == 0)
-            {
+                /**
+                 * If the destination path (directory in this case) already exists,
+                 * this means that it has been previously fetched before. In this
+                 * case, we simply need to fetch the new commits. Otherwise, do a
+                 * fresh new clone.
+                 */
+                // auto destinationPath = toStringz(fetchable.destinationPath);
+                if (fetchable.destinationPath.exists)
+                {
+                    git_strarray remotes;
+                    scope(exit) remotes.git_strarray_dispose();
+
+                    if (repo.git_repository_open(fetchable.destinationPath.toStringz()) != 0)
+                    {
+                        debug fprintf(stderr, "Failed to open repo: %s\n", git_error_last().message);
+                        return FetchResult(FetchError(git_error_last().klass, FetchErrorDomain.Git, fetchable.sourceURI));
+                    }
+
+                    if (remotes.git_remote_list(repo) != 0)
+                    {
+                        debug fprintf(stderr, "Failed to list remotes: %s\n", git_error_last().message);
+                        return FetchResult(FetchError(git_error_last().klass, FetchErrorDomain.Git, fetchable.sourceURI));
+                    }
+
+                    if (remotes.count < 1)
+                    {
+                        debug fprintf(stderr, "Remote count less than 1: %ld\n", remotes.count);
+                        return FetchResult(FetchError(git_error_last().klass, FetchErrorDomain.Git, fetchable.sourceURI));
+                    }
+
+                    git_remote* remote;
+                    scope(exit) git_remote_free(remote);
+                    if (git_remote_lookup(remote, *repo, remotes.strings[0]) != 0)
+                    {
+                        debug fprintf(stderr, "Failed to load remote: %s\n", git_error_last().message);
+                        return FetchResult(FetchError(git_error_last().klass, FetchErrorDomain.Git, fetchable.sourceURI));
+                    }
+                    
+                    if (git_remote_fetch(remote, null, fetch_opts, null) != 0)
+                    {
+                        debug fprintf(stderr, "Failed to fetch from remote: %s\n", git_error_last().message);
+                        return FetchResult(FetchError(git_error_last().klass, FetchErrorDomain.Git, fetchable.sourceURI));
+                    }
+                }
+                else
+                {
+                    git_clone_options clone_opts;
+                    clone_opts.git_clone_init_options(1);
+                    clone_opts.fetch_opts = fetch_opts;
+
+                    if (git_clone(repo, fetchable.sourceURI.toStringz(),
+                                fetchable.destinationPath.toStringz(), clone_opts) != 0)
+                    {
+                        debug fprintf(stderr, "Failed to clone repo: %s\n", git_error_last().message);
+                        return FetchResult(FetchError(git_error_last().klass, FetchErrorDomain.Git, fetchable.sourceURI));
+                    }
+                }
+
+                /**
+                 * Note that we need to return a status code as if we're doing HTTP
+                 * requests, so we should return 200 when the command succeeds.
+                 */
                 statusCode = 200;
+                // }();
             }
         }
         else
@@ -394,6 +446,28 @@ private:
         enforce(worker !is null, "CURL IS BROKEN");
         worker.reportProgress(dlTotal, dlNow);
         return 0;
+    }
+
+    version(libgit2)
+    {
+        /**
+         * Handle the progress callback for Git clones/fetch
+         */
+        extern (C) static int mossGitFetchWorkerProgress(const(git_indexer_progress)* stats, void* payload)
+        {
+            /**
+             * For now there's no way to display two progress bars one after the
+             * other,
+             * I think. Ideally we want the first progress bar to display
+             * received_objects, and after the first bar is finished, the second
+             * progress bar would display indexed_deltas. For now, let's just
+             * display indexed_objects since it's a sum of the first two.
+             */
+            auto worker = cast(FetchWorker) payload;
+            enforce(worker !is null, "GIT IS BROKEN");
+            worker.reportProgress(stats.total_objects, stats.indexed_objects);
+            return 0;
+        }
     }
 
     /**

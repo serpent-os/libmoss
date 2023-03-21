@@ -27,11 +27,24 @@ import std.string : format;
  * moss-fetcher may have errors from 3 primary domains so we specify them
  * for ease of handling
  */
-public enum FetchErrorDomain
+version(libgit2)
 {
-    CurlEasy = 0,
-    CurlShare,
-    CStdlib,
+    public enum FetchErrorDomain
+    {
+        CurlEasy = 0,
+        CurlShare,
+        CStdlib,
+        Git,
+    }
+}
+else
+{
+    public enum FetchErrorDomain
+    {
+        CurlEasy = 0,
+        CurlShare,
+        CStdlib,
+    }
 }
 
 /**
@@ -71,6 +84,12 @@ public struct FetchError
         case FetchErrorDomain.CStdlib:
             return format!"[%s] %s: %s"("cstdlib",
                     strerror(errorNumber).fromStringz, artifact);
+        version(libgit2)
+        {
+        case FetchErrorDomain.Git:
+            return format!"[%s] %s: %s"("git",
+                    strerror(errorNumber).fromStringz, artifact);
+        }
         }
     }
 }

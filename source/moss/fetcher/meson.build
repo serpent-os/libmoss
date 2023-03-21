@@ -11,16 +11,22 @@ fetcher_sources = [
     'controller.d',
 ]
 
+fetcher_deps = [link_libmoss_core, dep_libcurl]
+if with_moss_fetcher_git
+    fetcher_deps += [link_libgit2]
+endif
+
 libmoss_fetcher = static_library(
 	'moss-fetcher',
 	fetcher_sources,
 	install: false,
-    dependencies: [link_libmoss_core, dep_libcurl],
+    dependencies: fetcher_deps,
 	include_directories: [root_includedir],
+    d_module_versions: with_moss_fetcher_git ? ['libgit2'] : [],
 )
 
 link_libmoss_fetcher = declare_dependency(
 	link_whole: libmoss_fetcher,
 	include_directories: [root_includedir],
-	dependencies: [link_libmoss_core, dep_libcurl],
+	dependencies: fetcher_deps,
 )
