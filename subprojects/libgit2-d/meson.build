@@ -46,6 +46,7 @@ libgit2_tgt = libgit2.target('libgit2package')
 # Package sources
 deps_sources = [
     'source/git2/bindings.d',
+    'source/git2/enums.d',
     'source/git2/extra.d',
     'source/git2/package.d',
 ]
