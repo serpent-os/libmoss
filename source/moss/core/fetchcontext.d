@@ -34,9 +34,14 @@ public enum FetchType
     TemporaryFile,
 
     /**
-     * Mirror cloning (`git clone --mirror`) a Git repository.
+     * Cloning a non-bare repository.
      */
     GitRepository,
+
+    /**
+     * Mirror cloning (`git clone --mirror`) a Git repository.
+     */
+    GitRepositoryMirror,
 }
 
 /**

@@ -216,6 +216,7 @@ private:
             }, (err) { foundError = err; return -1; });
             break;
         case FetchType.GitRepository:
+        case FetchType.GitRepositoryMirror:
             if (!fetchable.destinationPath.dirName.exists())
             {
                 fetchable.destinationPath.dirName.mkdirRecurse();
@@ -223,8 +224,11 @@ private:
             break;
         }
 
+        bool isGitType = fetchable.type == FetchType.GitRepository
+            || fetchable.type == FetchType.GitRepositoryMirror;
+
         /* Make sure we can continue now */
-        if (fetchable.type != FetchType.GitRepository && outputFD < 0)
+        if (!isGitType && outputFD < 0)
         {
             return FetchResult(FetchError(foundError.errorCode,
                     FetchErrorDomain.CStdlib, fetchable.destinationPath));
@@ -233,7 +237,7 @@ private:
         /* Ensure we close the file again */
         scope (exit)
         {
-            if (fetchable.type != FetchType.GitRepository)
+            if (isGitType)
             {
                 cstdlib.close(outputFD);
                 outputFD = -1;
@@ -243,7 +247,7 @@ private:
         long statusCode = 0;
 
         /* Use the git command-line to mirror clone requested the repository. */
-        if (fetchable.type == FetchType.GitRepository)
+        if (isGitType)
         {
             import std.process;
 
@@ -264,10 +268,26 @@ private:
             }
             else
             {
-                cmd = [
-                    "git", "clone", "--mirror", "--", fetchable.sourceURI,
-                    fetchable.destinationPath,
-                ];
+                /**
+                 * Who knows, maybe we'll add another FetchType (hopefully not).
+                 */
+                final switch (fetchable.type)
+                {
+                case FetchType.GitRepository:
+                    cmd = [
+                        "git", "clone", "--", fetchable.sourceURI,
+                        fetchable.destinationPath,
+                    ];
+                    break;
+                case FetchType.GitRepositoryMirror:
+                    cmd = [
+                        "git", "clone", "--mirror", "--", fetchable.sourceURI,
+                        fetchable.destinationPath,
+                    ];
+                    break;
+                case FetchType.RegularFile:
+                case FetchType.TemporaryFile:
+                }
             }
 
             auto p = spawnProcess(cmd, env, Config.none, workdir);
