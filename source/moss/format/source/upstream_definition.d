@@ -60,6 +60,15 @@ struct GitUpstreamDefinition
 
     /** Directory to clone the git source to */
     @YamlSchema("clonedir") string clonedir;
+
+    /**
+     * Whether to first clone the git repository into staging
+     * directory or not. This is often set to `false` when git
+     * submodules are defined using relative paths or urls, so that
+     * they can be resolved correctly instead of resolving to a local
+     * path.
+     */
+    @YamlSchema("staging") bool staging = true;
 }
 
 /**
