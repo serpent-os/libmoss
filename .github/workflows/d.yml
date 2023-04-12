@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  dub_test:
 
     runs-on: ubuntu-latest
 
