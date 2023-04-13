@@ -55,6 +55,30 @@ public struct TemporaryFile
 }
 
 /**
+ * A directory walk result will return whether it was successful, the
+ * size, and, the number of files and directories walked.
+ */
+public struct DirectoryWalkResult
+{
+    /**
+     * Succesfully walked the directory?
+     */
+    bool success = false;
+    /**
+     * Total disk size of the directory
+     */
+    ulong totalSize = -1;
+    /**
+     * Number of files walked
+     */
+    ulong files = -1;
+    /**
+     * Number of directories walked
+     */
+    ulong directories = -1;
+}
+
+/**
  * Algebraic result for most IOUtil operations
  */
 public alias IOResult = SumType!(bool, CError);
@@ -63,6 +87,11 @@ public alias IOResult = SumType!(bool, CError);
  * Returns a file descriptor
  */
 public alias IOFDResult = SumType!(int, CError);
+
+/**
+ * Returns the walk result
+ */
+public alias IOWalkResult = SumType!(DirectoryWalkResult, CError);
 
 /**
  * Returns a temporary file result
@@ -257,6 +286,108 @@ public struct IOUtil
         }
 
         return IOTempdResult(cast(string) copyBuffer.fromStringz);
+    }
+
+    /**
+     * Deletes all files in a directory. A lot faster than rmdirRecurse.
+     * Params:
+     *   path = directory to remove
+     *   keepRootDir = delete everything in the directory but not the directory itself (default: false)
+     * Returns: sumtype (DirectoryWalkResult | CError)
+     */
+    static IOWalkResult deleteDir(in string path, bool keepRootDir = false) @trusted
+    {
+        import moss.core.ftw : FTW, nftw, NftwFlags, stat_t, TypeFlag;
+        import std.file : FileException, exists, remove, rmdir;
+        import std.parallelism : parallel;
+        import std.string : fromStringz, toStringz;
+
+        scope (exit)
+        {
+            cstdlib.errno = 0;
+        }
+
+        if (!path.exists)
+        {
+            return IOWalkResult(CError(cstdlib.errno));
+        }
+
+        /* Static vars to interact with the handler */
+        static string[] dirs;
+        dirs.length = 0;
+        dirs.assumeSafeAppend();
+        static string[] files;
+        files.length = 0;
+        files.assumeSafeAppend();
+        static ulong size;
+        size = 0;
+
+        /* nftw handler */
+        extern (C) static int handler(const char* fpath, const stat_t* sb, int typeflag, FTW* ftwbuf)
+        {
+            const path = fpath.fromStringz.idup;
+            switch (typeflag)
+            {
+                case TypeFlag.FTW_F:
+                case TypeFlag.FTW_SL:
+                case TypeFlag.FTW_SLN:
+                    files ~= path;
+                    size += sb.st_size;
+                    break;
+
+                /* Skip FTW_D to ensure dirs are sorted depth first */
+                case TypeFlag.FTW_DP:
+                    dirs ~= path;
+                    break;
+
+                default:
+                    break;
+            }
+            return 0;
+        }
+        /* No. of open fds */
+        enum nopenfd = 4096;
+        /* Depth first, same mount only, don't follow symlinks */
+        int flags = NftwFlags.FTW_DEPTH | NftwFlags.FTW_MOUNT | NftwFlags.FTW_PHYS;
+        /* Walk the path */
+        const ret = nftw(path.toStringz, &handler, nopenfd, flags);
+
+        if (ret != 0)
+        {
+            return IOWalkResult(CError(ret));
+        }
+
+        if (keepRootDir == true)
+        {
+            dirs = dirs[0 .. $ - 1];
+        }
+
+        bool success = true;
+        try
+        {
+            /* Delete files in parallel */
+            foreach(file; parallel(files))
+            {
+                remove(file);
+            }
+            /* Remove dirs, they're sorted depth first */
+            foreach(dir; dirs)
+            {
+                remove(dir);
+            }
+        }
+        catch (FileException e)
+        {
+            /* Try and keep going */
+            success = false;
+        }
+
+        /* Assign to a TLS vars for return */
+        immutable ulong deletedSize = size;
+        immutable ulong retFiles = files.length;
+        immutable ulong retDirs = dirs.length;
+
+        return IOWalkResult(DirectoryWalkResult(success, deletedSize, retFiles, retDirs));
     }
 
     /**
