@@ -15,11 +15,14 @@
  */
 module moss.deps.digraph;
 
+import std.algorithm : each, filter;
 import std.array : array;
 import std.container.rbtree;
+import std.conv : to;
 import std.exception : enforce;
-import std.string : format;
+import std.logger;
 import std.stdio : File, stdout;
+import std.string : format;
 import std.traits : Unconst;
 
 /**
@@ -236,10 +239,7 @@ public final class DirectedAcyclicalGraph(B)
     {
         enforce(cb !is null, "Cannot perform search without a closure");
         /* Discolour/reset each vertex */
-        foreach (vertex; vertices)
-        {
-            vertex.status = VertexStatus.Undiscovered;
-        }
+        vertices.each!((ref v) => v.status = VertexStatus.Undiscovered);
 
         /* For every unvisited vertex, begin search */
         foreach (vertex; vertices)
@@ -252,13 +252,44 @@ public final class DirectedAcyclicalGraph(B)
     }
 
     /**
+     * Visit all vertices until all cyclical dependencies can be removed.
+     */
+    void breakCycles() @safe
+    {
+        void resetVertices()
+        {
+            vertices.each!((ref v) => v.status = VertexStatus.Undiscovered);
+        }
+
+        resetVertices();
+        scope (exit)
+            resetVertices();
+
+        bool canBreak = true;
+
+        while (canBreak)
+        {
+            canBreak = false;
+
+            /* Walk all undiscovered */
+            foreach (ref v; vertices[].filter!((v) => v.status == VertexStatus.Undiscovered))
+            {
+                if (dfsUncycle(v))
+                {
+                    canBreak = true;
+                    break;
+                }
+            }
+            resetVertices();
+        }
+    }
+
+    /**
      * Emit the graph to the given output stream.
      * Highly simplistic
      */
     void emitGraph(File output = stdout) @system
     {
-        import std.conv : to;
-
         output.writeln("digraph G {");
         foreach (v; vertices)
         {
@@ -273,28 +304,6 @@ public final class DirectedAcyclicalGraph(B)
             }
         }
         output.writeln("}");
-    }
-
-    /**
-     * Automatically break U->V->U cycle dependencies
-     */
-    void breakCycles() @safe
-    {
-        foreach (v; vertices)
-        {
-            restart: foreach (edge; v.edges)
-            {
-                auto lookupNode = getVertex(edge);
-                auto matches = () @trusted {
-                    return lookupNode.edges.equalRange(v.label);
-                }();
-                if (!matches.empty)
-                {
-                    () @trusted { lookupNode.edges.removeKey(matches); }();
-                    goto restart;
-                }
-            }
-        }
     }
 
     /**
@@ -362,6 +371,41 @@ private:
         auto match = () @trusted { return vertices.equalRange(desc); }();
         enforce(!match.empty, "Cannot find node");
         return match.front;
+    }
+
+    /**
+     * Try to break cycles on a vertex
+     *
+     * Params:
+     *   vertex = Current vertex we're operating on
+     * Returns: true if we broke a cycle
+     */
+    bool dfsUncycle(VertexDescriptor vertex) @safe
+    {
+        vertex.status = VertexStatus.Discovered;
+
+        foreach (edge; vertex.edges)
+        {
+            auto edgeNode = getVertex(edge);
+            if (edgeNode.status == VertexStatus.Undiscovered)
+            {
+                if (dfsUncycle(edgeNode))
+                {
+                    return true;
+                }
+            }
+            else if (edgeNode.status == VertexStatus.Discovered)
+            {
+                trace(format!"Removing cyclical dependency between %s and %s"(vertex.label.to!string,
+                        edgeNode.label.to!string));
+                /* Let's remove this connection and break */
+                edgeNode.edges.removeKey(vertex.label);
+                return true;
+            }
+        }
+        vertex.status = VertexStatus.Explored;
+
+        return false;
     }
 
     /**
