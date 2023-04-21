@@ -134,7 +134,7 @@ public struct Mount
     /**
      * Attempt to unmount this mount point
      */
-    MountReturn unmount() @system nothrow
+    MountReturn unmount() @system nothrow const
     {
         scope const char* fsDest = target.empty ? null : target.toStringz;
         auto ret = cstdlib.umount2(fsDest, unmountFlags);
