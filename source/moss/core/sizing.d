@@ -21,7 +21,7 @@ import std.string : format;
 
 private static immutable suffixes = ["B", "KiB", "MiB", "GiB", "TiB"];
 private static immutable ulong suffixN = cast(ulong)((cast(long) suffixes.length) - 1);
-private static immutable unitSize = log(1024);
+private static immutable unitSize = log(1024.0);
 
 /**
  * A FormattedSize encapsulates the suffix and power-reduced
@@ -65,17 +65,18 @@ pure FormattedSize formattedSize(scope const ref double inp) @safe @nogc nothrow
 }
 
 /**
- * Default pretty print of size (12 characters wide including suffix)
+ * Default pretty print of size (13 characters wide including suffix)
  *
  * Example:
- * "      100  B"
- * "    1,023  B"
- * "    1.00 KiB"
- * "  999.99 KiB"
- * "    1.00 MiB"
+ * "       100  B"
+ * "     1,023  B"
+ * "     1.00 KiB"
+ * "   999.99 KiB"
+ * " 1,023.49 KiB"
+ * "     1.00 MiB"
  *     (...)
- * "  999.99 TiB"
- * "9,999.99 TiB"
+ * "   999.99 TiB"
+ * " 9,999.99 TiB"
  *
  * Params:
  *      inp = Double precision size
@@ -87,11 +88,11 @@ pure auto formattedSizePadding(scope const ref double inp) @safe
     if (formatted.suffix != "B")
     {
         /* ensure that very large sizes have enough room */
-        return format!"%7,.2f %-3s"(formatted.numUnits, formatted.suffix);
+        return format!"%8,.2f %-3s"(formatted.numUnits, formatted.suffix);
     }
     else
     {
         /* match up bytes nicely without a dot separator */
-        return format!"%8,.0f %2s"(formatted.numUnits, formatted.suffix);
+        return format!"%9,.0f %2s"(formatted.numUnits, formatted.suffix);
     }
 }

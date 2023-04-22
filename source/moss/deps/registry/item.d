@@ -22,6 +22,7 @@ public import std.stdint : uint64_t;
 public import std.typecons : Nullable;
 public import std.range : isInputRange;
 import std.array : array;
+import std.string : format;
 import std.algorithm : multiSort, SwapStrategy, map;
 
 @trusted:
@@ -203,6 +204,11 @@ public struct RegistryItem
     ulong toHash() @safe nothrow const
     {
         return typeid(string).getHash(&pkgID);
+    }
+
+    string toString() const @safe
+    {
+        return format!"%s"(plugin.info(pkgID).name);
     }
 
 package:
