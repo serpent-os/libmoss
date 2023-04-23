@@ -15,6 +15,7 @@
 #include "buf.h"
 #include "common.h"
 #include "commit.h"
+#include "grafts.h"
 #include "tag.h"
 #include "blob.h"
 #include "futils.h"
@@ -151,6 +152,8 @@ int git_repository__cleanup(git_repository *repo)
 	git_repository_submodule_cache_clear(repo);
 	git_cache_clear(&repo->objects);
 	git_attr_cache_flush(repo);
+	git_grafts_free(repo->grafts);
+	git_grafts_free(repo->shallow_grafts);
 
 	set_config(repo, NULL);
 	set_index(repo, NULL);
@@ -769,6 +772,27 @@ out:
 	return error;
 }
 
+static int load_grafts(git_repository *repo)
+{
+	git_str path = GIT_STR_INIT;
+	int error;
+
+	if ((error = git_repository__item_path(&path, repo, GIT_REPOSITORY_ITEM_INFO)) < 0 ||
+	    (error = git_str_joinpath(&path, path.ptr, "grafts")) < 0 ||
+	    (error = git_grafts_from_file(&repo->grafts, path.ptr)) < 0)
+		goto error;
+
+	git_str_clear(&path);
+
+	if ((error = git_str_joinpath(&path, repo->gitdir, "shallow")) < 0 ||
+	    (error = git_grafts_from_file(&repo->shallow_grafts, path.ptr)) < 0)
+		goto error;
+
+error:
+	git_str_dispose(&path);
+	return error;
+}
+
 static int obtain_config_and_set_oid_type(
 	git_config **config_ptr,
 	git_repository *repo)
@@ -1089,6 +1113,9 @@ int git_repository_open_ext(
 
 	error = obtain_config_and_set_oid_type(&config, repo);
 	if (error < 0)
+		goto cleanup;
+
+	if (git_shallow__enabled && (error = load_grafts(repo)) < 0)
 		goto cleanup;
 
 	if ((flags & GIT_REPOSITORY_OPEN_BARE) != 0) {
@@ -1477,6 +1504,20 @@ int git_repository_set_index(git_repository *repo, git_index *index)
 {
 	GIT_ASSERT_ARG(repo);
 	set_index(repo, index);
+	return 0;
+}
+
+int git_repository_grafts__weakptr(git_grafts **out, git_repository *repo)
+{
+	assert(out && repo && repo->grafts);
+	*out = repo->grafts;
+	return 0;
+}
+
+int git_repository_shallow_grafts__weakptr(git_grafts **out, git_repository *repo)
+{
+	assert(out && repo && repo->shallow_grafts);
+	*out = repo->shallow_grafts;
 	return 0;
 }
 
@@ -3468,6 +3509,59 @@ int git_repository_state_cleanup(git_repository *repo)
 	GIT_ASSERT_ARG(repo);
 
 	return git_repository__cleanup_files(repo, state_files, ARRAY_SIZE(state_files));
+}
+
+int git_repository__shallow_roots(git_array_oid_t *out, git_repository *repo) {
+	int error = 0;
+
+	if (!repo->shallow_grafts && (error = load_grafts(repo)) < 0)
+		return error;
+
+	if ((error = git_grafts_refresh(repo->shallow_grafts)) < 0)
+		return error;
+
+	if ((error = git_grafts_get_oids(out, repo->shallow_grafts)) < 0)
+		return error;
+
+	return 0;
+}
+
+int git_repository__shallow_roots_write(git_repository *repo, git_array_oid_t roots)
+{
+	git_filebuf file = GIT_FILEBUF_INIT;
+	git_str path = GIT_STR_INIT;
+	int error = 0;
+	size_t idx;
+	git_oid *oid;
+
+	assert(repo);
+
+	if ((error = git_str_joinpath(&path, repo->gitdir, "shallow")) < 0)
+		goto on_error;
+
+	if ((error = git_filebuf_open(&file, git_str_cstr(&path), GIT_FILEBUF_HASH_CONTENTS, 0666)) < 0)
+		goto on_error;
+
+	git_array_foreach(roots, idx, oid) {
+		git_filebuf_write(&file, git_oid_tostr_s(oid), GIT_OID_SHA1_HEXSIZE);
+		git_filebuf_write(&file, "\n", 1);
+	}
+
+	git_filebuf_commit(&file);
+
+	if ((error = load_grafts(repo)) < 0) {
+		error = -1;
+		goto on_error;
+	}
+
+	if (git_array_size(roots) == 0) {
+		remove(path.ptr);
+	}
+
+on_error:
+	git_str_dispose(&path);
+
+	return error;
 }
 
 int git_repository_is_shallow(git_repository *repo)

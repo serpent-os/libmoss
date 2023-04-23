@@ -13,6 +13,7 @@
 #include "cache.h"
 #include "common.h"
 #include "filter.h"
+#include "grafts.h"
 #include "hash.h"
 #include "index.h"
 #include "merge_driver.h"
@@ -431,6 +432,10 @@ int git_libgit2_opts(int key, ...)
 
 	case GIT_OPT_SET_HOMEDIR:
 		error = git_sysdir_set(GIT_SYSDIR_HOME, va_arg(ap, const char *));
+		break;
+
+	case GIT_OPT_ENABLE_SHALLOW:
+		git_shallow__enabled = (va_arg(ap, int) != 0);
 		break;
 
 	default:

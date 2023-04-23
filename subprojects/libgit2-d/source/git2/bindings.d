@@ -7,6 +7,10 @@ import core.stdc.stddef;
 @safe:
 extern (C):
 
+alias git_indexer_progress_cb = int function (const(git_indexer_progress)* stats, void* payload);
+
+@nogc:
+
 int git_libgit2_version (out int major, out int minor, out int rev);
 
 const(char)* git_libgit2_prerelease ();
@@ -64,7 +68,8 @@ enum git_libgit2_opt_t
     GIT_OPT_GET_OWNER_VALIDATION = 35,
     GIT_OPT_SET_OWNER_VALIDATION = 36,
     GIT_OPT_GET_HOMEDIR = 37,
-    GIT_OPT_SET_HOMEDIR = 38
+    GIT_OPT_SET_HOMEDIR = 38,
+    GIT_OPT_ENABLE_SHALLOW = 39
 }
 
 int git_libgit2_opts (int option, ...);
@@ -388,9 +393,9 @@ int git_repository_init_options_init (
     uint version_);
 
 int git_repository_init_ext (
-    git_repository** out_,
+    scope out git_repository* out_,
     const(char)* repo_path,
-    git_repository_init_options* opts);
+    scope const(git_repository_init_options)* opts);
 
 int git_repository_head (git_reference** out_, scope git_repository* repo);
 
@@ -2656,7 +2661,7 @@ struct git_proxy_options
 int git_proxy_options_init (git_proxy_options* opts, uint version_);
 
 int git_remote_create (
-    git_remote** out_,
+    scope out git_remote* out_,
     scope git_repository* repo,
     const(char)* name,
     const(char)* url);
@@ -2861,6 +2866,10 @@ struct git_fetch_options
     git_remote_redirect_t follow_redirects;
 
     git_strarray custom_headers;
+
+    int depth;
+
+    int unshallow;
 }
 
 int git_fetch_options_init (git_fetch_options* opts, uint version_);
@@ -3448,7 +3457,8 @@ enum git_error_t
     GIT_ERROR_WORKTREE = 32,
     GIT_ERROR_SHA = 33,
     GIT_ERROR_HTTP = 34,
-    GIT_ERROR_INTERNAL = 35
+    GIT_ERROR_INTERNAL = 35,
+    GIT_ERROR_GRAFTS = 36
 }
 
 const(git_error)* git_error_last ();
