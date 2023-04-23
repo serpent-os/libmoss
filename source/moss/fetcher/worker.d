@@ -28,7 +28,8 @@ import std.datetime;
 import cstdlib = moss.core.c;
 import moss.core.ioutil;
 import std.stdint : uint64_t;
-version(libgit2) import git2;
+
+version (libgit2) import git2;
 
 import std.concurrency : locate, Tid, thisTid, receiveOnly, receive, send;
 
@@ -101,8 +102,8 @@ package final class FetchWorker : Thread
         handle = curl_easy_init();
         enforce(handle !is null, "FetchWorker(): curl_easy_init() failure");
         setupHandle();
- 
-        version(libgit2)
+
+        version (libgit2)
         {
             /* Initialize libgit2 */
             int err = git_libgit2_init();
@@ -140,7 +141,7 @@ package final class FetchWorker : Thread
         curl_easy_cleanup(handle);
         handle = null;
 
-        version(libgit2)
+        version (libgit2)
         {
             /* Just quitting is too severe, maybe warning is better */
             int err = git_libgit2_shutdown();
@@ -261,111 +262,68 @@ private:
 
         long statusCode = 0;
 
-        /* Use the git command-line to mirror clone requested the repository. */
+        /* Clone requested the repository. */
         if (isGitType)
         {
-            /* Do nothing if we're not built against libgit2 */
-            version(libgit2)
+            version (libgit2)
             {
-                cmd = ["git", "fetch"];
-                workdir = fetchable.destinationPath;
-            }
-            else
-            {
-                /**
-                 * Who knows, maybe we'll add another FetchType (hopefully not).
-                 */
-                final switch (fetchable.type)
-                {
-                case FetchType.GitRepository:
-                    cmd = [
-                        "git", "clone", "--", fetchable.sourceURI,
-                        fetchable.destinationPath,
-                    ];
-                    break;
-                case FetchType.GitRepositoryMirror:
-                    cmd = [
-                        "git", "clone", "--mirror", "--", fetchable.sourceURI,
-                        fetchable.destinationPath,
-                    ];
-                    break;
-                case FetchType.RegularFile:
-                case FetchType.TemporaryFile:
-                }
-            }
+                import core.stdc.stdio;
+                import std.logger;
 
                 scope git_repository* repo;
-                scope(exit) git_repository_free(repo);
+                scope (exit)
+                    git_repository_free(repo);
+                scope git_remote* remote;
+                scope (exit)
+                    git_remote_free(remote);
 
                 git_fetch_options fetch_opts;
-                git_fetch_init_options(fetch_opts, 1);
+                fetch_opts.git_fetch_init_options(GIT_FETCH_OPTIONS_VERSION);
                 fetch_opts.callbacks.transfer_progress = &mossGitFetchWorkerProgress;
-                fetch_opts.callbacks.payload = (() @trusted { return cast(void*)this; } )() ;
+                fetch_opts.callbacks.payload = (() @trusted => cast(void*) this)();
 
-                /**
-                 * If the destination path (directory in this case) already exists,
-                 * this means that it has been previously fetched before. In this
-                 * case, we simply need to fetch the new commits. Otherwise, do a
-                 * fresh new clone.
-                 */
-                // auto destinationPath = toStringz(fetchable.destinationPath);
-                if (fetchable.destinationPath.exists)
+                // Create, init, and setup the remote for a new repository if
+                // there isn't one already at the destination path.
+                if (!fetchable.destinationPath.exists())
                 {
-                    git_strarray remotes;
-                    scope(exit) remotes.git_strarray_dispose();
+                    mkdirRecurse(fetchable.destinationPath);
 
-                    if (repo.git_repository_open(fetchable.destinationPath.toStringz()) != 0)
+                    if (repo.git_repository_init(fetchable.destinationPath.toStringz(),
+                            fetchable.type == FetchType.GitRepositoryMirror))
                     {
-                        debug fprintf(stderr, "Failed to open repo: %s\n", git_error_last().message);
-                        return FetchResult(FetchError(git_error_last().klass, FetchErrorDomain.Git, fetchable.sourceURI));
+                        debug fprintf(stderr, "Failed to init repository at %s, reason: %s\n",
+                                fetchable.destinationPath.toStringz(), git_error_last().message);
+                        return FetchResult(FetchError(git_error_last().klass,
+                                FetchErrorDomain.Git, fetchable.sourceURI));
                     }
 
-                    if (remotes.git_remote_list(repo) != 0)
+                    if (git_remote_create_with_fetchspec(&remote, repo, toStringz("origin"),
+                            fetchable.sourceURI.toStringz(), toStringz("+refs/*:refs/*")))
                     {
-                        debug fprintf(stderr, "Failed to list remotes: %s\n", git_error_last().message);
-                        return FetchResult(FetchError(git_error_last().klass, FetchErrorDomain.Git, fetchable.sourceURI));
-                    }
-
-                    if (remotes.count < 1)
-                    {
-                        debug fprintf(stderr, "Remote count less than 1: %ld\n", remotes.count);
-                        return FetchResult(FetchError(git_error_last().klass, FetchErrorDomain.Git, fetchable.sourceURI));
-                    }
-
-                    git_remote* remote;
-                    scope(exit) git_remote_free(remote);
-                    if (git_remote_lookup(remote, *repo, remotes.strings[0]) != 0)
-                    {
-                        debug fprintf(stderr, "Failed to load remote: %s\n", git_error_last().message);
-                        return FetchResult(FetchError(git_error_last().klass, FetchErrorDomain.Git, fetchable.sourceURI));
-                    }
-                    
-                    if (git_remote_fetch(remote, null, fetch_opts, null) != 0)
-                    {
-                        debug fprintf(stderr, "Failed to fetch from remote: %s\n", git_error_last().message);
-                        return FetchResult(FetchError(git_error_last().klass, FetchErrorDomain.Git, fetchable.sourceURI));
+                        debug fprintf(stderr, "Failed to create remote %s for repository at %s, reason: %s\n",
+                                fetchable.sourceURI.toStringz(),
+                                fetchable.destinationPath.toStringz(), git_error_last().message);
+                        return FetchResult(FetchError(git_error_last().klass,
+                                FetchErrorDomain.Git, fetchable.sourceURI));
                     }
                 }
-                else
-                {
-                    git_clone_options clone_opts;
-                    clone_opts.git_clone_init_options(1);
-                    clone_opts.fetch_opts = fetch_opts;
 
-                    if (git_clone(repo, fetchable.sourceURI.toStringz(),
-                                fetchable.destinationPath.toStringz(), clone_opts) != 0)
-                    {
-                        debug fprintf(stderr, "Failed to clone repo: %s\n", git_error_last().message);
-                        return FetchResult(FetchError(git_error_last().klass, FetchErrorDomain.Git, fetchable.sourceURI));
-                    }
+                if (git_remote_fetch(remote, null, fetch_opts))
+                {
+                    debug fprintf(stderr, "Failed to fetch remote for repository at %s, reason: %s\n",
+                            fetchable.destinationPath.toStringz(), git_error_last().message);
+                    return FetchResult(FetchError(git_error_last().klass,
+                            FetchErrorDomain.Git, fetchable.sourceURI));
                 }
 
                 /**
                  * Note that we need to return a status code as if we're doing HTTP
                  * requests, so we should return 200 when the command succeeds.
                  */
-                statusCode = 200;
-                // }();
+                if (statusCode == 0)
+                {
+                    statusCode = 200;
+                }
             }
         }
         else
@@ -476,12 +434,13 @@ private:
         return 0;
     }
 
-    version(libgit2)
+    version (libgit2)
     {
         /**
          * Handle the progress callback for Git clones/fetch
          */
-        extern (C) static int mossGitFetchWorkerProgress(const(git_indexer_progress)* stats, void* payload)
+        extern (C) static int mossGitFetchWorkerProgress(const(git_indexer_progress)* stats,
+                void* payload)
         {
             /**
              * For now there's no way to display two progress bars one after the
