@@ -9,6 +9,7 @@ module git2.extra;
 import git2.bindings;
 
 @safe:
+@nogc:
 extern(C):
 
 int git_remote_fetch (
@@ -28,6 +29,11 @@ int git_remote_fetch (
     scope ref git_strarray refspecs,
     scope ref git_fetch_options opts,
     const(char)* reflog_message = null);
+
+int git_repository_init_ext (
+    scope out git_repository* out_,
+    const(char)* repo_path,
+    scope ref git_repository_init_options opts);
 
 int git_clone (
     scope out git_repository* out_,

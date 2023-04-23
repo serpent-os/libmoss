@@ -1,0 +1,2163 @@
+diff --git a/include/git2/common.h b/include/git2/common.h
+index f968deb233a..b09b078a1f7 100644
+--- a/include/git2/common.h
++++ b/include/git2/common.h
+@@ -224,7 +224,8 @@ typedef enum {
+ 	GIT_OPT_GET_OWNER_VALIDATION,
+ 	GIT_OPT_SET_OWNER_VALIDATION,
+ 	GIT_OPT_GET_HOMEDIR,
+-	GIT_OPT_SET_HOMEDIR
++	GIT_OPT_SET_HOMEDIR,
++	GIT_OPT_ENABLE_SHALLOW
+ } git_libgit2_opt_t;
+ 
+ /**
+@@ -461,6 +462,9 @@ typedef enum {
+  *      > { "!noop", "newext" } indicates that the caller does not want
+  *      > to support repositories with the `noop` extension but does want
+  *      > to support repositories with the `newext` extension.
++ *	
++ * 	 opts(GIT_OPT_ENABLE_SHALLOW, int enabled)
++ *		> Enable or disable shallow clone support completely.
+  *
+  *   opts(GIT_OPT_GET_OWNER_VALIDATION, int *enabled)
+  *      > Gets the owner validation setting for repository
+diff --git a/include/git2/errors.h b/include/git2/errors.h
+index a61964bbb12..e634a97c176 100644
+--- a/include/git2/errors.h
++++ b/include/git2/errors.h
+@@ -109,7 +109,8 @@ typedef enum {
+ 	GIT_ERROR_WORKTREE,
+ 	GIT_ERROR_SHA,
+ 	GIT_ERROR_HTTP,
+-	GIT_ERROR_INTERNAL
++	GIT_ERROR_INTERNAL,
++	GIT_ERROR_GRAFTS
+ } git_error_t;
+ 
+ /**
+diff --git a/include/git2/remote.h b/include/git2/remote.h
+index 8c9c26f3fd5..9e4043f87bd 100644
+--- a/include/git2/remote.h
++++ b/include/git2/remote.h
+@@ -743,6 +743,20 @@ typedef struct {
+ 	 */
+ 	git_proxy_options proxy_opts;
+ 
++	/**
++	 * Depth of the fetch to perform. Depth <= 0 fetches the full history.
++	 *
++	 * The default is -1.
++	 */
++	int depth;
++
++	/**
++	 * Convert a shallow repository to a full repository.
++	 *
++	 * The default is 0, which means the flag is off.
++	 */
++	int unshallow;
++
+ 	/**
+ 	 * Whether to allow off-site redirects.  If this is not
+ 	 * specified, the `http.followRedirects` configuration setting
+@@ -758,7 +772,7 @@ typedef struct {
+ 
+ #define GIT_FETCH_OPTIONS_VERSION 1
+ #define GIT_FETCH_OPTIONS_INIT { GIT_FETCH_OPTIONS_VERSION, GIT_REMOTE_CALLBACKS_INIT, GIT_FETCH_PRUNE_UNSPECIFIED, 1, \
+-				 GIT_REMOTE_DOWNLOAD_TAGS_UNSPECIFIED, GIT_PROXY_OPTIONS_INIT }
++				 GIT_REMOTE_DOWNLOAD_TAGS_UNSPECIFIED, GIT_PROXY_OPTIONS_INIT, -1, 0 }
+ 
+ /**
+  * Initialize git_fetch_options structure
+diff --git a/include/git2/sys/transport.h b/include/git2/sys/transport.h
+index b7058218803..062bcd0edf1 100644
+--- a/include/git2/sys/transport.h
++++ b/include/git2/sys/transport.h
+@@ -25,6 +25,15 @@
+ 
+ GIT_BEGIN_DECL
+ 
++typedef struct git_shallowarray git_shallowarray;
++
++typedef struct {
++	const git_remote_head * const *refs;
++	size_t count;
++	git_shallowarray *shallow_roots;
++	int depth;
++} git_fetch_negotiation;
++
+ struct git_transport {
+ 	unsigned int version; /**< The struct version */
+ 
+@@ -96,8 +105,7 @@ struct git_transport {
+ 	int GIT_CALLBACK(negotiate_fetch)(
+ 		git_transport *transport,
+ 		git_repository *repo,
+-		const git_remote_head * const *refs,
+-		size_t count);
++		const git_fetch_negotiation *fetch_data);
+ 
+ 	/**
+ 	 * Start downloading the packfile from the remote repository.
+@@ -442,6 +450,11 @@ GIT_EXTERN(int) git_smart_subtransport_ssh(
+ 	git_transport *owner,
+ 	void *param);
+ 
++GIT_EXTERN(size_t) git_shallowarray_count(git_shallowarray *array);
++GIT_EXTERN(const git_oid *) git_shallowarray_get(git_shallowarray *array, size_t idx);
++GIT_EXTERN(int) git_shallowarray_add(git_shallowarray *array, git_oid *oid);
++GIT_EXTERN(int) git_shallowarray_remove(git_shallowarray *array, git_oid *oid);
++
+ /** @} */
+ GIT_END_DECL
+ #endif
+diff --git a/src/libgit2/clone.c b/src/libgit2/clone.c
+index b73880e4486..43341a493f4 100644
+--- a/src/libgit2/clone.c
++++ b/src/libgit2/clone.c
+@@ -420,7 +420,9 @@ static int clone_into(
+ 
+ 	memcpy(&fetch_opts, opts, sizeof(git_fetch_options));
+ 	fetch_opts.update_fetchhead = 0;
+-	fetch_opts.download_tags = GIT_REMOTE_DOWNLOAD_TAGS_ALL;
++
++	if (opts->depth <= 0)
++		fetch_opts.download_tags = GIT_REMOTE_DOWNLOAD_TAGS_ALL;
+ 
+ 	if ((error = git_remote_connect_options__from_fetch_opts(&connect_opts, remote, &fetch_opts)) < 0)
+ 		goto cleanup;
+diff --git a/src/libgit2/commit.c b/src/libgit2/commit.c
+index d85fefb3d48..a7d83111509 100644
+--- a/src/libgit2/commit.c
++++ b/src/libgit2/commit.c
+@@ -22,6 +22,7 @@
+ #include "object.h"
+ #include "array.h"
+ #include "oidarray.h"
++#include "grafts.h"
+ 
+ void git_commit__free(void *_commit)
+ {
+@@ -427,10 +428,6 @@ static int commit_parse(
+ 		buffer += tree_len;
+ 	}
+ 
+-	/*
+-	 * TODO: commit grafts!
+-	 */
+-
+ 	while (git_object__parse_oid_header(&parent_id,
+ 			&buffer, buffer_end, "parent ",
+ 			opts->oid_type) == 0) {
+@@ -532,16 +529,44 @@ int git_commit__parse_raw(
+ 	return commit_parse(commit, data, size, &parse_options);
+ }
+ 
++static int assign_commit_parents_from_graft(git_commit *commit, git_commit_graft *graft) {
++	size_t idx;
++	git_oid *oid;
++
++	git_array_clear(commit->parent_ids);
++	git_array_init_to_size(commit->parent_ids, git_array_size(graft->parents));
++	git_array_foreach(graft->parents, idx, oid) {
++		git_oid *id = git_array_alloc(commit->parent_ids);
++		GIT_ERROR_CHECK_ALLOC(id);
++
++		git_oid_cpy(id, oid);
++	}
++
++	return 0;
++}
++
+ int git_commit__parse_ext(
+ 	git_commit *commit,
+ 	git_odb_object *odb_obj,
+ 	git_commit__parse_options *parse_opts)
+ {
+-	return commit_parse(
+-		commit,
+-		git_odb_object_data(odb_obj),
+-		git_odb_object_size(odb_obj),
+-		parse_opts);
++	git_repository *repo = git_object_owner((git_object *)commit);
++	git_commit_graft *graft;
++	int error;
++	
++	if ((error = commit_parse(commit, git_odb_object_data(odb_obj),
++				  git_odb_object_size(odb_obj), parse_opts)) < 0)
++		return error;
++
++	if (!git_shallow__enabled)
++		return 0;
++
++	/* Perform necessary grafts */
++	if (git_grafts_get(&graft, repo->grafts, git_odb_object_id(odb_obj)) != 0 &&
++		git_grafts_get(&graft, repo->shallow_grafts, git_odb_object_id(odb_obj)) != 0)
++		return 0;
++
++	return assign_commit_parents_from_graft(commit, graft);
+ }
+ 
+ #define GIT_COMMIT_GETTER(_rvalue, _name, _return, _invalid) \
+diff --git a/src/libgit2/fetch.c b/src/libgit2/fetch.c
+index 003b5198ae8..6bf16bc0f12 100644
+--- a/src/libgit2/fetch.c
++++ b/src/libgit2/fetch.c
+@@ -20,6 +20,7 @@
+ #include "netops.h"
+ #include "repository.h"
+ #include "refs.h"
++#include "transports/smart.h"
+ 
+ static int maybe_want(git_remote *remote, git_remote_head *head, git_refspec *tagspec, git_remote_autotag_option_t tagopt)
+ {
+@@ -59,8 +60,10 @@ static int mark_local(git_remote *remote)
+ 		return -1;
+ 
+ 	git_vector_foreach(&remote->refs, i, head) {
+-		/* If we have the object, mark it so we don't ask for it */
+-		if (git_odb_exists(odb, &head->oid))
++		/* If we have the object, mark it so we don't ask for it.
++		   However if we are unshallowing, we need to ask for it 
++		   even though the head exists locally. */
++		if (remote->nego.depth != INT_MAX && git_odb_exists(odb, &head->oid))
+ 			head->local = 1;
+ 		else
+ 			remote->need_pack = 1;
+@@ -169,6 +172,11 @@ int git_fetch_negotiate(git_remote *remote, const git_fetch_options *opts)
+ 
+ 	remote->need_pack = 0;
+ 
++	if (!opts)
++		remote->nego.depth = -1;
++	else
++		remote->nego.depth = opts->unshallow ? INT_MAX : opts->depth;
++
+ 	if (filter_wants(remote, opts) < 0)
+ 		return -1;
+ 
+@@ -176,24 +184,43 @@ int git_fetch_negotiate(git_remote *remote, const git_fetch_options *opts)
+ 	if (!remote->need_pack)
+ 		return 0;
+ 
++	if (opts && opts->unshallow && opts->depth > 0) {
++		git_error_set(GIT_ERROR_INVALID, "options '--depth' and '--unshallow' cannot be used together");
++		return -1;
++	}
++
+ 	/*
+ 	 * Now we have everything set up so we can start tell the
+ 	 * server what we want and what we have.
+ 	 */
++	remote->nego.refs = (const git_remote_head * const *)remote->refs.contents;
++	remote->nego.count = remote->refs.length;
++	remote->nego.shallow_roots = git__malloc(sizeof(*remote->nego.shallow_roots));
++
++	git_array_init(remote->nego.shallow_roots->array);
++
++	git_repository__shallow_roots(&remote->nego.shallow_roots->array, remote->repo);
++
+ 	return t->negotiate_fetch(t,
+ 		remote->repo,
+-		(const git_remote_head * const *)remote->refs.contents,
+-		remote->refs.length);
++		&remote->nego);
+ }
+ 
+ int git_fetch_download_pack(git_remote *remote)
+ {
+ 	git_transport *t = remote->transport;
++	int error;
+ 
+ 	if (!remote->need_pack)
+ 		return 0;
+ 
+-	return t->download_pack(t, remote->repo, &remote->stats);
++	if ((error = t->download_pack(t, remote->repo, &remote->stats)) != 0)
++		return error;
++
++	if ((error = git_repository__shallow_roots_write(remote->repo, remote->nego.shallow_roots->array)) != 0)
++		return error;
++
++	return 0;
+ }
+ 
+ int git_fetch_options_init(git_fetch_options *opts, unsigned int version)
+diff --git a/src/libgit2/grafts.c b/src/libgit2/grafts.c
+new file mode 100644
+index 00000000000..7cbb1dd7683
+--- /dev/null
++++ b/src/libgit2/grafts.c
+@@ -0,0 +1,247 @@
++/*
++ * Copyright (C) the libgit2 contributors. All rights reserved.
++ *
++ * This file is part of libgit2, distributed under the GNU GPL v2 with
++ * a Linking Exception. For full terms see the included COPYING file.
++ */
++
++#include "grafts.h"
++
++#include "futils.h"
++#include "oid.h"
++#include "oidarray.h"
++#include "parse.h"
++
++bool git_shallow__enabled = false;
++
++struct git_grafts {
++	/* Map of `git_commit_graft`s */
++	git_oidmap *commits;
++
++	/* File backing the graft. NULL if it's an in-memory graft */
++	char *path;
++	git_oid path_checksum;
++};
++
++int git_grafts_new(git_grafts **out)
++{
++	git_grafts *grafts;
++
++	grafts = git__calloc(1, sizeof(*grafts));
++	GIT_ERROR_CHECK_ALLOC(grafts);
++
++	if ((git_oidmap_new(&grafts->commits)) < 0) {
++		git__free(grafts);
++		return -1;
++	}
++
++	*out = grafts;
++	return 0;
++}
++
++int git_grafts_from_file(git_grafts **out, const char *path)
++{
++	git_grafts *grafts = NULL;
++	int error;
++
++	if (*out)
++		return git_grafts_refresh(*out);
++
++	if ((error = git_grafts_new(&grafts)) < 0)
++		goto error;
++
++	grafts->path = git__strdup(path);
++	GIT_ERROR_CHECK_ALLOC(grafts->path);
++
++	if ((error = git_grafts_refresh(grafts)) < 0)
++		goto error;
++
++	*out = grafts;
++error:
++	if (error < 0)
++		git_grafts_free(grafts);
++	return error;
++}
++
++void git_grafts_free(git_grafts *grafts)
++{
++	if (!grafts)
++		return;
++	git__free(grafts->path);
++	git_grafts_clear(grafts);
++	git_oidmap_free(grafts->commits);
++	git__free(grafts);
++}
++
++void git_grafts_clear(git_grafts *grafts)
++{
++	git_commit_graft *graft;
++
++	assert(grafts);
++
++	git_oidmap_foreach_value(grafts->commits, graft, {
++		git__free(graft->parents.ptr);
++		git__free(graft);
++	});
++
++	git_oidmap_clear(grafts->commits);
++}
++
++int git_grafts_refresh(git_grafts *grafts)
++{
++	git_str contents = GIT_STR_INIT;
++	int error, updated = 0;
++
++	assert(grafts);
++
++	if (!grafts->path)
++		return 0;
++
++	if ((error = git_futils_readbuffer_updated(&contents, grafts->path, 
++				(grafts->path_checksum).id, &updated)) < 0) {
++		if (error == GIT_ENOTFOUND) {
++			git_grafts_clear(grafts);
++			error = 0;
++		}
++		
++		goto cleanup;
++	}
++
++	if (!updated) {
++		goto cleanup;
++	}
++
++	if ((error = git_grafts_parse(grafts, contents.ptr, contents.size)) < 0)
++		goto cleanup;
++
++cleanup:
++	git_str_dispose(&contents);
++	return error;
++}
++
++int git_grafts_parse(git_grafts *grafts, const char *content, size_t contentlen)
++{
++	git_array_oid_t parents = GIT_ARRAY_INIT;
++	git_parse_ctx parser;
++	int error;
++
++	git_grafts_clear(grafts);
++
++	if ((error = git_parse_ctx_init(&parser, content, contentlen)) < 0)
++		goto error;
++
++	for (; parser.remain_len; git_parse_advance_line(&parser)) {
++		const char *line_start = parser.line, *line_end = parser.line + parser.line_len;
++		git_oid graft_oid;
++
++		if ((error = git_oid__fromstrn(&graft_oid, line_start, GIT_OID_SHA1_HEXSIZE, GIT_OID_SHA1)) < 0) {
++			git_error_set(GIT_ERROR_GRAFTS, "invalid graft OID at line %" PRIuZ, parser.line_num);
++			goto error;
++		}
++		line_start += GIT_OID_SHA1_HEXSIZE;
++
++		while (line_start < line_end && *line_start == ' ') {
++			git_oid *id = git_array_alloc(parents);
++			GIT_ERROR_CHECK_ALLOC(id);
++
++			if ((error = git_oid__fromstrn(id, ++line_start, GIT_OID_SHA1_HEXSIZE, GIT_OID_SHA1)) < 0) {
++				git_error_set(GIT_ERROR_GRAFTS, "invalid parent OID at line %" PRIuZ, parser.line_num);
++				goto error;
++			}
++
++			line_start += GIT_OID_SHA1_HEXSIZE;
++		}
++
++		if ((error = git_grafts_add(grafts, &graft_oid, parents)) < 0)
++			goto error;
++
++		git_array_clear(parents);
++	}
++
++error:
++	git_array_clear(parents);
++	return error;
++}
++
++int git_grafts_add(git_grafts *grafts, const git_oid *oid, git_array_oid_t parents)
++{
++	git_commit_graft *graft;
++	git_oid *parent_oid;
++	int error;
++	size_t i;
++
++	assert(grafts && oid);
++
++	graft = git__calloc(1, sizeof(*graft));
++	GIT_ERROR_CHECK_ALLOC(graft);
++
++	git_array_init_to_size(graft->parents, git_array_size(parents));
++	git_array_foreach(parents, i, parent_oid) {
++		git_oid *id = git_array_alloc(graft->parents);
++		GIT_ERROR_CHECK_ALLOC(id);
++
++		git_oid_cpy(id, parent_oid);
++	}
++	git_oid_cpy(&graft->oid, oid);
++
++	if ((error = git_grafts_remove(grafts, &graft->oid)) < 0 && error != GIT_ENOTFOUND)
++		goto cleanup;
++	if ((error = git_oidmap_set(grafts->commits, &graft->oid, graft)) < 0)
++		goto cleanup;
++
++	return 0;
++
++cleanup:
++	git_array_clear(graft->parents);
++	git__free(graft);
++	return error;
++}
++
++int git_grafts_remove(git_grafts *grafts, const git_oid *oid)
++{
++	git_commit_graft *graft;
++	int error;
++
++	assert(grafts && oid);
++
++	if ((graft = git_oidmap_get(grafts->commits, oid)) == NULL)
++		return GIT_ENOTFOUND;
++
++	if ((error = git_oidmap_delete(grafts->commits, oid)) < 0)
++		return error;
++
++	git__free(graft->parents.ptr);
++	git__free(graft);
++
++	return 0;
++}
++
++int git_grafts_get(git_commit_graft **out, git_grafts *grafts, const git_oid *oid)
++{
++	assert(out && grafts && oid);
++	if ((*out = git_oidmap_get(grafts->commits, oid)) == NULL)
++		return GIT_ENOTFOUND;
++	return 0;
++}
++
++int git_grafts_get_oids(git_array_oid_t *out, git_grafts *grafts)
++{
++	const git_oid *oid;
++	size_t i = 0;
++	int error;
++
++	assert(out && grafts);
++
++	while ((error = git_oidmap_iterate(NULL, grafts->commits, &i, &oid)) == 0) {
++		git_oid *cpy = git_array_alloc(*out);
++		GIT_ERROR_CHECK_ALLOC(cpy);
++		git_oid_cpy(cpy, oid);
++	}
++
++	return 0;
++}
++
++size_t git_grafts_size(git_grafts *grafts)
++{
++	return git_oidmap_size(grafts->commits);
++}
+diff --git a/src/libgit2/grafts.h b/src/libgit2/grafts.h
+new file mode 100644
+index 00000000000..4139438bba7
+--- /dev/null
++++ b/src/libgit2/grafts.h
+@@ -0,0 +1,37 @@
++/*
++ * Copyright (C) the libgit2 contributors. All rights reserved.
++ *
++ * This file is part of libgit2, distributed under the GNU GPL v2 with
++ * a Linking Exception. For full terms see the included COPYING file.
++ */
++#ifndef INCLUDE_graft_h__
++#define INCLUDE_graft_h__
++
++#include "common.h"
++#include "oidarray.h"
++#include "oidmap.h"
++
++/** graft commit */
++typedef struct {
++	git_oid oid;
++	git_array_oid_t parents;
++} git_commit_graft;
++
++typedef struct git_grafts git_grafts;
++
++extern bool git_shallow__enabled;
++
++int git_grafts_new(git_grafts **out);
++int git_grafts_from_file(git_grafts **out, const char *path);
++void git_grafts_free(git_grafts *grafts);
++void git_grafts_clear(git_grafts *grafts);
++
++int git_grafts_refresh(git_grafts *grafts);
++int git_grafts_parse(git_grafts *grafts, const char *content, size_t contentlen);
++int git_grafts_add(git_grafts *grafts, const git_oid *oid, git_array_oid_t parents);
++int git_grafts_remove(git_grafts *grafts, const git_oid *oid);
++int git_grafts_get(git_commit_graft **out, git_grafts *grafts, const git_oid *oid);
++int git_grafts_get_oids(git_array_oid_t *out, git_grafts *grafts);
++size_t git_grafts_size(git_grafts *grafts);
++
++#endif
+diff --git a/src/libgit2/libgit2.c b/src/libgit2/libgit2.c
+index f225122e548..65f19e3ca6d 100644
+--- a/src/libgit2/libgit2.c
++++ b/src/libgit2/libgit2.c
+@@ -13,6 +13,7 @@
+ #include "cache.h"
+ #include "common.h"
+ #include "filter.h"
++#include "grafts.h"
+ #include "hash.h"
+ #include "index.h"
+ #include "merge_driver.h"
+@@ -433,6 +434,10 @@ int git_libgit2_opts(int key, ...)
+ 		error = git_sysdir_set(GIT_SYSDIR_HOME, va_arg(ap, const char *));
+ 		break;
+ 
++	case GIT_OPT_ENABLE_SHALLOW:
++		git_shallow__enabled = (va_arg(ap, int) != 0);
++		break;
++
+ 	default:
+ 		git_error_set(GIT_ERROR_INVALID, "invalid option key");
+ 		error = -1;
+diff --git a/src/libgit2/object.c b/src/libgit2/object.c
+index d87d40cf16d..3d544cfff55 100644
+--- a/src/libgit2/object.c
++++ b/src/libgit2/object.c
+@@ -108,15 +108,13 @@ int git_object__from_raw(
+ 	return 0;
+ }
+ 
+-int git_object__from_odb_object(
++int git_object__init_from_odb_object(
+ 	git_object **object_out,
+ 	git_repository *repo,
+ 	git_odb_object *odb_obj,
+ 	git_object_t type)
+ {
+-	int error;
+ 	size_t object_size;
+-	git_object_def *def;
+ 	git_object *object = NULL;
+ 
+ 	GIT_ASSERT_ARG(object_out);
+@@ -143,6 +141,23 @@ int git_object__from_odb_object(
+ 	object->cached.size = odb_obj->cached.size;
+ 	object->repo = repo;
+ 
++	*object_out = object;
++	return 0;
++}
++
++int git_object__from_odb_object(
++	git_object **object_out,
++	git_repository *repo,
++	git_odb_object *odb_obj,
++	git_object_t type)
++{
++	int error;
++	git_object_def *def;
++	git_object *object = NULL;
++
++	if ((error = git_object__init_from_odb_object(&object, repo, odb_obj, type)) < 0)
++		return error;
++
+ 	/* Parse raw object data */
+ 	def = &git_objects_table[odb_obj->cached.type];
+ 	GIT_ASSERT(def->free && def->parse);
+diff --git a/src/libgit2/object.h b/src/libgit2/object.h
+index a29fdfbf3dd..b6c604c8178 100644
+--- a/src/libgit2/object.h
++++ b/src/libgit2/object.h
+@@ -36,6 +36,12 @@ int git_object__from_raw(
+ 	git_object_t object_type,
+ 	git_oid_t oid_type);
+ 
++int git_object__init_from_odb_object(
++	git_object **object_out,
++	git_repository *repo,
++	git_odb_object *odb_obj,
++	git_object_t type);
++
+ int git_object__from_odb_object(
+ 	git_object **object_out,
+ 	git_repository *repo,
+diff --git a/src/libgit2/remote.c b/src/libgit2/remote.c
+index c3e2a324d23..e1bc6c694d3 100644
+--- a/src/libgit2/remote.c
++++ b/src/libgit2/remote.c
+@@ -23,6 +23,7 @@
+ #include "git2/types.h"
+ #include "git2/oid.h"
+ #include "git2/net.h"
++#include "transports/smart.h"
+ 
+ #define CONFIG_URL_FMT "remote.%s.url"
+ #define CONFIG_PUSHURL_FMT "remote.%s.pushurl"
+@@ -2158,6 +2159,11 @@ void git_remote_free(git_remote *remote)
+ 		remote->transport = NULL;
+ 	}
+ 
++	if (remote->nego.shallow_roots) {
++		git_array_clear(remote->nego.shallow_roots->array);
++		git__free(remote->nego.shallow_roots);
++	}
++
+ 	git_vector_free(&remote->refs);
+ 
+ 	free_refspecs(&remote->refspecs);
+diff --git a/src/libgit2/remote.h b/src/libgit2/remote.h
+index 676b3c2ab65..9e089be38c5 100644
+--- a/src/libgit2/remote.h
++++ b/src/libgit2/remote.h
+@@ -38,6 +38,7 @@ struct git_remote {
+ 	git_remote_autotag_option_t download_tags;
+ 	int prune_refs;
+ 	int passed_refspecs;
++	git_fetch_negotiation nego;
+ };
+ 
+ int git_remote__urlfordirection(git_str *url_out, struct git_remote *remote, int direction, const git_remote_callbacks *callbacks);
+diff --git a/src/libgit2/repository.c b/src/libgit2/repository.c
+index 8c41167a1c0..bb6ae1b0f0b 100644
+--- a/src/libgit2/repository.c
++++ b/src/libgit2/repository.c
+@@ -15,6 +15,7 @@
+ #include "buf.h"
+ #include "common.h"
+ #include "commit.h"
++#include "grafts.h"
+ #include "tag.h"
+ #include "blob.h"
+ #include "futils.h"
+@@ -151,6 +152,8 @@ int git_repository__cleanup(git_repository *repo)
+ 	git_repository_submodule_cache_clear(repo);
+ 	git_cache_clear(&repo->objects);
+ 	git_attr_cache_flush(repo);
++	git_grafts_free(repo->grafts);
++	git_grafts_free(repo->shallow_grafts);
+ 
+ 	set_config(repo, NULL);
+ 	set_index(repo, NULL);
+@@ -769,6 +772,27 @@ static int find_repo(
+ 	return error;
+ }
+ 
++static int load_grafts(git_repository *repo)
++{
++	git_str path = GIT_STR_INIT;
++	int error;
++
++	if ((error = git_repository__item_path(&path, repo, GIT_REPOSITORY_ITEM_INFO)) < 0 ||
++	    (error = git_str_joinpath(&path, path.ptr, "grafts")) < 0 ||
++	    (error = git_grafts_from_file(&repo->grafts, path.ptr)) < 0)
++		goto error;
++
++	git_str_clear(&path);
++
++	if ((error = git_str_joinpath(&path, repo->gitdir, "shallow")) < 0 ||
++	    (error = git_grafts_from_file(&repo->shallow_grafts, path.ptr)) < 0)
++		goto error;
++
++error:
++	git_str_dispose(&path);
++	return error;
++}
++
+ static int obtain_config_and_set_oid_type(
+ 	git_config **config_ptr,
+ 	git_repository *repo)
+@@ -1091,6 +1115,9 @@ int git_repository_open_ext(
+ 	if (error < 0)
+ 		goto cleanup;
+ 
++	if (git_shallow__enabled && (error = load_grafts(repo)) < 0)
++		goto cleanup;
++
+ 	if ((flags & GIT_REPOSITORY_OPEN_BARE) != 0) {
+ 		repo->is_bare = 1;
+ 	} else {
+@@ -1480,6 +1507,20 @@ int git_repository_set_index(git_repository *repo, git_index *index)
+ 	return 0;
+ }
+ 
++int git_repository_grafts__weakptr(git_grafts **out, git_repository *repo)
++{
++	assert(out && repo && repo->grafts);
++	*out = repo->grafts;
++	return 0;
++}
++
++int git_repository_shallow_grafts__weakptr(git_grafts **out, git_repository *repo)
++{
++	assert(out && repo && repo->shallow_grafts);
++	*out = repo->shallow_grafts;
++	return 0;
++}
++
+ int git_repository_set_namespace(git_repository *repo, const char *namespace)
+ {
+ 	git__free(repo->namespace);
+@@ -3470,6 +3511,59 @@ int git_repository_state_cleanup(git_repository *repo)
+ 	return git_repository__cleanup_files(repo, state_files, ARRAY_SIZE(state_files));
+ }
+ 
++int git_repository__shallow_roots(git_array_oid_t *out, git_repository *repo) {
++	int error = 0;
++
++	if (!repo->shallow_grafts && (error = load_grafts(repo)) < 0)
++		return error;
++
++	if ((error = git_grafts_refresh(repo->shallow_grafts)) < 0)
++		return error;
++
++	if ((error = git_grafts_get_oids(out, repo->shallow_grafts)) < 0)
++		return error;
++
++	return 0;
++}
++
++int git_repository__shallow_roots_write(git_repository *repo, git_array_oid_t roots)
++{
++	git_filebuf file = GIT_FILEBUF_INIT;
++	git_str path = GIT_STR_INIT;
++	int error = 0;
++	size_t idx;
++	git_oid *oid;
++
++	assert(repo);
++
++	if ((error = git_str_joinpath(&path, repo->gitdir, "shallow")) < 0)
++		goto on_error;
++
++	if ((error = git_filebuf_open(&file, git_str_cstr(&path), GIT_FILEBUF_HASH_CONTENTS, 0666)) < 0)
++		goto on_error;
++
++	git_array_foreach(roots, idx, oid) {
++		git_filebuf_write(&file, git_oid_tostr_s(oid), GIT_OID_SHA1_HEXSIZE);
++		git_filebuf_write(&file, "\n", 1);
++	}
++
++	git_filebuf_commit(&file);
++
++	if ((error = load_grafts(repo)) < 0) {
++		error = -1;
++		goto on_error;
++	}
++
++	if (git_array_size(roots) == 0) {
++		remove(path.ptr);
++	}
++
++on_error:
++	git_str_dispose(&path);
++
++	return error;
++}
++
+ int git_repository_is_shallow(git_repository *repo)
+ {
+ 	git_str path = GIT_STR_INIT;
+diff --git a/src/libgit2/repository.h b/src/libgit2/repository.h
+index 75380ae5347..16458e4160d 100644
+--- a/src/libgit2/repository.h
++++ b/src/libgit2/repository.h
+@@ -24,6 +24,7 @@
+ #include "attrcache.h"
+ #include "submodule.h"
+ #include "diff_driver.h"
++#include "grafts.h"
+ 
+ #define DOT_GIT ".git"
+ #define GIT_DIR DOT_GIT "/"
+@@ -157,6 +158,9 @@ struct git_repository {
+ 
+ 	unsigned int lru_counter;
+ 
++	git_grafts *grafts;
++	git_grafts *shallow_grafts;
++
+ 	git_atomic32 attr_session_key;
+ 
+ 	intptr_t configmap_cache[GIT_CONFIGMAP_CACHE_MAX];
+@@ -188,6 +192,8 @@ int git_repository_config__weakptr(git_config **out, git_repository *repo);
+ int git_repository_odb__weakptr(git_odb **out, git_repository *repo);
+ int git_repository_refdb__weakptr(git_refdb **out, git_repository *repo);
+ int git_repository_index__weakptr(git_index **out, git_repository *repo);
++int git_repository_grafts__weakptr(git_grafts **out, git_repository *repo);
++int git_repository_shallow_grafts__weakptr(git_grafts **out, git_repository *repo);
+ 
+ /*
+  * Configuration map cache
+@@ -239,6 +245,9 @@ extern size_t git_repository__reserved_names_posix_len;
+ bool git_repository__reserved_names(
+ 	git_str **out, size_t *outlen, git_repository *repo, bool include_ntfs);
+ 
++int git_repository__shallow_roots(git_array_oid_t *out, git_repository *repo);
++int git_repository__shallow_roots_write(git_repository *repo, git_array_oid_t roots);
++
+ /*
+  * The default branch for the repository; the `init.defaultBranch`
+  * configuration option, if set, or `master` if it is not.
+diff --git a/src/libgit2/transports/local.c b/src/libgit2/transports/local.c
+index 4d86f171310..f576682a77f 100644
+--- a/src/libgit2/transports/local.c
++++ b/src/libgit2/transports/local.c
+@@ -295,15 +295,13 @@ static int local_ls(const git_remote_head ***out, size_t *size, git_transport *t
+ static int local_negotiate_fetch(
+ 	git_transport *transport,
+ 	git_repository *repo,
+-	const git_remote_head * const *refs,
+-	size_t count)
++	const git_fetch_negotiation *wants)
+ {
+ 	transport_local *t = (transport_local*)transport;
+ 	git_remote_head *rhead;
+ 	unsigned int i;
+ 
+-	GIT_UNUSED(refs);
+-	GIT_UNUSED(count);
++	GIT_UNUSED(wants);
+ 
+ 	/* Fill in the loids */
+ 	git_vector_foreach(&t->refs, i, rhead) {
+diff --git a/src/libgit2/transports/smart.c b/src/libgit2/transports/smart.c
+index c3a764bd3d5..da6dca0392a 100644
+--- a/src/libgit2/transports/smart.c
++++ b/src/libgit2/transports/smart.c
+@@ -517,3 +517,49 @@ int git_transport_smart(git_transport **out, git_remote *owner, void *param)
+ 	*out = (git_transport *) t;
+ 	return 0;
+ }
++
++size_t git_shallowarray_count(git_shallowarray *array)
++{
++	return git_array_size(array->array);
++}
++
++const git_oid * git_shallowarray_get(git_shallowarray *array, size_t idx)
++{
++	return git_array_get(array->array, idx);
++}
++
++int git_shallowarray_add(git_shallowarray *array, git_oid *oid)
++{
++	size_t oid_index;
++
++	if (git_array_search(&oid_index, array->array, (git_array_compare_cb)git_oid_cmp, oid) < 0) {
++		git_oid *tmp = git_array_alloc(array->array);
++		GIT_ERROR_CHECK_ALLOC(tmp);
++
++		git_oid_cpy(tmp, oid);
++	}
++
++	return 0;
++}
++
++int git_shallowarray_remove(git_shallowarray *array, git_oid *oid)
++{
++	git_array_oid_t new_array = GIT_ARRAY_INIT;
++	git_oid *element;
++	git_oid *tmp;
++	size_t i;
++
++	git_array_foreach(array->array, i, element) {
++		if (git_oid_cmp(oid, element)) {
++			tmp = git_array_alloc(new_array);
++			GIT_ERROR_CHECK_ALLOC(tmp);
++
++			git_oid_cpy(tmp, element);
++		}
++	}
++
++	git_array_clear(array->array);
++	array->array = new_array;
++
++	return 0;
++}
+diff --git a/src/libgit2/transports/smart.h b/src/libgit2/transports/smart.h
+index d71160d8e60..8e06d03ef6e 100644
+--- a/src/libgit2/transports/smart.h
++++ b/src/libgit2/transports/smart.h
+@@ -14,6 +14,7 @@
+ #include "netops.h"
+ #include "push.h"
+ #include "str.h"
++#include "oidarray.h"
+ #include "git2/sys/transport.h"
+ 
+ #define GIT_SIDE_BAND_DATA     1
+@@ -32,6 +33,7 @@
+ #define GIT_CAP_SYMREF "symref"
+ #define GIT_CAP_WANT_TIP_SHA1 "allow-tip-sha1-in-want"
+ #define GIT_CAP_WANT_REACHABLE_SHA1 "allow-reachable-sha1-in-want"
++#define GIT_CAP_SHALLOW "shallow"
+ #define GIT_CAP_OBJECT_FORMAT "object-format="
+ #define GIT_CAP_AGENT "agent="
+ 
+@@ -50,7 +52,9 @@ typedef enum {
+ 	GIT_PKT_PROGRESS,
+ 	GIT_PKT_OK,
+ 	GIT_PKT_NG,
+-	GIT_PKT_UNPACK
++	GIT_PKT_UNPACK,
++	GIT_PKT_SHALLOW,
++	GIT_PKT_UNSHALLOW
+ } git_pkt_type;
+ 
+ /* Used for multi_ack and multi_ack_detailed */
+@@ -122,6 +126,11 @@ typedef struct {
+ 	int unpack_ok;
+ } git_pkt_unpack;
+ 
++typedef struct {
++	git_pkt_type type;
++	git_oid oid;
++} git_pkt_shallow;
++
+ typedef struct transport_smart_caps {
+ 	unsigned int common:1,
+ 	             ofs_delta:1,
+@@ -134,7 +143,8 @@ typedef struct transport_smart_caps {
+ 	             report_status:1,
+ 	             thin_pack:1,
+ 	             want_tip_sha1:1,
+-	             want_reachable_sha1:1;
++	             want_reachable_sha1:1,
++	             shallow:1;
+ 	char *object_format;
+ 	char *agent;
+ } transport_smart_caps;
+@@ -171,8 +181,7 @@ int git_smart__push(git_transport *transport, git_push *push);
+ int git_smart__negotiate_fetch(
+ 	git_transport *transport,
+ 	git_repository *repo,
+-	const git_remote_head * const *refs,
+-	size_t count);
++	const git_fetch_negotiation *wants);
+ 
+ int git_smart__download_pack(
+ 	git_transport *transport,
+@@ -195,8 +204,12 @@ int git_pkt_parse_line(git_pkt **head, const char **endptr, const char *line, si
+ int git_pkt_buffer_flush(git_str *buf);
+ int git_pkt_send_flush(GIT_SOCKET s);
+ int git_pkt_buffer_done(git_str *buf);
+-int git_pkt_buffer_wants(const git_remote_head * const *refs, size_t count, transport_smart_caps *caps, git_str *buf);
++int git_pkt_buffer_wants(const git_fetch_negotiation *wants, transport_smart_caps *caps, git_str *buf);
+ int git_pkt_buffer_have(git_oid *oid, git_str *buf);
+ void git_pkt_free(git_pkt *pkt);
+ 
++struct git_shallowarray {
++	git_array_oid_t array;
++};
++
+ #endif
+diff --git a/src/libgit2/transports/smart_pkt.c b/src/libgit2/transports/smart_pkt.c
+index 5fce42175be..ec9764a87a6 100644
+--- a/src/libgit2/transports/smart_pkt.c
++++ b/src/libgit2/transports/smart_pkt.c
+@@ -436,6 +436,50 @@ static int unpack_pkt(git_pkt **out, const char *line, size_t len)
+ 	return 0;
+ }
+ 
++static int shallow_pkt(git_pkt **out, const char *line, size_t len)
++{
++	git_pkt_shallow *pkt;
++
++	pkt = git__calloc(1, sizeof(git_pkt_shallow));
++	GIT_ERROR_CHECK_ALLOC(pkt);
++
++	pkt->type = GIT_PKT_SHALLOW;
++	line += 7;
++	len -= 7;
++
++	if (len >= GIT_OID_SHA1_HEXSIZE) {
++		git_oid__fromstr(&pkt->oid, line + 1, GIT_OID_SHA1);
++		line += GIT_OID_SHA1_HEXSIZE + 1;
++		len -= GIT_OID_SHA1_HEXSIZE + 1;
++	}
++
++	*out = (git_pkt *) pkt;
++
++	return 0;
++}
++
++static int unshallow_pkt(git_pkt **out, const char *line, size_t len)
++{
++	git_pkt_shallow *pkt;
++
++	pkt = git__calloc(1, sizeof(git_pkt_shallow));
++	GIT_ERROR_CHECK_ALLOC(pkt);
++
++	pkt->type = GIT_PKT_UNSHALLOW;
++	line += 9;
++	len -= 9;
++
++	if (len >= GIT_OID_SHA1_HEXSIZE) {
++		git_oid__fromstr(&pkt->oid, line + 1, GIT_OID_SHA1);
++		line += GIT_OID_SHA1_HEXSIZE + 1;
++		len -= GIT_OID_SHA1_HEXSIZE + 1;
++	}
++
++	*out = (git_pkt *) pkt;
++
++	return 0;
++}
++
+ static int parse_len(size_t *out, const char *line, size_t linelen)
+ {
+ 	char num[PKT_LEN_SIZE + 1];
+@@ -566,6 +610,10 @@ int git_pkt_parse_line(
+ 		error = ng_pkt(pkt, line, len);
+ 	else if (!git__prefixncmp(line, len, "unpack"))
+ 		error = unpack_pkt(pkt, line, len);
++	else if (!git__prefixcmp(line, "shallow"))
++		error = shallow_pkt(pkt, line, len);
++	else if (!git__prefixcmp(line, "unshallow"))
++		error = unshallow_pkt(pkt, line, len);
+ 	else
+ 		error = ref_pkt(pkt, line, len, data);
+ 
+@@ -638,6 +686,9 @@ static int buffer_want_with_caps(
+ 	if (caps->ofs_delta)
+ 		git_str_puts(&str, GIT_CAP_OFS_DELTA " ");
+ 
++	if (caps->shallow)
++		git_str_puts(&str, GIT_CAP_SHALLOW " ");
++
+ 	if (git_str_oom(&str))
+ 		return -1;
+ 
+@@ -668,8 +719,7 @@ static int buffer_want_with_caps(
+  */
+ 
+ int git_pkt_buffer_wants(
+-	const git_remote_head * const *refs,
+-	size_t count,
++	const git_fetch_negotiation *wants,
+ 	transport_smart_caps *caps,
+ 	git_str *buf)
+ {
+@@ -679,7 +729,7 @@ int git_pkt_buffer_wants(
+ 	size_t oid_hexsize, want_len, i = 0;
+ 
+ #ifdef GIT_EXPERIMENTAL_SHA256
+-	oid_type = count > 0 ? refs[0]->oid.type : GIT_OID_SHA1;
++	oid_type = wants->count > 0 ? wants->refs[0]->oid.type : GIT_OID_SHA1;
+ #else
+ 	oid_type = GIT_OID_SHA1;
+ #endif
+@@ -690,20 +740,20 @@ int git_pkt_buffer_wants(
+ 	      oid_hexsize + 1 /* LF */;
+ 
+ 	if (caps->common) {
+-		for (; i < count; ++i) {
+-			head = refs[i];
++		for (; i < wants->count; ++i) {
++			head = wants->refs[i];
+ 			if (!head->local)
+ 				break;
+ 		}
+ 
+-		if (buffer_want_with_caps(refs[i], caps, oid_type, buf) < 0)
++		if (buffer_want_with_caps(wants->refs[i], caps, oid_type, buf) < 0)
+ 			return -1;
+ 
+ 		i++;
+ 	}
+ 
+-	for (; i < count; ++i) {
+-		head = refs[i];
++	for (; i < wants->count; ++i) {
++		head = wants->refs[i];
+ 
+ 		if (head->local)
+ 			continue;
+@@ -718,6 +768,36 @@ int git_pkt_buffer_wants(
+ 			return -1;
+ 	}
+ 
++	/* Tell the server about our shallow objects */
++	for (i = 0; i < git_shallowarray_count(wants->shallow_roots); i++) {
++		char oid[GIT_OID_SHA1_HEXSIZE];
++		git_str shallow_buf = GIT_STR_INIT;
++
++		git_oid_fmt(oid, git_shallowarray_get(wants->shallow_roots, i));
++		git_str_puts(&shallow_buf, "shallow ");
++		git_str_put(&shallow_buf, oid, GIT_OID_SHA1_HEXSIZE);
++		git_str_putc(&shallow_buf, '\n');
++
++		git_str_printf(buf, "%04x%s", (unsigned int)git_str_len(&shallow_buf) + 4, git_str_cstr(&shallow_buf));
++
++		git_str_dispose(&shallow_buf);
++
++		if (git_str_oom(buf))
++			return -1;
++	}
++
++	if (wants->depth > 0) {
++		git_str deepen_buf = GIT_STR_INIT;
++
++		git_str_printf(&deepen_buf, "deepen %d\n", wants->depth);
++		git_str_printf(buf,"%04x%s", (unsigned int)git_str_len(&deepen_buf) + 4, git_str_cstr(&deepen_buf));
++
++		git_str_dispose(&deepen_buf);
++		
++		if (git_str_oom(buf))
++			return -1;
++	}
++
+ 	return git_pkt_buffer_flush(buf);
+ }
+ 
+diff --git a/src/libgit2/transports/smart_protocol.c b/src/libgit2/transports/smart_protocol.c
+index 0d47acafe0a..c37c3cc8dcb 100644
+--- a/src/libgit2/transports/smart_protocol.c
++++ b/src/libgit2/transports/smart_protocol.c
+@@ -243,6 +243,12 @@ int git_smart__detect_caps(
+ 			continue;
+ 		}
+ 
++		if (!git__prefixcmp(ptr, GIT_CAP_SHALLOW)) {
++			caps->common = caps->shallow = 1;
++			ptr += strlen(GIT_CAP_SHALLOW);
++			continue;
++		}
++
+ 		/* We don't know this capability, so skip it */
+ 		ptr = strchr(ptr, ' ');
+ 	}
+@@ -344,7 +350,26 @@ static int wait_while_ack(gitno_buffer *buf)
+ 	return 0;
+ }
+ 
+-int git_smart__negotiate_fetch(git_transport *transport, git_repository *repo, const git_remote_head * const *wants, size_t count)
++static int cap_not_sup_err(const char *cap_name)
++{
++	git_error_set(GIT_ERROR_NET, "server doesn't support %s", cap_name);
++	return GIT_EINVALID;
++}
++
++/* Disables server capabilities we're not interested in */
++static int setup_caps(transport_smart_caps *caps, const git_fetch_negotiation *wants)
++{
++	if (wants->depth > 0) {
++		if (!caps->shallow)
++			return cap_not_sup_err(GIT_CAP_SHALLOW);
++	} else {
++		caps->shallow = 0;
++	}
++
++	return 0;
++}
++
++int git_smart__negotiate_fetch(git_transport *transport, git_repository *repo, const git_fetch_negotiation *wants)
+ {
+ 	transport_smart *t = (transport_smart *)transport;
+ 	git_revwalk__push_options opts = GIT_REVWALK__PUSH_OPTIONS_INIT;
+@@ -356,7 +381,10 @@ int git_smart__negotiate_fetch(git_transport *transport, git_repository *repo, c
+ 	unsigned int i;
+ 	git_oid oid;
+ 
+-	if ((error = git_pkt_buffer_wants(wants, count, &t->caps, &data)) < 0)
++	if ((error = setup_caps(&t->caps, wants)) < 0)
++		return error;
++
++	if ((error = git_pkt_buffer_wants(wants, &t->caps, &data)) < 0)
+ 		return error;
+ 
+ 	if ((error = git_revwalk_new(&walk, repo)) < 0)
+@@ -366,6 +394,35 @@ int git_smart__negotiate_fetch(git_transport *transport, git_repository *repo, c
+ 	if ((error = git_revwalk__push_glob(walk, "refs/*", &opts)) < 0)
+ 		goto on_error;
+ 
++	if (wants->depth > 0) {
++		git_pkt_shallow *pkt;
++
++		if ((error = git_smart__negotiation_step(&t->parent, data.ptr, data.size)) < 0)
++			goto on_error;
++
++		while ((error = recv_pkt((git_pkt **)&pkt, NULL, buf)) == 0) {
++
++			if (pkt->type == GIT_PKT_SHALLOW) {
++				git_shallowarray_add(wants->shallow_roots, &pkt->oid);
++			} else if (pkt->type == GIT_PKT_UNSHALLOW) {
++				git_shallowarray_remove(wants->shallow_roots, &pkt->oid);
++			} else if (pkt->type == GIT_PKT_FLUSH) {
++				/* Server is done, stop processing shallow oids */
++				break;
++			} else {
++				git_error_set(GIT_ERROR_NET, "Unexpected pkt type");
++				goto on_error;
++			}
++
++			git_pkt_free((git_pkt *) pkt);
++		}
++
++		git_pkt_free((git_pkt *) pkt);
++
++		if (error < 0) {
++			goto on_error;
++		}
++	}
+ 	/*
+ 	 * Our support for ACK extensions is simply to parse them. On
+ 	 * the first ACK we will accept that as enough common
+@@ -428,7 +485,7 @@ int git_smart__negotiate_fetch(git_transport *transport, git_repository *repo, c
+ 			git_pkt_ack *pkt;
+ 			unsigned int j;
+ 
+-			if ((error = git_pkt_buffer_wants(wants, count, &t->caps, &data)) < 0)
++			if ((error = git_pkt_buffer_wants(wants, &t->caps, &data)) < 0)
+ 				goto on_error;
+ 
+ 			git_vector_foreach(&t->common, j, pkt) {
+@@ -448,7 +505,7 @@ int git_smart__negotiate_fetch(git_transport *transport, git_repository *repo, c
+ 		git_pkt_ack *pkt;
+ 		unsigned int j;
+ 
+-		if ((error = git_pkt_buffer_wants(wants, count, &t->caps, &data)) < 0)
++		if ((error = git_pkt_buffer_wants(wants, &t->caps, &data)) < 0)
+ 			goto on_error;
+ 
+ 		git_vector_foreach(&t->common, j, pkt) {
+diff --git a/src/util/array.h b/src/util/array.h
+index cbab52ad1f3..bf66e1c5a55 100644
+--- a/src/util/array.h
++++ b/src/util/array.h
+@@ -85,12 +85,14 @@ GIT_INLINE(int) git_array_grow(void *_a, size_t item_size)
+ #define git_array_foreach(a, i, element) \
+ 	for ((i) = 0; (i) < (a).size && ((element) = &(a).ptr[(i)]); (i)++)
+ 
++typedef int (*git_array_compare_cb)(const void *, const void *);
++
+ GIT_INLINE(int) git_array__search(
+ 	size_t *out,
+ 	void *array_ptr,
+ 	size_t item_size,
+ 	size_t array_len,
+-	int (*compare)(const void *, const void *),
++	git_array_compare_cb compare,
+ 	const void *key)
+ {
+ 	size_t lim;
+diff --git a/tests/libgit2/clone/shallow.c b/tests/libgit2/clone/shallow.c
+new file mode 100644
+index 00000000000..eacfe1bcfa6
+--- /dev/null
++++ b/tests/libgit2/clone/shallow.c
+@@ -0,0 +1,173 @@
++#include "clar_libgit2.h"
++#include "futils.h"
++#include "repository.h"
++
++void test_clone_shallow__initialize(void)
++{
++    cl_git_pass(git_libgit2_opts(GIT_OPT_ENABLE_SHALLOW, 1));
++}
++
++void test_clone_shallow__cleanup(void)
++{
++	git_libgit2_opts(GIT_OPT_ENABLE_SHALLOW, 0);
++}
++
++static int remote_single_branch(git_remote **out, git_repository *repo, const char *name, const char *url, void *payload)
++{
++	GIT_UNUSED(payload);
++
++	cl_git_pass(git_remote_create_with_fetchspec(out, repo, name, url, "+refs/heads/master:refs/remotes/origin/master"));
++
++	return 0;
++}
++
++void test_clone_shallow__clone_depth_zero(void)
++{
++	git_str path = GIT_STR_INIT;
++	git_repository *repo;
++	git_clone_options clone_opts = GIT_CLONE_OPTIONS_INIT;
++	git_array_oid_t roots = GIT_ARRAY_INIT;
++
++	clone_opts.fetch_opts.depth = 0;
++	clone_opts.remote_cb = remote_single_branch;
++
++	git_str_joinpath(&path, clar_sandbox_path(), "shallowclone_0");
++
++	cl_git_pass(git_clone(&repo, "https://github.com/libgit2/TestGitRepository", git_str_cstr(&path), &clone_opts));
++
++	/* cloning with depth 0 results in a full clone. */
++	cl_assert_equal_b(false, git_repository_is_shallow(repo));
++
++	/* full clones do not have shallow roots. */
++	cl_git_pass(git_repository__shallow_roots(&roots, repo));
++	cl_assert_equal_i(0, roots.size);
++
++	git_array_clear(roots);
++	git_str_dispose(&path);
++	git_repository_free(repo);
++}
++
++void test_clone_shallow__clone_depth_one(void)
++{
++	git_str path = GIT_STR_INIT;
++	git_repository *repo;
++	git_revwalk *walk;
++	git_clone_options clone_opts = GIT_CLONE_OPTIONS_INIT;
++	git_oid oid;
++	git_array_oid_t roots = GIT_ARRAY_INIT;
++	size_t num_commits = 0;
++	int error = 0;
++
++	clone_opts.fetch_opts.depth = 1;
++	clone_opts.remote_cb = remote_single_branch;
++
++	git_str_joinpath(&path, clar_sandbox_path(), "shallowclone_1");
++
++	cl_git_pass(git_clone(&repo, "https://github.com/libgit2/TestGitRepository", git_str_cstr(&path), &clone_opts));
++
++	cl_assert_equal_b(true, git_repository_is_shallow(repo));
++
++	cl_git_pass(git_repository__shallow_roots(&roots, repo));
++	cl_assert_equal_i(1, roots.size);
++	cl_assert_equal_s("49322bb17d3acc9146f98c97d078513228bbf3c0", git_oid_tostr_s(&roots.ptr[0]));
++
++	git_revwalk_new(&walk, repo);
++
++	git_revwalk_push_head(walk);
++
++	while ((error = git_revwalk_next(&oid, walk)) == GIT_OK) {
++		num_commits++;
++	}
++
++	cl_assert_equal_i(num_commits, 1);
++	cl_assert_equal_i(error, GIT_ITEROVER);
++
++	git_array_clear(roots);
++	git_str_dispose(&path);
++	git_revwalk_free(walk);
++	git_repository_free(repo);
++}
++
++void test_clone_shallow__clone_depth_five(void)
++{
++	git_str path = GIT_STR_INIT;
++	git_repository *repo;
++	git_revwalk *walk;
++	git_clone_options clone_opts = GIT_CLONE_OPTIONS_INIT;
++	git_oid oid;
++	git_array_oid_t roots = GIT_ARRAY_INIT;
++	size_t num_commits = 0;
++	int error = 0;
++
++	clone_opts.fetch_opts.depth = 5;
++	clone_opts.remote_cb = remote_single_branch;
++
++	git_str_joinpath(&path, clar_sandbox_path(), "shallowclone_5");
++
++	cl_git_pass(git_clone(&repo, "https://github.com/libgit2/TestGitRepository", git_str_cstr(&path), &clone_opts));
++
++	cl_assert_equal_b(true, git_repository_is_shallow(repo));
++
++	cl_git_pass(git_repository__shallow_roots(&roots, repo));
++	cl_assert_equal_i(3, roots.size);
++	cl_assert_equal_s("c070ad8c08840c8116da865b2d65593a6bb9cd2a", git_oid_tostr_s(&roots.ptr[0]));
++	cl_assert_equal_s("0966a434eb1a025db6b71485ab63a3bfbea520b6", git_oid_tostr_s(&roots.ptr[1]));
++	cl_assert_equal_s("83834a7afdaa1a1260568567f6ad90020389f664", git_oid_tostr_s(&roots.ptr[2]));
++
++	git_revwalk_new(&walk, repo);
++
++	git_revwalk_push_head(walk);
++
++	while ((error = git_revwalk_next(&oid, walk)) == GIT_OK) {
++		num_commits++;
++	}
++
++	cl_assert_equal_i(num_commits, 13);
++	cl_assert_equal_i(error, GIT_ITEROVER);
++
++	git_array_clear(roots);
++	git_str_dispose(&path);
++	git_revwalk_free(walk);
++	git_repository_free(repo);
++}
++
++void test_clone_shallow__unshallow(void)
++{
++	git_str path = GIT_STR_INIT;
++	git_repository *repo;
++	git_revwalk *walk;
++	git_clone_options clone_opts = GIT_CLONE_OPTIONS_INIT;
++	git_fetch_options fetch_opts = GIT_FETCH_OPTIONS_INIT;
++	git_remote *origin = NULL;
++	git_oid oid;
++	size_t num_commits = 0;
++	int error = 0;
++
++	clone_opts.fetch_opts.depth = 5;
++	clone_opts.remote_cb = remote_single_branch;
++
++	git_str_joinpath(&path, clar_sandbox_path(), "unshallow");
++	cl_git_pass(git_clone(&repo, "https://github.com/libgit2/TestGitRepository", git_str_cstr(&path), &clone_opts));
++	cl_assert_equal_b(true, git_repository_is_shallow(repo));
++
++	fetch_opts.unshallow = 1;
++	cl_git_pass(git_remote_lookup(&origin, repo, "origin"));
++
++	cl_git_pass(git_remote_fetch(origin, NULL, &fetch_opts, NULL));
++	cl_assert_equal_b(false, git_repository_is_shallow(repo));
++
++	git_revwalk_new(&walk, repo);
++	git_revwalk_push_head(walk);
++
++	while ((error = git_revwalk_next(&oid, walk)) == GIT_OK) {
++		num_commits++;
++	}
++
++	cl_assert_equal_i(num_commits, 21);
++	cl_assert_equal_i(error, GIT_ITEROVER);
++
++	git_remote_free(origin);
++	git_str_dispose(&path);
++	git_revwalk_free(walk);
++	git_repository_free(repo);
++}
+diff --git a/tests/libgit2/grafts/basic.c b/tests/libgit2/grafts/basic.c
+new file mode 100644
+index 00000000000..5ad437b195c
+--- /dev/null
++++ b/tests/libgit2/grafts/basic.c
+@@ -0,0 +1,123 @@
++#include "clar_libgit2.h"
++
++#include "futils.h"
++#include "grafts.h"
++
++static git_repository *g_repo;
++
++void test_grafts_basic__initialize(void)
++{
++	git_libgit2_opts(GIT_OPT_ENABLE_SHALLOW, 1);
++	g_repo = cl_git_sandbox_init("grafted.git");
++}
++
++void test_grafts_basic__cleanup(void)
++{
++	git_libgit2_opts(GIT_OPT_ENABLE_SHALLOW, 0);
++	cl_git_sandbox_cleanup();
++}
++
++void test_grafts_basic__graft_add(void)
++{
++	git_array_oid_t parents = GIT_ARRAY_INIT;
++	git_oid oid_src, *oid1;
++	git_commit_graft *graft;
++	git_grafts *grafts;
++
++	cl_git_pass(git_grafts_new(&grafts));
++
++	cl_assert(oid1 = git_array_alloc(parents));
++	cl_git_pass(git_oid__fromstr(&oid_src, "2f3053cbff8a4ca2f0666de364ddb734a28a31a9", GIT_OID_SHA1));
++	git_oid_cpy(oid1, &oid_src);
++
++	git_oid__fromstr(&oid_src, "f503807ffa920e407a600cfaee96b7152259acc7", GIT_OID_SHA1);
++	cl_git_pass(git_grafts_add(grafts, &oid_src, parents));
++	git_array_clear(parents);
++
++	cl_assert_equal_i(1, git_grafts_size(grafts));
++	cl_git_pass(git_grafts_get(&graft, grafts, &oid_src));
++	cl_assert_equal_s("f503807ffa920e407a600cfaee96b7152259acc7", git_oid_tostr_s(&graft->oid));
++	cl_assert_equal_i(1, git_array_size(graft->parents));
++	cl_assert_equal_s("2f3053cbff8a4ca2f0666de364ddb734a28a31a9", git_oid_tostr_s(git_array_get(graft->parents, 0)));
++
++	git_grafts_free(grafts);
++}
++
++void test_grafts_basic__grafted_revwalk(void)
++{
++	git_revwalk *w;
++	git_oid oids[10];
++	size_t i = 0;
++	git_commit *commit;
++
++	cl_git_pass(git_revwalk_new(&w, g_repo));
++	cl_git_pass(git_revwalk_push_ref(w, "refs/heads/branch"));
++
++	cl_git_pass(git_revwalk_next(&oids[i++], w));
++	cl_assert_equal_s(git_oid_tostr_s(&oids[0]), "8a00e91619098618be97c0d2ceabb05a2c58edd9");
++	cl_git_pass(git_revwalk_next(&oids[i++], w));
++	cl_assert_equal_s(git_oid_tostr_s(&oids[1]), "f503807ffa920e407a600cfaee96b7152259acc7");
++	cl_git_pass(git_revwalk_next(&oids[i++], w));
++	cl_assert_equal_s(git_oid_tostr_s(&oids[2]), "2f3053cbff8a4ca2f0666de364ddb734a28a31a9");
++
++	cl_git_fail_with(GIT_ITEROVER, git_revwalk_next(&oids[i++], w));
++
++	cl_git_pass(git_commit_lookup(&commit, g_repo, &oids[0]));
++
++	cl_assert_equal_i(1, git_commit_parentcount(commit));
++
++	git_commit_free(commit);
++	git_revwalk_free(w);
++}
++
++void test_grafts_basic__grafted_objects(void)
++{
++	git_oid oid;
++	git_commit *commit;
++
++	cl_git_pass(git_oid__fromstr(&oid, "f503807ffa920e407a600cfaee96b7152259acc7", GIT_OID_SHA1));
++	cl_git_pass(git_commit_lookup(&commit, g_repo, &oid));
++	cl_assert_equal_i(1, git_commit_parentcount(commit));
++	git_commit_free(commit);
++
++	cl_git_pass(git_oid__fromstr(&oid, "0512adebd3782157f0d5c9b22b043f87b4aaff9e", GIT_OID_SHA1));
++	cl_git_pass(git_commit_lookup(&commit, g_repo, &oid));
++	cl_assert_equal_i(1, git_commit_parentcount(commit));
++	git_commit_free(commit);
++
++	cl_git_pass(git_oid__fromstr(&oid, "66cc22a015f6ca75b34c82d28f78ba663876bade", GIT_OID_SHA1));
++	cl_git_pass(git_commit_lookup(&commit, g_repo, &oid));
++	cl_assert_equal_i(4, git_commit_parentcount(commit));
++	git_commit_free(commit);
++}
++
++void test_grafts_basic__grafted_merge_revwalk(void)
++{
++	git_revwalk *w;
++	git_oid oids[10];
++	size_t i = 0;
++
++	cl_git_pass(git_revwalk_new(&w, g_repo));
++	cl_git_pass(git_revwalk_push_ref(w, "refs/heads/bottom"));
++
++	cl_git_pass(git_revwalk_next(&oids[i++], w));
++	cl_assert_equal_s(git_oid_tostr_s(&oids[i - 1]), "66cc22a015f6ca75b34c82d28f78ba663876bade");
++	cl_git_pass(git_revwalk_next(&oids[i++], w));
++	cl_assert_equal_s(git_oid_tostr_s(&oids[i - 1]), "e414f42f4e6bc6934563a2349a8600f0ab68618e");
++	cl_git_pass(git_revwalk_next(&oids[i++], w));
++	cl_assert_equal_s(git_oid_tostr_s(&oids[i - 1]), "8a00e91619098618be97c0d2ceabb05a2c58edd9");
++	cl_git_pass(git_revwalk_next(&oids[i++], w));
++	cl_assert_equal_s(git_oid_tostr_s(&oids[i - 1]), "1c18e80a276611bb9b146590616bbc5aebdf2945");
++	cl_git_pass(git_revwalk_next(&oids[i++], w));
++	cl_assert_equal_s(git_oid_tostr_s(&oids[i - 1]), "d7224d49d6d5aff6ade596ed74f4bcd4f77b29e2");
++	cl_git_pass(git_revwalk_next(&oids[i++], w));
++	cl_assert_equal_s(git_oid_tostr_s(&oids[i - 1]), "0512adebd3782157f0d5c9b22b043f87b4aaff9e");
++	cl_git_pass(git_revwalk_next(&oids[i++], w));
++	cl_assert_equal_s(git_oid_tostr_s(&oids[i - 1]), "f503807ffa920e407a600cfaee96b7152259acc7");
++	cl_git_pass(git_revwalk_next(&oids[i++], w));
++	cl_assert_equal_s(git_oid_tostr_s(&oids[i - 1]), "2f3053cbff8a4ca2f0666de364ddb734a28a31a9");
++
++	cl_git_fail_with(GIT_ITEROVER, git_revwalk_next(&oids[i++], w));
++
++	git_revwalk_free(w);
++}
+diff --git a/tests/libgit2/grafts/parse.c b/tests/libgit2/grafts/parse.c
+new file mode 100644
+index 00000000000..149b01c8c7b
+--- /dev/null
++++ b/tests/libgit2/grafts/parse.c
+@@ -0,0 +1,149 @@
++#include "clar_libgit2.h"
++
++#include "grafts.h"
++
++#define OID0 "c0368f9f9743e950e6cfe1f45a649f8a9dfcd97e"
++#define OID1 "cfc50a0db87ce908fb8a8c5b8f7b4ab96eee8643"
++#define OID2 "6914d97cd08b9edf5e855fca211c750fa82fd80a"
++#define OID3 "516521937d0e9ce9d0d836149a0702671f326b4a"
++#define OID4 "e2c29d67ef2f217650196f94c796f0532b8caad6"
++#define OID5 "79bcb936596cb50353fe7be28b7444e66e4a2842"
++#define OID6 "b9c54107d57c17dbcaf646c4d52f66eb9e69d23d"
++#define OID7 "9f8a746e9ad7b58cc840016bc3944d5ad262acb5"
++#define OID8 "392f4beef7d0d15b2bc5b1abe1a754eba0ec36da"
++
++#define OID_TRUNCATED "392f4beef7d0d15b2bc5b1abe1a754eba0ec36d"
++#define OID_NONHEX    "9f8a746e9ax7b58cc840016bc3944d5ad262acb5"
++
++static git_grafts *grafts;
++
++void test_grafts_parse__initialize(void)
++{
++	cl_git_pass(git_grafts_new(&grafts));
++}
++
++void test_grafts_parse__cleanup(void)
++{
++	git_grafts_free(grafts);
++	grafts = NULL;
++}
++
++static void assert_parse_succeeds(git_grafts *grafts, const char *string, size_t n)
++{
++	cl_git_pass(git_grafts_parse(grafts, string, strlen(string)));
++	cl_assert_equal_i(git_grafts_size(grafts), n);
++}
++
++static void assert_parse_fails(git_grafts *grafts, const char *string)
++{
++	cl_git_fail(git_grafts_parse(grafts, string, strlen(string)));
++}
++
++static void assert_graft_contains(git_grafts *grafts, const char *graft, size_t n, ...)
++{
++	git_commit_graft *commit;
++	git_oid oid;
++	va_list ap;
++	size_t i = 0;
++
++	cl_git_pass(git_oid__fromstr(&oid, graft, GIT_OID_SHA1));
++	cl_git_pass(git_grafts_get(&commit, grafts, &oid));
++	cl_assert_equal_oid(&commit->oid, &oid);
++	cl_assert_equal_i(commit->parents.size, n);
++
++	va_start(ap, n);
++	while (i < n) {
++		cl_git_pass(git_oid__fromstr(&oid, va_arg(ap, const char *), GIT_OID_SHA1));
++		cl_assert_equal_oid(&commit->parents.ptr[i], &oid);
++		i++;
++	}
++	va_end(ap);
++}
++
++void test_grafts_parse__single_oid(void)
++{
++	assert_parse_succeeds(grafts, OID1, 1);
++	assert_graft_contains(grafts, OID1, 0);
++}
++
++void test_grafts_parse__single_oid_with_newline(void)
++{
++	assert_parse_succeeds(grafts, OID1 "\n", 1);
++	assert_graft_contains(grafts, OID1, 0);
++}
++
++void test_grafts_parse__multiple_oids(void)
++{
++	assert_parse_succeeds(grafts, OID1 "\n" OID2 "\n" OID3, 3);
++	assert_graft_contains(grafts, OID1, 0);
++	assert_graft_contains(grafts, OID2, 0);
++	assert_graft_contains(grafts, OID3, 0);
++}
++
++void test_grafts_parse__same_oid(void)
++{
++	assert_parse_succeeds(grafts, OID1 "\n" OID1, 1);
++	assert_graft_contains(grafts, OID1, 0);
++}
++
++void test_grafts_parse__oid_with_parent(void)
++{
++	assert_parse_succeeds(grafts, OID1 " " OID2, 1);
++	assert_graft_contains(grafts, OID1, 1, OID2);
++}
++
++void test_grafts_parse__oid_with_parent_and_newline(void)
++{
++	assert_parse_succeeds(grafts, OID1 " " OID2 "\n", 1);
++	assert_graft_contains(grafts, OID1, 1, OID2);
++}
++
++void test_grafts_parse__oid_with_multiple_parents(void)
++{
++	assert_parse_succeeds(grafts, OID1 " " OID2 " " OID3 " " OID4 " " OID5, 1);
++	assert_graft_contains(grafts, OID1, 4, OID2, OID3, OID4, OID5);
++}
++
++void test_grafts_parse__multiple_oids_with_multiple_parents(void)
++{
++	assert_parse_succeeds(grafts,
++		OID1 " " OID2 " " OID3 " " OID4 " " OID5 "\n"
++		OID6 " " OID7 " " OID8 "\n" , 2);
++	assert_graft_contains(grafts, OID1, 4, OID2, OID3, OID4, OID5);
++	assert_graft_contains(grafts, OID6, 2, OID7, OID8);
++}
++
++void test_grafts_parse__multiple_spaces_fails(void)
++{
++	assert_parse_fails(grafts, OID1 "  " OID2);
++}
++
++void test_grafts_parse__trailing_space_fails(void)
++{
++	assert_parse_fails(grafts, OID1 " " OID2 " ");
++}
++
++void test_grafts_parse__invalid_character_inbetween_fails(void)
++{
++	assert_parse_fails(grafts, OID1 " x " OID2);
++}
++
++void test_grafts_parse__truncated_oid_fails(void)
++{
++	assert_parse_fails(grafts, OID_TRUNCATED);
++}
++
++void test_grafts_parse__truncated_parent_fails(void)
++{
++	assert_parse_fails(grafts, OID1 " " OID_TRUNCATED);
++}
++
++void test_grafts_parse__invalid_oid_fails(void)
++{
++	assert_parse_fails(grafts, OID_NONHEX);
++}
++
++void test_grafts_parse__invalid_parent_fails(void)
++{
++	assert_parse_fails(grafts, OID1 " " OID_NONHEX);
++}
+diff --git a/tests/libgit2/grafts/shallow.c b/tests/libgit2/grafts/shallow.c
+new file mode 100644
+index 00000000000..8c272392243
+--- /dev/null
++++ b/tests/libgit2/grafts/shallow.c
+@@ -0,0 +1,146 @@
++#include "clar_libgit2.h"
++
++#include "futils.h"
++#include "grafts.h"
++#include "repository.h"
++
++static git_repository *g_repo;
++static git_oid g_shallow_oid;
++
++void test_grafts_shallow__set_feature_flag(void)
++{
++    cl_git_pass(git_libgit2_opts(GIT_OPT_ENABLE_SHALLOW, 1));
++}
++
++void test_grafts_shallow__unset_feature_flag(void)
++{
++    cl_git_pass(git_libgit2_opts(GIT_OPT_ENABLE_SHALLOW, 0));
++}
++
++void test_grafts_shallow__initialize(void)
++{
++	git_libgit2_opts(GIT_OPT_ENABLE_SHALLOW, 1);
++	cl_git_pass(git_oid__fromstr(&g_shallow_oid, "be3563ae3f795b2b4353bcce3a527ad0a4f7f644", GIT_OID_SHA1));
++}
++
++void test_grafts_shallow__cleanup(void)
++{
++	git_libgit2_opts(GIT_OPT_ENABLE_SHALLOW, 0);
++	cl_git_sandbox_cleanup();
++}
++
++void test_grafts_shallow__no_shallow_file(void)
++{
++	g_repo = cl_git_sandbox_init("testrepo.git");
++	cl_assert_equal_i(0, git_repository_is_shallow(g_repo));
++}
++
++void test_grafts_shallow__empty_shallow_file(void)
++{
++	g_repo = cl_git_sandbox_init("testrepo.git");
++	cl_git_mkfile("testrepo.git/shallow", "");
++	cl_assert_equal_i(0, git_repository_is_shallow(g_repo));
++}
++
++void test_grafts_shallow__shallow_repo(void)
++{
++	g_repo = cl_git_sandbox_init("shallow.git");
++	cl_assert_equal_i(1, git_repository_is_shallow(g_repo));
++}
++
++void test_grafts_shallow__clears_errors(void)
++{
++	g_repo = cl_git_sandbox_init("testrepo.git");
++	cl_assert_equal_i(0, git_repository_is_shallow(g_repo));
++	cl_assert_equal_p(NULL, git_error_last());
++}
++
++void test_grafts_shallow__shallow_oids(void)
++{
++	git_commit_graft *graft;
++	git_grafts *grafts;
++
++	g_repo = cl_git_sandbox_init("shallow.git");
++
++	cl_git_pass(git_repository_shallow_grafts__weakptr(&grafts, g_repo));
++	cl_assert_equal_i(1, git_grafts_size(grafts));
++	cl_git_pass(git_grafts_get(&graft, grafts, &g_shallow_oid));
++}
++
++void test_grafts_shallow__cache_clearing(void)
++{
++	git_commit_graft *graft;
++	git_grafts *grafts;
++	git_oid tmp_oid;
++
++	cl_git_pass(git_oid__fromstr(&tmp_oid, "0000000000000000000000000000000000000000", GIT_OID_SHA1));
++	g_repo = cl_git_sandbox_init("shallow.git");
++	cl_git_pass(git_repository_shallow_grafts__weakptr(&grafts, g_repo));
++
++	cl_assert_equal_i(1, git_grafts_size(grafts));
++	cl_git_pass(git_grafts_get(&graft, grafts, &g_shallow_oid));
++
++	cl_git_mkfile("shallow.git/shallow",
++		"be3563ae3f795b2b4353bcce3a527ad0a4f7f644\n"
++		"0000000000000000000000000000000000000000\n"
++	);
++
++	cl_git_pass(git_grafts_refresh(grafts));
++	cl_assert_equal_i(2, git_grafts_size(grafts));
++	cl_git_pass(git_grafts_get(&graft, grafts, &g_shallow_oid));
++	cl_git_pass(git_grafts_get(&graft, grafts, &tmp_oid));
++
++	cl_git_pass(p_unlink("shallow.git/shallow"));
++	cl_git_pass(git_grafts_refresh(grafts));
++	cl_assert_equal_i(0, git_grafts_size(grafts));
++}
++
++void test_grafts_shallow__errors_on_borked(void)
++{
++	git_grafts *grafts;
++
++	g_repo = cl_git_sandbox_init("shallow.git");
++
++	cl_git_mkfile("shallow.git/shallow", "lolno");
++	cl_git_pass(git_repository_shallow_grafts__weakptr(&grafts, g_repo));
++	cl_git_fail(git_grafts_refresh(grafts));
++	cl_assert_equal_i(0, git_grafts_size(grafts));
++
++	cl_git_mkfile("shallow.git/shallow", "lolno\n");
++	cl_git_pass(git_repository_shallow_grafts__weakptr(&grafts, g_repo));
++	cl_git_fail(git_grafts_refresh(grafts));
++	cl_assert_equal_i(0, git_grafts_size(grafts));
++}
++
++void test_grafts_shallow__revwalk_behavior(void)
++{
++	git_revwalk *w;
++	git_oid oid_1, oid_2, oid_3;
++
++	g_repo = cl_git_sandbox_init("shallow.git");
++
++	cl_git_pass(git_revwalk_new(&w, g_repo));
++	cl_git_pass(git_revwalk_push_head(w));
++
++	cl_git_pass(git_revwalk_next(&oid_1, w)); // a65fedf39aefe402d3bb6e24df4d4f5fe4547750
++	cl_git_pass(git_revwalk_next(&oid_2, w)); // be3563ae3f795b2b4353bcce3a527ad0a4f7f644
++	cl_git_fail_with(GIT_ITEROVER, git_revwalk_next(&oid_3, w));
++
++	cl_assert_equal_s(git_oid_tostr_s(&oid_1), "a65fedf39aefe402d3bb6e24df4d4f5fe4547750");
++	cl_assert_equal_s(git_oid_tostr_s(&oid_2), "be3563ae3f795b2b4353bcce3a527ad0a4f7f644");
++
++	git_revwalk_free(w);
++}
++
++void test_grafts_shallow__grafted_object(void)
++{
++	git_commit *commit;
++
++	g_repo = cl_git_sandbox_init("shallow.git");
++
++	cl_git_pass(git_commit_lookup(&commit, g_repo, &g_shallow_oid));
++
++	cl_assert_equal_i(0, git_commit_parentcount(commit));
++
++	git_commit_free(commit);
++}
+diff --git a/tests/libgit2/transports/smart/shallowarray.c b/tests/libgit2/transports/smart/shallowarray.c
+new file mode 100644
+index 00000000000..ec4388e42d3
+--- /dev/null
++++ b/tests/libgit2/transports/smart/shallowarray.c
+@@ -0,0 +1,52 @@
++#include "clar_libgit2.h"
++
++#include "git2/oid.h"
++#include "git2/transport.h"
++
++#include "common.h"
++#include "transports/smart.h"
++#include "oid.h"
++
++#include <assert.h>
++
++#define oid_0 "c070ad8c08840c8116da865b2d65593a6bb9cd2a"
++#define oid_1 "0966a434eb1a025db6b71485ab63a3bfbea520b6"
++#define oid_2 "83834a7afdaa1a1260568567f6ad90020389f664"
++
++void test_transports_smart_shallowarray__add_and_remove_oid_from_shallowarray(void)
++{
++    git_oid oid_0_obj, oid_1_obj, oid_2_obj;
++    git_shallowarray *shallow_roots = git__malloc(sizeof(git_shallowarray));
++    git_array_init(shallow_roots->array);
++
++    git_oid__fromstr(&oid_0_obj, oid_0, GIT_OID_SHA1);
++    git_oid__fromstr(&oid_1_obj, oid_1, GIT_OID_SHA1);
++    git_oid__fromstr(&oid_2_obj, oid_2, GIT_OID_SHA1);
++
++    git_shallowarray_add(shallow_roots, &oid_0_obj);
++    git_shallowarray_add(shallow_roots, &oid_1_obj);
++    git_shallowarray_add(shallow_roots, &oid_2_obj);
++
++    cl_assert_equal_i(3, shallow_roots->array.size);
++	cl_assert_equal_s("c070ad8c08840c8116da865b2d65593a6bb9cd2a", git_oid_tostr_s(&shallow_roots->array.ptr[0]));
++	cl_assert_equal_s("0966a434eb1a025db6b71485ab63a3bfbea520b6", git_oid_tostr_s(&shallow_roots->array.ptr[1]));
++	cl_assert_equal_s("83834a7afdaa1a1260568567f6ad90020389f664", git_oid_tostr_s(&shallow_roots->array.ptr[2]));
++
++    git_shallowarray_remove(shallow_roots, &oid_2_obj);
++
++    cl_assert_equal_i(2, shallow_roots->array.size);
++	cl_assert_equal_s("c070ad8c08840c8116da865b2d65593a6bb9cd2a", git_oid_tostr_s(&shallow_roots->array.ptr[0]));
++	cl_assert_equal_s("0966a434eb1a025db6b71485ab63a3bfbea520b6", git_oid_tostr_s(&shallow_roots->array.ptr[1]));
++
++    git_shallowarray_remove(shallow_roots, &oid_1_obj);
++
++    cl_assert_equal_i(1, shallow_roots->array.size);
++	cl_assert_equal_s("c070ad8c08840c8116da865b2d65593a6bb9cd2a", git_oid_tostr_s(&shallow_roots->array.ptr[0]));
++
++    git_shallowarray_remove(shallow_roots, &oid_0_obj);
++
++    cl_assert_equal_i(0, shallow_roots->array.size);
++
++	git_array_clear(shallow_roots->array);
++	git__free(shallow_roots);
++}
+diff --git a/tests/resources/grafted.git/HEAD b/tests/resources/grafted.git/HEAD
+new file mode 100644
+index 00000000000..cb089cd89a7
+--- /dev/null
++++ b/tests/resources/grafted.git/HEAD
+@@ -0,0 +1 @@
++ref: refs/heads/master
+diff --git a/tests/resources/grafted.git/config b/tests/resources/grafted.git/config
+new file mode 100644
+index 00000000000..e6da231579b
+--- /dev/null
++++ b/tests/resources/grafted.git/config
+@@ -0,0 +1,6 @@
++[core]
++	repositoryformatversion = 0
++	filemode = true
++	bare = true
++	ignorecase = true
++	precomposeunicode = true
+diff --git a/tests/resources/grafted.git/info/grafts b/tests/resources/grafted.git/info/grafts
+new file mode 100644
+index 00000000000..bb9df8c0a80
+--- /dev/null
++++ b/tests/resources/grafted.git/info/grafts
+@@ -0,0 +1,3 @@
++f503807ffa920e407a600cfaee96b7152259acc7 2f3053cbff8a4ca2f0666de364ddb734a28a31a9
++0512adebd3782157f0d5c9b22b043f87b4aaff9e 2f3053cbff8a4ca2f0666de364ddb734a28a31a9
++66cc22a015f6ca75b34c82d28f78ba663876bade e414f42f4e6bc6934563a2349a8600f0ab68618e 8a00e91619098618be97c0d2ceabb05a2c58edd9 1c18e80a276611bb9b146590616bbc5aebdf2945 2f3053cbff8a4ca2f0666de364ddb734a28a31a9
+diff --git a/tests/resources/grafted.git/objects/05/12adebd3782157f0d5c9b22b043f87b4aaff9e b/tests/resources/grafted.git/objects/05/12adebd3782157f0d5c9b22b043f87b4aaff9e
+new file mode 100644
+index 00000000000..16880d596e5
+Binary files /dev/null and b/tests/resources/grafted.git/objects/05/12adebd3782157f0d5c9b22b043f87b4aaff9e differ
+diff --git a/tests/resources/grafted.git/objects/1c/18e80a276611bb9b146590616bbc5aebdf2945 b/tests/resources/grafted.git/objects/1c/18e80a276611bb9b146590616bbc5aebdf2945
+new file mode 100644
+index 00000000000..2c057b85d87
+Binary files /dev/null and b/tests/resources/grafted.git/objects/1c/18e80a276611bb9b146590616bbc5aebdf2945 differ
+diff --git a/tests/resources/grafted.git/objects/1c/3f11eca55d76bc1bf7353ca7e4226246d353ed b/tests/resources/grafted.git/objects/1c/3f11eca55d76bc1bf7353ca7e4226246d353ed
+new file mode 100644
+index 00000000000..b92a3047f18
+Binary files /dev/null and b/tests/resources/grafted.git/objects/1c/3f11eca55d76bc1bf7353ca7e4226246d353ed differ
+diff --git a/tests/resources/grafted.git/objects/2a/f02ebff1fc0142d2380c98758d81c67b365869 b/tests/resources/grafted.git/objects/2a/f02ebff1fc0142d2380c98758d81c67b365869
+new file mode 100644
+index 00000000000..ed3f874a7bd
+Binary files /dev/null and b/tests/resources/grafted.git/objects/2a/f02ebff1fc0142d2380c98758d81c67b365869 differ
+diff --git a/tests/resources/grafted.git/objects/2b/ecadd3f1ecad07a054392421edf9c0e1c375b2 b/tests/resources/grafted.git/objects/2b/ecadd3f1ecad07a054392421edf9c0e1c375b2
+new file mode 100644
+index 00000000000..724eedbb2ec
+Binary files /dev/null and b/tests/resources/grafted.git/objects/2b/ecadd3f1ecad07a054392421edf9c0e1c375b2 differ
+diff --git a/tests/resources/grafted.git/objects/2f/3053cbff8a4ca2f0666de364ddb734a28a31a9 b/tests/resources/grafted.git/objects/2f/3053cbff8a4ca2f0666de364ddb734a28a31a9
+new file mode 100644
+index 00000000000..3d124a67352
+Binary files /dev/null and b/tests/resources/grafted.git/objects/2f/3053cbff8a4ca2f0666de364ddb734a28a31a9 differ
+diff --git a/tests/resources/grafted.git/objects/45/342912745ba6f8893b1e126df4653a4355df1a b/tests/resources/grafted.git/objects/45/342912745ba6f8893b1e126df4653a4355df1a
+new file mode 100644
+index 00000000000..4a8c471bd5b
+Binary files /dev/null and b/tests/resources/grafted.git/objects/45/342912745ba6f8893b1e126df4653a4355df1a differ
+diff --git a/tests/resources/grafted.git/objects/48/b2b333732644eafb385771a992b923fa88f135 b/tests/resources/grafted.git/objects/48/b2b333732644eafb385771a992b923fa88f135
+new file mode 100644
+index 00000000000..ac640636beb
+Binary files /dev/null and b/tests/resources/grafted.git/objects/48/b2b333732644eafb385771a992b923fa88f135 differ
+diff --git a/tests/resources/grafted.git/objects/5d/31bf4b437e1191b6c709c665f1bd329d0ed0bf b/tests/resources/grafted.git/objects/5d/31bf4b437e1191b6c709c665f1bd329d0ed0bf
+new file mode 100644
+index 00000000000..47a05377ef3
+Binary files /dev/null and b/tests/resources/grafted.git/objects/5d/31bf4b437e1191b6c709c665f1bd329d0ed0bf differ
+diff --git a/tests/resources/grafted.git/objects/66/cc22a015f6ca75b34c82d28f78ba663876bade b/tests/resources/grafted.git/objects/66/cc22a015f6ca75b34c82d28f78ba663876bade
+new file mode 100644
+index 00000000000..c68b2cd4fb1
+--- /dev/null
++++ b/tests/resources/grafted.git/objects/66/cc22a015f6ca75b34c82d28f78ba663876bade
+@@ -0,0 +1,2 @@
++xœ¥ŽM
++Â0F]ç³Ê$™üDÜx=Á4N´Ð4ÒFÏ¯Ô#¸úàñx|©–260dvmñap1°Ñaò}ö¹·N‹hL!E&}ã”BTO^dn ¤)“É$~øê–œ·l,õ=bF|ô:ŠâW{ÔÎm”y¸rYë‡uÛN~øt/<N]ªåÚ¡EHkØ£ATi»Úä¯ˆºH©o<N¢>Ñ«M,
+\ No newline at end of file
+diff --git a/tests/resources/grafted.git/objects/6c/f192eb71cd3243c9fbbe2551012c4449de3fcf b/tests/resources/grafted.git/objects/6c/f192eb71cd3243c9fbbe2551012c4449de3fcf
+new file mode 100644
+index 00000000000..a437f243204
+Binary files /dev/null and b/tests/resources/grafted.git/objects/6c/f192eb71cd3243c9fbbe2551012c4449de3fcf differ
+diff --git a/tests/resources/grafted.git/objects/7c/9da502b2744b70522bb694cd607fb00104a233 b/tests/resources/grafted.git/objects/7c/9da502b2744b70522bb694cd607fb00104a233
+new file mode 100644
+index 00000000000..b363584fd9a
+Binary files /dev/null and b/tests/resources/grafted.git/objects/7c/9da502b2744b70522bb694cd607fb00104a233 differ
+diff --git a/tests/resources/grafted.git/objects/8a/00e91619098618be97c0d2ceabb05a2c58edd9 b/tests/resources/grafted.git/objects/8a/00e91619098618be97c0d2ceabb05a2c58edd9
+new file mode 100644
+index 00000000000..887778a60a0
+--- /dev/null
++++ b/tests/resources/grafted.git/objects/8a/00e91619098618be97c0d2ceabb05a2c58edd9
+@@ -0,0 +1,2 @@
++xœ¥ŽA
++Â0E]ç³Êt’4Dtá	<Á$™Ô@“Jï¯Ô#¸úðïý°”’Ñ‡¶Š@B§5ú@b$Ñ'ÒØ[´iƒ÷±g&V/^¥6Hõ	]J<ŠAÇbH,2Þõ–ÈŽ‚SünÏe…{ËR«ÀƒË¶T8oûvòÃ×©pž»°”|›­Ódàˆ„¨Â~µÉ_u‹1×	RžÅ¨ßšNC
+\ No newline at end of file
+diff --git a/tests/resources/grafted.git/objects/a0/4de168dd5c43aa2af594d794d62e922f8b3b34 b/tests/resources/grafted.git/objects/a0/4de168dd5c43aa2af594d794d62e922f8b3b34
+new file mode 100644
+index 00000000000..1ed3ed906ab
+Binary files /dev/null and b/tests/resources/grafted.git/objects/a0/4de168dd5c43aa2af594d794d62e922f8b3b34 differ
+diff --git a/tests/resources/grafted.git/objects/b2/b4f9e5fe5dacbb2f98bd71d1dc86c7b571ddd1 b/tests/resources/grafted.git/objects/b2/b4f9e5fe5dacbb2f98bd71d1dc86c7b571ddd1
+new file mode 100644
+index 00000000000..2adc857219e
+Binary files /dev/null and b/tests/resources/grafted.git/objects/b2/b4f9e5fe5dacbb2f98bd71d1dc86c7b571ddd1 differ
+diff --git a/tests/resources/grafted.git/objects/ba/54010f8d41532eb130eba420f50248881f7fc2 b/tests/resources/grafted.git/objects/ba/54010f8d41532eb130eba420f50248881f7fc2
+new file mode 100644
+index 00000000000..52a88727471
+Binary files /dev/null and b/tests/resources/grafted.git/objects/ba/54010f8d41532eb130eba420f50248881f7fc2 differ
+diff --git a/tests/resources/grafted.git/objects/d7/224d49d6d5aff6ade596ed74f4bcd4f77b29e2 b/tests/resources/grafted.git/objects/d7/224d49d6d5aff6ade596ed74f4bcd4f77b29e2
+new file mode 100644
+index 00000000000..5b41b6778f8
+--- /dev/null
++++ b/tests/resources/grafted.git/objects/d7/224d49d6d5aff6ade596ed74f4bcd4f77b29e2
+@@ -0,0 +1,2 @@
++xœ¥A
++Â0E]ç³ÊdÒDÜx=Á$™h¡I¤ž_­Gpõà/ÿ…šóÔ€,íÚ"ä%pŒ&é/Ñ1ÚÞŒÔ“–˜Æ€¢ƒqÖ“zð"¥ZMÅGãÒÖ%Œ6ŒžÈcoÒà|ÏœÒ(ŠŸí^8·IJ¸r^kÃº±“ß|ºežæ.Ô|mÑ u„öHˆ*lW›ü%QÉõ%¦Y„ZÚ§bUoaRj
+\ No newline at end of file
+diff --git a/tests/resources/grafted.git/objects/db/8e43f297a313c439530c977b733aaa8c10d54e b/tests/resources/grafted.git/objects/db/8e43f297a313c439530c977b733aaa8c10d54e
+new file mode 100644
+index 00000000000..b9cf5947b70
+Binary files /dev/null and b/tests/resources/grafted.git/objects/db/8e43f297a313c439530c977b733aaa8c10d54e differ
+diff --git a/tests/resources/grafted.git/objects/e4/14f42f4e6bc6934563a2349a8600f0ab68618e b/tests/resources/grafted.git/objects/e4/14f42f4e6bc6934563a2349a8600f0ab68618e
+new file mode 100644
+index 00000000000..1a14959c49b
+Binary files /dev/null and b/tests/resources/grafted.git/objects/e4/14f42f4e6bc6934563a2349a8600f0ab68618e differ
+diff --git a/tests/resources/grafted.git/objects/e6/7b587a57850c69f6f9351ee10c7c8a41dacc78 b/tests/resources/grafted.git/objects/e6/7b587a57850c69f6f9351ee10c7c8a41dacc78
+new file mode 100644
+index 00000000000..213f9ac22ef
+Binary files /dev/null and b/tests/resources/grafted.git/objects/e6/7b587a57850c69f6f9351ee10c7c8a41dacc78 differ
+diff --git a/tests/resources/grafted.git/objects/f0/7330bc2e4ed4bd0bf2301505f6c6bbad01aa2a b/tests/resources/grafted.git/objects/f0/7330bc2e4ed4bd0bf2301505f6c6bbad01aa2a
+new file mode 100644
+index 00000000000..f2d64889207
+Binary files /dev/null and b/tests/resources/grafted.git/objects/f0/7330bc2e4ed4bd0bf2301505f6c6bbad01aa2a differ
+diff --git a/tests/resources/grafted.git/objects/f5/03807ffa920e407a600cfaee96b7152259acc7 b/tests/resources/grafted.git/objects/f5/03807ffa920e407a600cfaee96b7152259acc7
+new file mode 100644
+index 00000000000..21436c177e9
+--- /dev/null
++++ b/tests/resources/grafted.git/objects/f5/03807ffa920e407a600cfaee96b7152259acc7
+@@ -0,0 +1,2 @@
++xœ¥A
++Â0E]ç³J&˜6)ºðž ™™Ô@“@ï¯Ô#¸ú·xŸZ)¹z{ê›D/É‹Mb9PŒ&yyBF&7Òí—™Q…wµ=K­ÏPöVáº;ÈOß–ò:P+3 ÕÆƒ³6Z+:®»üQwæ\Hy£>zAƒ
+\ No newline at end of file
+diff --git a/tests/resources/grafted.git/refs/heads/bottom b/tests/resources/grafted.git/refs/heads/bottom
+new file mode 100644
+index 00000000000..10513e69877
+--- /dev/null
++++ b/tests/resources/grafted.git/refs/heads/bottom
+@@ -0,0 +1 @@
++66cc22a015f6ca75b34c82d28f78ba663876bade
+diff --git a/tests/resources/grafted.git/refs/heads/branch b/tests/resources/grafted.git/refs/heads/branch
+new file mode 100644
+index 00000000000..d0fe5c28390
+--- /dev/null
++++ b/tests/resources/grafted.git/refs/heads/branch
+@@ -0,0 +1 @@
++8a00e91619098618be97c0d2ceabb05a2c58edd9
+diff --git a/tests/resources/grafted.git/refs/heads/master b/tests/resources/grafted.git/refs/heads/master
+new file mode 100644
+index 00000000000..de809b9421a
+--- /dev/null
++++ b/tests/resources/grafted.git/refs/heads/master
+@@ -0,0 +1 @@
++2f3053cbff8a4ca2f0666de364ddb734a28a31a9
+diff --git a/tests/resources/grafted.git/refs/heads/top b/tests/resources/grafted.git/refs/heads/top
+new file mode 100644
+index 00000000000..ce226110b8e
+--- /dev/null
++++ b/tests/resources/grafted.git/refs/heads/top
+@@ -0,0 +1 @@
++1c18e80a276611bb9b146590616bbc5aebdf2945

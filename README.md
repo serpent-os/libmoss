@@ -26,8 +26,8 @@ it.
 cmake -DBUILD_TESTS=OFF -B build -S .
 make -C build
 DESTDIR="$PWD/install" make -C build install
-clang -E -I$PWD/install/usr/local/include $PWD/install/usr/local/include/git2.h -o source/git2/git2.i
-dstep source/git2/git2.i -o source/git2/bindings.d
+clang -E -I$PWD/install/usr/local/include $PWD/install/usr/local/include/git2.h -o ../../source/git2/git2.i
+dstep ../../source/git2/git2.i -o ../../source/git2/bindings.d
 ```
 
 ### Updating Bindings
