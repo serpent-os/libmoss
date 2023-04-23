@@ -1956,8 +1956,6 @@ struct git_indexer_progress
     size_t received_bytes;
 }
 
-alias git_indexer_progress_cb = int function (const(git_indexer_progress)* stats, void* payload);
-
 struct git_indexer_options
 {
     uint version_;
