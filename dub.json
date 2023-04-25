@@ -39,6 +39,6 @@
 		"lmdb",
 		"libxxhash",
 		"libzstd",
-		"libgit2"
+		"git2"
 	]
 }
