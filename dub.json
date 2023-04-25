@@ -18,6 +18,9 @@
 		"tinyendian": {
 			"path": "vendor/tinyendian"
 		},
+		"libgit2-d": {
+			"path": "subprojects/libgit2-d"
+		},
 		"lmdb-d": {
 			"path": "subprojects/lmdb-d"
 		},
@@ -35,6 +38,7 @@
 		"libcurl",
 		"lmdb",
 		"libxxhash",
-		"libzstd"
+		"libzstd",
+		"libgit2"
 	]
 }
