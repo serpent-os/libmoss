@@ -1,11 +1,13 @@
 # libmosscore
 
 libmoss_core_sources = [
+    'c/files.d',
+    'c/mounts.d',
+    'c/package.d',
     'cli/package.d',
     'download/manager.d',
     'download/package.d',
     'download/store.d',
-    'c.d',
     'ftw.d',
     'cpuinfo.d',
     'encoding.d',
