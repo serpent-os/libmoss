@@ -145,7 +145,12 @@ version (linux)
         }
     }
 
-    void move_mount(int fromFD, const string fromPath, int toFD, const string toPath, int flags)
+    enum MOVE_MOUNT
+    {
+        F_EMPTY_PATH = 4,
+    }
+
+    void move_mount(int fromFD, const string fromPath, int toFD, const string toPath, MOVE_MOUNT flags)
     {
         immutable int SYS_MOVE_MOUNT = 429;
         const auto ret = syscall(SYS_MOVE_MOUNT, fromFD, fromPath.toStringz(), toFD, toPath.toStringz(), flags);

@@ -12,174 +12,103 @@
  * Authors: Copyright © 2020-2023 Serpent OS Developers
  * License: Zlib
  */
-module moss.core.mounts;
+module moss.core.mounts2;
 
-public import std.typecons : Nullable, nullable;
-import core.stdc.errno : ENOENT;
-import core.sys.posix.unistd : close;
-import std.exception : ErrnoException;
-import std.stdio : File;
-import std.string : empty, toStringz;
+import moss.core.c.mounts;
+import moss.core.c.mounts : cUnmount = unmount;
 
-public import moss.core.ioutil : CError;
-public import moss.core.c :
-    MNT,
-    MOUNT_ATTR,
-    MS,
-    mount_attr;
-import cstdlib = moss.core.c;
-
-/**
- * A null return from mount/umount/umount2 is "good" for us.
- */
-public alias MountReturn = Nullable!(CError, CError.init);
-
-/**
- * Define a mount through a sensible API
- */
-public struct Mount
+struct FSConfigValue
 {
-    /**
-     * What are we mounting .. where?
-     */
-    string source;
+    FSCONFIG type;
+    void* value;
+}
 
-    /**
-     * Set the target mount point
-     */
-    string target;
-
-    /**
-     * Set the filesystem type
-     */
+struct FSMount
+{
     string filesystem;
+    string target;
+    FSConfigValue[string] config;
+    MS mountFlags;
 
-    /**
-     * mountMode defines how this mount point will be mounted.
-     * If unspecified, the kernel will use its default mode.
-     */
-    cstdlib.MS mountMode;
-
-    /**
-     * mountAttr optionally defines additional properties of this mount point.
-     * They will be set after the `mount` syscall.
-     * If unspecified, the kernel will use its default mode.
-     */
-    Nullable!(cstdlib.mount_attr) mountAttr;
-
-    /**
-     * Default to normal umount flags
-     */
-    cstdlib.MNT unmountFlags;
-
-    /**
-     * Returns: A new tmpfs mount at the given destination
-     */
-    static Mount tmpfs(in string destination)
+    void create()
     {
-        return Mount("", destination, "tmpfs", cstdlib.MS.NONE, cstdlib.mount_attr(cstdlib.MOUNT_ATTR.NODEV).nullable);
+        this.fd = fsopen(filesystem);
+    }
+
+    void configure()
+    {
+        foreach (key, val; this.config)
+        {
+            fsconfig(this.fd, val.type, key, val.value);
+        }
+        fsconfig(this.fd, FSCONFIG.CMD_CREATE, "", null);
+    }
+
+    void mountDetached()
+    {
+        this.mountFD = fsmount(this.fd, cast(FSMOUNT) 0, mountFlags);
+    }
+
+    void mountToTarget()
+    {
+        move_mount(this.mountFD, "", 0, this.target, MOVE_MOUNT.F_EMPTY_PATH);
     }
 
     /**
-     * Returns: A read-write bind mount from source to destination
+     * mount is a convenience method to easily mount the mount point.
+     * No extra function calls are required.
      */
-    static Mount bindRW(in string source, in string destination)
+    void mount()
     {
-        return Mount(source, destination, null, cstdlib.MS.BIND);
+        this.create();
+        this.configure();
+        this.mountDetached();
+        this.mountToTarget();
     }
 
-    /**
-     * Returns: A read-only bind mount from source to destination
-     */
-    static Mount bindRO(in string source, in string destination)
+    void unmount()
     {
-        return Mount(source, destination, null, cstdlib.MS.BIND, cstdlib.mount_attr(cstdlib.MOUNT_ATTR.RDONLY).nullable);
-    }
-
-    /**
-     * Attempt to mount this mount point
-     *
-     * The required mount point must already exist or this call will fail
-     */
-    MountReturn mount() @system nothrow
-    {
-        scope const char* fsType = filesystem.empty ? null : filesystem.toStringz;
-        scope const char* fsSource = source.empty ? null : source.toStringz;
-        scope const char* fsDest = target.empty ? null : target.toStringz;
-
-        auto ret = cstdlib.mount(fsSource, fsDest, fsType, mountMode, data);
-        if (ret != 0)
-        {
-            return MountReturn(CError(cstdlib.errno));
-        }
-        if (mountAttr.isNull())
-        {
-            return MountReturn();
-        }
-        try
-        {
-            ret = this.mountSetAttr();
-        }
-        catch (Exception)
-        {
-            ret = -1;
-        }
-        if (ret != 0)
-        {
-            return MountReturn(CError(cstdlib.errno));
-        }
-        return MountReturn();
-    }
-
-    /**
-     * Attempt to unmount this mount point
-     */
-    MountReturn unmount() @system nothrow const
-    {
-        scope const char* fsDest = target.empty ? null : target.toStringz;
-        auto ret = cstdlib.umount2(fsDest, unmountFlags);
-        if (ret != 0)
-        {
-            return MountReturn(CError(cstdlib.errno));
-        }
-        return MountReturn();
-    }
-
-    /**
-     * setData sets additional mounting directives whose
-     * context depends on the target file system.
-     */
-    void setData(immutable(void)* data)
-    {
-        this.data = data;
+        cUnmount(this.target);
     }
 
 private:
-    immutable(void)* data = null;
+    int fd;
+    int mountFD;
+}
 
-    int mountSetAttr()
+struct FileMount
+{
+    string source;
+    string target;
+    AT openFlags;
+    MountAttr attributes;
+
+    void mountDetached()
     {
-        auto fd = cstdlib.open_tree(
-            -1,
-            target.toStringz(),
-            cstdlib.AT.NONE
-        );
-        if (fd < 0)
-        {
-            return fd;
-        }
-        scope(exit)
-        {
-            close(fd);
-        }
-        auto attrs = this.mountAttr.get();
-        auto ret = cstdlib.mount_setattr(
-            fd,
-            "".toStringz,
-            cstdlib.AT.EMPTY_PATH | cstdlib.AT.RECURSIVE,
-            &attrs,
-            attrs.sizeof,
-        );
-        return ret;
+        this.fd = open_tree(-1, this.source, this.openFlags | AT.RECURSIVE);
     }
+
+    void setAttributes()
+    {
+        mount_setattr(this.fd, "", AT.EMPTY_PATH | AT.RECURSIVE, &this.attributes);
+    }
+
+    void mountToTarget()
+    {
+        move_mount(this.fd, "", 0, this.target, MOVE_MOUNT.F_EMPTY_PATH);
+    }
+
+    /**
+     * mount is a convenience method to easily mount the mount point.
+     * No extra function calls are required.
+     */
+    void mount()
+    {
+        this.mountDetached();
+        this.setAttributes();
+        this.mountToTarget();
+    }
+
+private:
+    int fd;
 }
