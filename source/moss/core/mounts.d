@@ -14,7 +14,7 @@
  */
 module moss.core.mounts;
 
-import moss.core.c.mounts;
+public import moss.core.c.mounts;
 import moss.core.c.mounts : cUnmount = unmount;
 
 struct FSConfigValue
@@ -82,6 +82,23 @@ struct FileMount
     string target;
     AT openFlags;
     MountAttr attributes;
+    MNT unmountFlags;
+
+    /**
+     * Returns: A read-write bind mount from source to destination.
+     */
+    static FileMount bindRW(in string source, in string destination)
+    {
+        return FileMount(source, destination, cast(AT) OPEN_TREE.CLONE);
+    }
+
+    /**
+     * Returns: A read-only bind mount from source to destination.
+     */
+    static FileMount bindRO(in string source, in string destination)
+    {
+        return FileMount(source, destination, cast(AT) OPEN_TREE.CLONE, MountAttr(MOUNT_ATTR.RDONLY));
+    }
 
     void mountDetached()
     {
@@ -107,6 +124,11 @@ struct FileMount
         this.mountDetached();
         this.setAttributes();
         this.mountToTarget();
+    }
+
+    void unmount()
+    {
+        cUnmount(this.target, this.unmountFlags);
     }
 
 private:
