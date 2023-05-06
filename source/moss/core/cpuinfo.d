@@ -16,7 +16,7 @@
 
 module moss.core.cpuinfo;
 
-import moss.core.c : uname, utsname;
+import moss.core.c.files : uname, utsname;
 import std.algorithm : canFind, each, fold, map, sort;
 import std.array;
 import std.conv : to;

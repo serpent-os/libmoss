@@ -14,10 +14,12 @@
  */
 module moss.core.ioutil;
 
-import cstdlib = moss.core.c;
 import std.sumtype;
 public import std.conv : octal;
 public import std.string : fromStringz, toStringz;
+
+import moss.core.c.files : cMkdir = mkdir;
+import moss.core.c.files;
 
 /**
  * Encapsulates errors from C functions
@@ -34,7 +36,7 @@ public struct CError
      */
     @property const(char[]) toString() const
     {
-        return fromStringz(cstdlib.strerror(errorCode));
+        return fromStringz(strerror(errorCode));
     }
 }
 
@@ -82,29 +84,29 @@ public struct IOUtil
     /**
      * Copy the file fromPath into new file toPath, with optional mode (octal)
      */
-    static IOResult copyFile(in string fromPath, in string toPath, cstdlib.mode_t mode = octal!644)
+    static IOResult copyFile(in string fromPath, in string toPath, mode_t mode = octal!644)
     {
         scope (exit)
         {
-            cstdlib.errno = 0;
+            errno = 0;
         }
 
-        auto fdin = cstdlib.open(fromPath.toStringz, cstdlib.O_RDONLY, 0);
+        auto fdin = open(fromPath.toStringz, O_RDONLY, 0);
         if (fdin <= 0)
         {
-            return IOResult(CError(cstdlib.errno));
+            return IOResult(CError(errno));
         }
-        auto fdout = cstdlib.open(toPath.toStringz,
-                cstdlib.O_WRONLY | cstdlib.O_CREAT | cstdlib.O_TRUNC, mode);
+        auto fdout = open(toPath.toStringz,
+                O_WRONLY | O_CREAT | O_TRUNC, mode);
         if (fdout <= 0)
         {
-            return IOResult(CError(cstdlib.errno));
+            return IOResult(CError(errno));
         }
 
         scope (exit)
         {
-            cstdlib.close(fdin);
-            cstdlib.close(fdout);
+            close(fdin);
+            close(fdout);
         }
 
         return copyFile(fdin, fdout);
@@ -118,17 +120,17 @@ public struct IOUtil
     {
         scope (exit)
         {
-            cstdlib.errno = 0;
+            errno = 0;
         }
 
         /* Acquire the length using fstat() */
         if (len < 1)
         {
-            cstdlib.stat_t st = {0};
-            auto ret = cstdlib.fstat(fdIn, &st);
+            stat_t st = {0};
+            auto ret = fstat(fdIn, &st);
             if (ret < 0)
             {
-                return IOResult(CError(cstdlib.errno));
+                return IOResult(CError(errno));
             }
             len = st.st_size;
         }
@@ -143,19 +145,19 @@ public struct IOUtil
     {
         scope (exit)
         {
-            cstdlib.errno = 0;
+            errno = 0;
         }
 
-        cstdlib.loff_t inOff = inOffsets;
-        cstdlib.loff_t outOff = outOffsets;
-        cstdlib.loff_t nBytes = 0;
+        loff_t inOff = inOffsets;
+        loff_t outOff = outOffsets;
+        loff_t nBytes = 0;
 
         do
         {
-            nBytes = cstdlib.copy_file_range(fdIn, &inOff, fdOut, &outOff, len, 0);
+            nBytes = copy_file_range(fdIn, &inOff, fdOut, &outOff, len, 0);
             if (nBytes < 0)
             {
-                return IOResult(CError(cstdlib.errno));
+                return IOResult(CError(errno));
             }
             len -= nBytes;
         }
@@ -167,20 +169,20 @@ public struct IOUtil
     /**
      * Sane mkdir wrapper that allows defining the creation mode.
      */
-    static IOResult mkdir(in string path, cstdlib.mode_t mode = octal!755, bool ignoreExists = false)
+    static IOResult mkdir(in string path, mode_t mode = octal!755, bool ignoreExists = false)
     {
         scope (exit)
         {
-            cstdlib.errno = 0;
+            errno = 0;
         }
 
-        auto ret = cstdlib.mkdir(path.toStringz, mode);
+        auto ret = cMkdir(path.toStringz, mode);
         if (ret == 0)
         {
             return IOResult(true);
         }
-        auto err = cstdlib.errno;
-        if (ignoreExists && err == cstdlib.EEXIST)
+        auto err = errno;
+        if (ignoreExists && err == EEXIST)
         {
             return IOResult(true);
         }
@@ -190,18 +192,18 @@ public struct IOUtil
     /**
      * Create a new write only file
      */
-    static IOFDResult create(in string path, cstdlib.mode_t mode = octal!644)
+    static IOFDResult create(in string path, mode_t mode = octal!644)
     {
         scope (exit)
         {
-            cstdlib.errno = 0;
+            errno = 0;
         }
 
-        auto ret = cstdlib.open(path.toStringz,
-                cstdlib.O_WRONLY | cstdlib.O_CREAT | cstdlib.O_TRUNC, mode);
+        auto ret = open(path.toStringz,
+                O_WRONLY | O_CREAT | O_TRUNC, mode);
         if (ret < 0)
         {
-            return IOFDResult(CError(cstdlib.errno));
+            return IOFDResult(CError(errno));
         }
         return IOFDResult(ret);
     }
@@ -216,7 +218,7 @@ public struct IOUtil
     {
         scope (exit)
         {
-            cstdlib.errno = 0;
+            errno = 0;
         }
 
         /* Dup into NUL terminated buffer to get the real path back */
@@ -225,10 +227,10 @@ public struct IOUtil
         copyBuffer[pattern.length] = '\0';
 
         /* Try to open the tmpfile now */
-        auto ret = cstdlib.mkstemp(copyBuffer.ptr);
+        auto ret = mkstemp(copyBuffer.ptr);
         if (ret < 0)
         {
-            return IOTempResult(CError(cstdlib.errno));
+            return IOTempResult(CError(errno));
         }
 
         /* Return open file descriptor + the resolved name */
@@ -243,17 +245,17 @@ public struct IOUtil
     {
         scope (exit)
         {
-            cstdlib.errno = 0;
+            errno = 0;
         }
         auto copyBuffer = new char[pattern.length + 1];
         copyBuffer[0 .. pattern.length] = pattern;
         copyBuffer[pattern.length] = '\0';
         char* retPtr = null;
 
-        retPtr = cstdlib.mkdtemp(copyBuffer.ptr);
+        retPtr = mkdtemp(copyBuffer.ptr);
         if (retPtr is null)
         {
-            return IOTempdResult(CError(cstdlib.errno));
+            return IOTempdResult(CError(errno));
         }
 
         return IOTempdResult(cast(string) copyBuffer.fromStringz);
@@ -269,14 +271,14 @@ public struct IOUtil
      */
     static IOResult hardlink(in string source, in string target) @trusted
     {
-        auto ret = cstdlib.link(source.toStringz, target.toStringz);
+        auto ret = link(source.toStringz, target.toStringz);
 
         if (ret == 0)
         {
             return IOResult(true);
         }
 
-        return IOResult(CError(cstdlib.errno));
+        return IOResult(CError(errno));
     }
 
     /**
@@ -296,7 +298,7 @@ public struct IOUtil
         auto err = ret.match!((e) => e.errorCode, (b) => 0);
         switch (err)
         {
-        case cstdlib.EXDEV:
+        case EXDEV:
             import std.file : copy, FileException;
 
             debug
@@ -319,12 +321,12 @@ public struct IOUtil
                 copyRes = IOResult(CError(e.errno));
             }
             return copyRes;
-        case cstdlib.EMLINK:
-        case cstdlib.EPERM:
+        case EMLINK:
+        case EPERM:
             debug
             {
                 /* Be as helpful as possible wrt troubleshooting the problem */
-                string errType = err != cstdlib.EMLINK ? "[EPERM]" : "[ELINK]";
+                string errType = err != EMLINK ? "[EPERM]" : "[ELINK]";
                 stderr.writeln(format!"%s: %s Hardlinking %s to %s failed, trying to copy instead..."(__FUNCTION__,
                         errType, source, target));
             }
@@ -343,7 +345,7 @@ private unittest
     auto res = IOUtil.copyFile("LICENSES/Zlib.txt", "LICENSE.test");
     scope (exit)
     {
-        cstdlib.unlink("LICENSE.test".toStringz);
+        unlink("LICENSE.test".toStringz);
     }
     res.match!((err) => assert(0, err.toString), (ok) {});
 }
@@ -358,7 +360,7 @@ private unittest
     TemporaryFile tmp = res.match!((err) => assert(0, err.toString), (t) => t);
     scope (exit)
     {
-        cstdlib.unlink(tmp.realPath.toStringz);
+        unlink(tmp.realPath.toStringz);
     }
 
     const auto theWrittenWord = "This is a temporary file, we're reading + writing it";
@@ -381,7 +383,7 @@ private unittest
     string name = result.tryMatch!((string name) => name);
     scope (exit)
     {
-        cstdlib.rmdir(name.toStringz);
+        rmdir(name.toStringz);
     }
     stdout.writefln!"mkdtemp: %s"(name);
     assert(name.exists);

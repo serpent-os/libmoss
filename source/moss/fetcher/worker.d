@@ -25,7 +25,7 @@ import std.string : toStringz;
 import std.sumtype;
 import core.thread.osthread;
 import std.datetime;
-import cstdlib = moss.core.c;
+import moss.core.c.files : cClose = close;
 import moss.core.ioutil;
 import std.stdint : uint64_t;
 
@@ -239,7 +239,7 @@ private:
         {
             if (isGitType)
             {
-                cstdlib.close(outputFD);
+                cClose(outputFD);
                 outputFD = -1;
             }
         }
