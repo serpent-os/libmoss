@@ -38,7 +38,13 @@ version (linux)
     void fsconfig(int fd, FSCONFIG type, string key, void* value, int aux = 0)
     {
         immutable int SYS_FSCONFIG = 431;
-        auto ret = cast(int) syscall(SYS_FSCONFIG, fd, type, key.toStringz(), value, aux);
+
+        char* keyz = null;
+        if (key != "")
+        {
+            keyz = cast(char*) key.toStringz();
+        }
+        auto ret = cast(int) syscall(SYS_FSCONFIG, fd, type, keyz, value, aux);
         if (ret < 0)
         {
             throw new ErrnoException("Failed to config file system");
@@ -105,7 +111,7 @@ version (linux)
         return ret;
     }
 
-    enum MOUNT_ATTR
+    enum MOUNT_ATTR : ulong
     {
         RELATIME = 0x0,
         RDONLY = 0x1,
@@ -124,7 +130,7 @@ version (linux)
     {
         MOUNT_ATTR attr_set; /** Mount attributes to set. */
         MOUNT_ATTR attr_clr; /** Mount attributes to clear. */
-        MS propagation; /** Mount propagation type. */
+        MS propagation = cast(MS) 0; /** Mount propagation type. */
         ulong userns_fd; /** User namespace file descriptor. */
     }
 
