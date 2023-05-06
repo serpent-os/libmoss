@@ -12,7 +12,7 @@
  * Authors: Copyright © 2020-2023 Serpent OS Developers
  * License: Zlib
  */
-module moss.core.mounts2;
+module moss.core.mounts;
 
 import moss.core.c.mounts;
 import moss.core.c.mounts : cUnmount = unmount;
