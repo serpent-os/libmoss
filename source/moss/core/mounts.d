@@ -14,8 +14,11 @@
  */
 module moss.core.mounts;
 
-public import moss.core.c.mounts;
+import core.sys.posix.unistd : close;
+import std.exception : ErrnoException;
+
 import moss.core.c.mounts : cUnmount = unmount;
+public import moss.core.c.mounts;
 
 struct FSConfigValue
 {
@@ -28,7 +31,7 @@ struct FSMount
     string filesystem;
     string target;
     FSConfigValue[string] config;
-    MS mountFlags;
+    MS mountFlags = cast(MS) 0;
 
     void create()
     {
@@ -47,11 +50,13 @@ struct FSMount
     void mountDetached()
     {
         this.mountFD = fsmount(this.fd, cast(FSMOUNT) 0, mountFlags);
+        _close(this.fd);
     }
 
     void mountToTarget()
     {
         move_mount(this.mountFD, "", 0, this.target, MOVE_MOUNT.F_EMPTY_PATH);
+        _close(this.mountFD);
     }
 
     /**
@@ -113,6 +118,7 @@ struct FileMount
     void mountToTarget()
     {
         move_mount(this.fd, "", 0, this.target, MOVE_MOUNT.F_EMPTY_PATH);
+        _close(this.fd);
     }
 
     /**
@@ -133,4 +139,14 @@ struct FileMount
 
 private:
     int fd;
+}
+
+private:
+void _close(int fd)
+{
+    const auto ret = close(fd);
+    if (ret < 0)
+    {
+        throw new ErrnoException("Failed to close file descriptor");
+    }
 }
