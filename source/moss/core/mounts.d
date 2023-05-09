@@ -33,27 +33,24 @@ struct FSMount
     FSConfigValue[string] config;
     MS mountFlags = cast(MS) 0;
 
-    void create()
-    {
-        this.fd = fsopen(filesystem);
-    }
-
-    void configure()
-    {
-        foreach (key, val; this.config)
-        {
-            fsconfig(this.fd, val.type, key, val.value);
-        }
-        fsconfig(this.fd, FSCONFIG.CMD_CREATE, "", null);
-    }
-
     void mountDetached()
     {
-        this.mountFD = fsmount(this.fd, cast(FSMOUNT) 0, mountFlags);
-        _close(this.fd);
+        auto fd = fsopen(filesystem);
+        scope(exit)
+        {
+            _close(fd);
+        }
+
+        foreach (key, val; this.config)
+        {
+            fsconfig(fd, val.type, key, val.value);
+        }
+        fsconfig(fd, FSCONFIG.CMD_CREATE, "", null);
+
+        this.mountFD = fsmount(fd, cast(FSMOUNT) 0, mountFlags);
     }
 
-    void mountToTarget()
+    void moveToTarget()
     {
         move_mount(this.mountFD, "", 0, this.target, MOVE_MOUNT.F_EMPTY_PATH);
         _close(this.mountFD);
@@ -65,10 +62,8 @@ struct FSMount
      */
     void mount()
     {
-        this.create();
-        this.configure();
         this.mountDetached();
-        this.mountToTarget();
+        this.moveToTarget();
     }
 
     void unmount()
@@ -77,7 +72,6 @@ struct FSMount
     }
 
 private:
-    int fd;
     int mountFD;
 }
 
@@ -108,14 +102,10 @@ struct FileMount
     void mountDetached()
     {
         this.fd = open_tree(-1, this.source, this.openFlags | AT.RECURSIVE);
-    }
-
-    void setAttributes()
-    {
         mount_setattr(this.fd, "", AT.EMPTY_PATH | AT.RECURSIVE, &this.attributes);
     }
 
-    void mountToTarget()
+    void moveToTarget()
     {
         move_mount(this.fd, "", 0, this.target, MOVE_MOUNT.F_EMPTY_PATH);
         _close(this.fd);
@@ -128,8 +118,7 @@ struct FileMount
     void mount()
     {
         this.mountDetached();
-        this.setAttributes();
-        this.mountToTarget();
+        this.moveToTarget();
     }
 
     void unmount()
