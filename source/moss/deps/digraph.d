@@ -270,6 +270,7 @@ public final class DirectedAcyclicalGraph(B)
         while (canBreak)
         {
             canBreak = false;
+            resetVertices();
 
             /* Walk all undiscovered */
             foreach (ref v; vertices[].filter!((v) => v.status == VertexStatus.Undiscovered))
@@ -280,7 +281,6 @@ public final class DirectedAcyclicalGraph(B)
                     break;
                 }
             }
-            resetVertices();
         }
     }
 
@@ -380,7 +380,7 @@ private:
      *   vertex = Current vertex we're operating on
      * Returns: true if we broke a cycle
      */
-    bool dfsUncycle(VertexDescriptor vertex) @safe
+    bool dfsUncycle(ref VertexDescriptor vertex) @safe
     {
         vertex.status = VertexStatus.Discovered;
 
@@ -399,7 +399,7 @@ private:
                 trace(format!"Removing cyclical dependency between %s and %s"(vertex.label.to!string,
                         edgeNode.label.to!string));
                 /* Let's remove this connection and break */
-                edgeNode.edges.removeKey(vertex.label);
+                vertex.edges.removeKey(edgeNode.label);
                 return true;
             }
         }
