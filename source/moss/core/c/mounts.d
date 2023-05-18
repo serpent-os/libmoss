@@ -77,6 +77,7 @@ version (linux)
      */
     enum AT
     {
+        FDCWD = -100, /** Special value to use the current working directory. */
         REMOVEDIR = 0x200, /** Pass to unlinkat() for rmdir() behaviour. */
         SYMLINK_FOLLOW = 0x400, /** Do follow symlinks. */
         NO_AUTOMOUNT = 0x800, /** Suppress terminal automount traversal. */
