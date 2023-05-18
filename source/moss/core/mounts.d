@@ -24,6 +24,7 @@ struct FSConfigValue
 {
     FSCONFIG type;
     void* value;
+    int aux; /** aux is auxiliary data. May be left uset when unnecessary. */
 }
 
 struct FSMount
@@ -43,7 +44,7 @@ struct FSMount
 
         foreach (key, val; this.config)
         {
-            fsconfig(fd, val.type, key, val.value);
+            fsconfig(fd, val.type, key, val.value, val.aux);
         }
         fsconfig(fd, FSCONFIG.CMD_CREATE, "", null);
 
