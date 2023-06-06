@@ -167,7 +167,7 @@ package:
         {
         case StoreType.System:
             _directory = join(["/.moss/store", identifier,
-                versionIdentifier], "/");
+                    versionIdentifier], "/");
             break;
         case StoreType.User:
             _directory = join([

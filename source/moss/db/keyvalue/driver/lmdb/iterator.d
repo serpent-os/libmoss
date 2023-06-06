@@ -97,7 +97,7 @@ package final class LMDBIterator : KeyValueIterator
             if (canSet)
             {
                 dbKey = encodeKey(Bucket(cast(ImmutableDatum) bucketName, bucketPrefix), [
-                ]);
+                        ]);
             }
             return mdb_cursor_get(cursor, &dbKey, &dbVal, nextMode);
         }();
