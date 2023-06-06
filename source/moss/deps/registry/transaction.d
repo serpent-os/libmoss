@@ -26,7 +26,7 @@ import std.string : format;
 import std.conv : to;
 import std.array : array;
 import std.algorithm : each, filter, map, canFind;
-import moss.deps.digraph;
+import moss.deps.dag;
 
 /**
  * Light version of Registryitem without the mutability issues
@@ -108,7 +108,7 @@ public final class Transaction
      */
     void installPackages(in RegistryItem[] items)
     {
-        finalState ~= computeDependencies(items);
+        computeDependencies(items).each!(d => finalState ~= d);
     }
 
     /**
@@ -130,7 +130,6 @@ public final class Transaction
         }
 
         auto dag = buildGraph(finalState, &pickInstalledOnly);
-        dag.breakCycles();
 
         /* Transpose the graph now */
         auto revgraph = dag.reversed();
@@ -140,8 +139,8 @@ public final class Transaction
         /* Remove each subgraph resolution */
         foreach (item; items)
         {
-            auto subgraph = revgraph.subgraph(cast(RegistryItem) item);
-            subgraph.topologicalSort((r) { removals ~= r; });
+            auto subgraph = revgraph.subGraph(cast(RegistryItem) item);
+            subgraph.topologicalSort().each!(r => removals ~= r);
         }
 
         removed ~= removals;
@@ -221,8 +220,6 @@ private:
      */
     auto computeDependencies(in RegistryItem[] items)
     {
-        RegistryItem[] ret;
-
         /* Compute subdomain buckets */
         auto subdomain = new Transaction(registryManager, items);
 
@@ -254,20 +251,15 @@ private:
             return NullableRegistryItem(avail.front);
         }
 
-        auto dag = buildGraph(items, &pickDependency);
-        dag.breakCycles();
-        dag.topologicalSort((r) { ret ~= r; });
-
-        return ret;
+        return buildGraph(items, &pickDependency).topologicalSort();
     }
 
     /**
      * Build the graph.
      */
-    DirectedAcyclicalGraph!RegistryItem buildGraph(in RegistryItem[] items,
-            DependencyLookupFunc depCB)
+    Dag!RegistryItem buildGraph(in RegistryItem[] items, DependencyLookupFunc depCB)
     {
-        auto dag = new DirectedAcyclicalGraph!RegistryItem();
+        auto dag = Dag!RegistryItem();
 
         /* Add the incoming vertices */
         RegistryItem[] workItems = cast(RegistryItem[]) items;
@@ -279,10 +271,7 @@ private:
 
             foreach (item; workItems)
             {
-                if (!dag.hasVertex(item))
-                {
-                    dag.addVertex(item);
-                }
+                dag.addNode(item);
                 foreach (dep; item.dependencies)
                 {
                     if (depCB is null)
@@ -297,11 +286,8 @@ private:
                         continue;
                     }
 
-                    if (!dag.hasVertex(chosenOne.get))
-                    {
-                        dag.addVertex(chosenOne.get);
+                    if (dag.addNode(chosenOne.get))
                         next ~= chosenOne.get;
-                    }
                     dag.addEdge(item, chosenOne.get);
                 }
             }

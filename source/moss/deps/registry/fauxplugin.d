@@ -170,7 +170,7 @@ unittest
 {
     import moss.deps.registry : RegistryManager, RegistryItem;
     import std.exception : enforce;
-    import moss.deps : DirectedAcyclicalGraph;
+    import moss.deps : Dag;
 
     auto qm = new RegistryManager();
     auto fs = new FauxSource();
@@ -183,13 +183,10 @@ unittest
     auto nano = result[0];
     enforce(nano.dependencies.length == 2);
 
-    auto dg = new DirectedAcyclicalGraph!string();
+    auto dg = Dag!string();
     void addRecurse(in string pkgID)
     {
-        if (!dg.hasVertex(pkgID))
-        {
-            dg.addVertex(pkgID);
-        }
+        dg.addNode(pkgID);
         auto results = qm.byID(pkgID);
         assert(!results.empty);
         foreach (dep; results.front.dependencies)
@@ -203,8 +200,7 @@ unittest
 
     addRecurse(nano.pkgID);
 
-    string[] computedOrder;
-    dg.topologicalSort((n) { computedOrder ~= n; });
+    const auto computedOrder = dg.topologicalSort().array;
     assert(computedOrder == ["baselayout", "glibc", "ncurses", "nano"]);
 
     dg.emitGraph();
@@ -215,9 +211,8 @@ unittest
     auto unknownSymbol = qm.byProvider(ProviderType.SharedLibraryName, "libz.so.1(x86_64)");
     assert(unknownSymbol.empty);
 
-    auto revdepsGraph = dg.reversed().subgraph("ncurses");
-    string[] revdepsOrder;
-    revdepsGraph.topologicalSort((n) { revdepsOrder ~= n; });
+    auto revdepsGraph = dg.reversed().subGraph("ncurses");
+    auto revdepsOrder = revdepsGraph.topologicalSort().array;
     assert(revdepsOrder == ["nano", "ncurses"]);
 }
 
@@ -240,5 +235,5 @@ unittest
     auto res = tr.apply();
     assert(tr.problems.length == 0);
     auto names = res.map!((p) => p.pkgID).array();
-    assert(names == ["baselayout", "glibc", "ncurses", "bash", "nano"]);
+    assert(names == ["baselayout", "glibc", "ncurses", "nano", "bash"]);
 }
