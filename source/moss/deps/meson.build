@@ -16,7 +16,7 @@ deps_sources = [
 	'registry/transaction.d',
 	'registry/package.d',
 	'registry/fauxplugin.d',
-	'digraph.d',
+	'dag.d',
 	'dependency.d',
 ]
 
