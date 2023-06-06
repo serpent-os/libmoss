@@ -154,7 +154,7 @@ public struct Dag(T)
     bool addEdge(T parent, T child) @safe
     {
         // Ensure parent & child aren't equal
-        if (parent is child)
+        if (parent == child)
             return false;
 
         auto p = getNode(parent);
@@ -320,7 +320,7 @@ class Node(T)
 {
     bool opEquals(T rhs) const @safe
     {
-        return this.data is rhs;
+        return this.data == rhs;
     }
 
     this(T data)
