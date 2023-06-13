@@ -23,7 +23,7 @@ if with_moss_deps
     components += 'deps'
 endif
 
-if with_moss_fetcher
+if with_moss_fetcher_http or with_moss_fetcher_git
     components += 'fetcher'
 endif
 

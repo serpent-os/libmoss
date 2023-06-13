@@ -1,5 +1,5 @@
 option('with-config', type: 'boolean', value: true, description: 'Enable moss-config library')
 option('with-db', type: 'boolean', value: true, description: 'Enable moss-db library')
 option('with-deps', type: 'boolean', value: true, description: 'Enable moss-deps library')
-option('with-fetcher', type: 'boolean', value: true, description: 'Enable moss-fetcher library')
+option('with-fetcher', type: 'combo', choices: ['http', 'git', 'true', 'false'], value: 'http', description: 'Enable moss-fetcher library')
 option('with-format', type: 'combo', choices: ['binary', 'source', 'true', 'false'], value: 'true', description: 'Enable moss-format library')
