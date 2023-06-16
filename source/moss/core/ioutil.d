@@ -323,25 +323,26 @@ public struct IOUtil
         size = 0;
 
         /* nftw handler */
-        extern (C) static int handler(const char* fpath, const stat_t* sb, int typeflag, FTW* ftwbuf)
+        extern (C) static int handler(const char* fpath, const stat_t* sb,
+                int typeflag, FTW* ftwbuf)
         {
             const path = fpath.fromStringz.idup;
             switch (typeflag)
             {
-                case TypeFlag.FTW_F:
-                case TypeFlag.FTW_SL:
-                case TypeFlag.FTW_SLN:
-                    files ~= path;
-                    size += sb.st_size;
-                    break;
+            case TypeFlag.FTW_F:
+            case TypeFlag.FTW_SL:
+            case TypeFlag.FTW_SLN:
+                files ~= path;
+                size += sb.st_size;
+                break;
 
                 /* Skip FTW_D to ensure dirs are sorted depth first */
-                case TypeFlag.FTW_DP:
-                    dirs ~= path;
-                    break;
+            case TypeFlag.FTW_DP:
+                dirs ~= path;
+                break;
 
-                default:
-                    break;
+            default:
+                break;
             }
             return 0;
         }
@@ -366,12 +367,12 @@ public struct IOUtil
         try
         {
             /* Delete files in parallel */
-            foreach(file; parallel(files))
+            foreach (file; parallel(files))
             {
                 remove(file);
             }
             /* Remove dirs, they're sorted depth first */
-            foreach(dir; dirs)
+            foreach (dir; dirs)
             {
                 remove(dir);
             }
