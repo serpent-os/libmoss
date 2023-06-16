@@ -17,119 +17,62 @@ module moss.format.binary.endianness;
 
 import std.bitmanip;
 import std.stdint;
+import std.traits;
 
-/**
- * Internal type to auto convert uint64
- */
-package union autoEndianUint64
+@("Test endian conversion") @safe unittest
 {
-    ubyte[8] bytes;
-    uint64_t value;
+    uint64_t l = 0;
+    uint32_t l2 = 0;
+    uint16_t l3 = 0;
 
-    static assert(autoEndianUint64.sizeof == uint64_t.sizeof, "Invalid size for uint64_t");
-
-    pure this(uint64_t v) @safe @nogc nothrow
-    {
-        value = v;
-    }
-
-    /**
-     * On little-endian systems, convert to big-endian (network order)
-     */
-    pragma(inline, true) pure void toNetworkOrder() @safe @nogc nothrow
-    {
-        version (LittleEndian)
-        {
-            bytes = nativeToBigEndian(value);
-        }
-    }
-
-    /**
-     * On little-endian systems, convert back to little-endian (host order)
-     */
-    pragma(inline, true) pure void toHostOrder() @safe @nogc nothrow
-    {
-        version (LittleEndian)
-        {
-            value = bigEndianToNative!(uint64_t, 8)(bytes);
-        }
-    }
+    assert(autoEndianConvert(l).sizeof == uint64_t.sizeof);
+    assert(autoEndianConvert(l2).sizeof == uint32_t.sizeof);
+    assert(autoEndianConvert(l3).sizeof == uint16_t.sizeof);
 }
 
 /**
- * Internal type to auto convert uint32
+ * Convert an integer to the right endian type
+ *
+ * Params:
+ *   v = Value to convert
  */
-package union autoEndianUint32
+package auto autoEndianConvert(T)(T v) @safe @nogc nothrow
 {
-    ubyte[4] bytes;
-    uint32_t value;
-
-    static assert(autoEndianUint32.sizeof == uint32_t.sizeof, "Invalid size for uint32_t");
-
-    pure this(uint32_t v) @safe @nogc nothrow
+    static union AutoEndianConv(T)
+            if (isNumeric!T && !isFloatingPoint!T && !isBoolean!T)
     {
-        value = v;
-    }
+        ubyte[T.sizeof] bytes;
+        T value;
 
-    /**
-     * On little-endian systems, convert to big-endian (network order)
-     */
-    pragma(inline, true) pure void toNetworkOrder() @safe @nogc nothrow
-    {
-        version (LittleEndian)
+        pure this(T v) @safe @nogc nothrow
         {
-            bytes = nativeToBigEndian(value);
+            value = v;
+        }
+
+        /**
+        * On little-endian systems, convert to big-endian (network order)
+        */
+        pragma(inline, true) pure void toNetworkOrder() @safe @nogc nothrow
+        {
+            version (LittleEndian)
+            {
+                bytes = nativeToBigEndian(value);
+            }
+        }
+
+        /**
+        * On little-endian systems, convert back to little-endian (host order)
+        */
+        pragma(inline, true) pure void toHostOrder() @safe @nogc nothrow
+        {
+            version (LittleEndian)
+            {
+                value = bigEndianToNative!(T, T.sizeof)(bytes);
+            }
         }
     }
 
-    /**
-     * On little-endian systems, convert back to little-endian (host order)
-     */
-    pragma(inline, true) pure void toHostOrder() @safe @nogc nothrow
-    {
-        version (LittleEndian)
-        {
-            value = bigEndianToNative!(uint32_t, 4)(bytes);
-        }
-    }
-}
-
-/**
- * Internal type to auto convert uint16
- */
-package union autoEndianUint16
-{
-    ubyte[2] bytes;
-    uint16_t value;
-
-    static assert(autoEndianUint16.sizeof == uint16_t.sizeof, "Invalid size for uint16_t");
-
-    pure this(uint16_t v) @safe @nogc nothrow
-    {
-        value = v;
-    }
-
-    /**
-     * On little-endian systems, convert to big-endian (network order)
-     */
-    pragma(inline, true) pure void toNetworkOrder() @safe @nogc nothrow
-    {
-        version (LittleEndian)
-        {
-            bytes = nativeToBigEndian(value);
-        }
-    }
-
-    /**
-     * On little-endian systems, convert back to little-endian (host order)
-     */
-    pragma(inline, true) pure void toHostOrder() @safe @nogc nothrow
-    {
-        version (LittleEndian)
-        {
-            value = bigEndianToNative!(uint16_t, 2)(bytes);
-        }
-    }
+    return AutoEndianConv!T(v);
 }
 
 /**
@@ -140,36 +83,14 @@ struct AutoEndian
 }
 
 /**
- * Return the correct endian helper for uint64_t
- */
-static pure auto autoEndianConvert(uint64_t v) @safe @nogc nothrow
-{
-    return autoEndianUint64(v);
-}
-
-/**
- * Return the correct endian helper for uint32_t
- */
-static pure auto autoEndianConvert(uint32_t v) @safe @nogc nothrow
-{
-    return autoEndianUint32(v);
-}
-
-/**
- * Return the correct endian helper for uint16_t
- */
-static pure auto autoEndianConvert(uint16_t v) @safe @nogc nothrow
-{
-    return autoEndianUint16(v);
-}
-
-/**
- * Internal helper to convert between endians
+ * Perform conversion (toHostOrder/toNetworkOrder)
+ *
+ * Params:
+ *   T = Type of Thing
+ *   v = Thing with members
  */
 static void orderHelper(T, string funcer)(ref T v) @safe @nogc nothrow
 {
-    import std.traits : hasUDA, moduleName;
-
     foreach (member; __traits(allMembers, T))
     {
         static if (__traits(compiles, __traits(getMember, T, member)))
