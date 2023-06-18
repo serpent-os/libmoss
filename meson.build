@@ -16,6 +16,8 @@ with_moss_db = get_option('with-db')
 with_moss_deps = get_option('with-deps')
 with_moss_fetcher = get_option('with-fetcher')
 with_moss_format = get_option('with-format')
+with_moss_fetcher_http = false
+with_moss_fetcher_git = false
 with_moss_format_binary = false
 with_moss_format_source = false
 
@@ -32,6 +34,30 @@ elif with_moss_format == 'binary'
 else
     with_moss_format_binary = false
     with_moss_format_source = false
+endif
+
+# Determine moss-fetcher build config
+if with_moss_fetcher == 'true'
+    with_moss_fetcher_http = true
+    with_moss_fetcher_git = true
+elif with_moss_fetcher == 'http'
+    with_moss_fetcher_http = true
+    with_moss_fetcher_git = false
+elif with_moss_fetcher == 'git'
+    with_moss_fetcher_http = false
+    with_moss_fetcher_git = true
+else
+    with_moss_fetcher_http = false
+    with_moss_fetcher_git = false
+endif
+
+# libgit2 binding
+if with_moss_fetcher_git
+    libgit2 = subproject('libgit2-d',
+        default_options: [
+            'default_library=static'
+        ])
+    link_libgit2 = libgit2.get_variable('link_libgit2')
 endif
 
 # lmdb binding
@@ -76,7 +102,8 @@ report = [
     '    moss-deps:                              @0@'.format(with_moss_deps),
     '    moss-format (binary):                   @0@'.format(with_moss_format_binary),
     '    moss-format (source):                   @0@'.format(with_moss_format_source),
-    '    moss-fetcher:                           @0@'.format(with_moss_fetcher),
+    '    moss-fetcher (http):                    @0@'.format(with_moss_fetcher_http),
+    '    moss-fetcher (git):                     @0@'.format(with_moss_fetcher_git),
 ]
 
 # Output some stuff to validate the build config
