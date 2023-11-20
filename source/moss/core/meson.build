@@ -22,15 +22,19 @@ libmoss_core_sources = [
     'util.d',
 ]
 
+core_deps = [link_ddbus]
+
 libmoss_core = static_library(
     'moss-core',
     libmoss_core_sources,
     install: false,
+    dependencies: core_deps,
     include_directories: [root_includedir]
 )
 
 # Allow individually linking to libmosscore
 link_libmoss_core = declare_dependency(
     link_whole: libmoss_core,
-    include_directories: [root_includedir]
+    include_directories: [root_includedir],
+    dependencies: core_deps,
 )

@@ -69,6 +69,37 @@ string computeSHA256(in string path, bool useMmap = false)
 }
 
 /**
+ * Take a inhibitor lock to inhibit system shutdowns and sleep states with systemd
+ * https://www.freedesktop.org/wiki/Software/systemd/inhibit/
+ *
+ * Requires ddbus : FileDescriptor to be imported.
+ *
+ * Params:
+ *   what = What is a colon-separated list of lock types, i.e. shutdown, sleep, idle, handle-power-key, handle-suspend-key, handle-hibernate-key, handle-lid-switch.
+ *   who = Who is a human-readable, descriptive string of who is taking the lock.
+ *   why = Why is a human-readable, descriptive string of why the lock is taken.
+ *   mode = Mode is one of block or delay, see above.
+ * Returns: FileDescriptor of lock
+ */
+import ddbus : FileDescriptor;
+FileDescriptor inhibit(in string what, in string who, in string why, in string mode)
+{
+    import ddbus : busName, Connection, connectToBus, FileDescriptor, interfaceName, ObjectPath, PathIface;
+    import ddbus.c_lib : DBusBusType;
+
+    static immutable dbusName = busName("org.freedesktop.login1");
+    static immutable dbusPath = ObjectPath("/org/freedesktop/login1");
+    static immutable dbusIface = interfaceName("org.freedesktop.login1.Manager");
+
+    Connection conn = connectToBus(DBusBusType.DBUS_BUS_SYSTEM);
+    PathIface obj = new PathIface(conn, dbusName, dbusPath, dbusIface);
+
+    auto lock = obj.call!FileDescriptor("Inhibit", what, who, why, mode);
+
+    return lock;
+}
+
+/**
  * Outperforms buildPath considerably by
  * not attempting to fold or normalize the paths
  *
