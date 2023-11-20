@@ -18,6 +18,9 @@
 		"tinyendian": {
 			"path": "vendor/tinyendian"
 		},
+		"ddbus": {
+			"path": "subprojects/ddbus"
+		},
 		"libgit2-d": {
 			"path": "subprojects/libgit2-d"
 		},

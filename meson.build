@@ -51,6 +51,13 @@ else
     with_moss_fetcher_git = false
 endif
 
+# ddbus binding
+ddbus = subproject('ddbus',
+    default_options: [
+        'default_library=static'
+    ])
+link_ddbus = ddbus.get_variable('link_ddbus')
+
 # libgit2 binding
 if with_moss_fetcher_git
     libgit2 = subproject('libgit2-d',
