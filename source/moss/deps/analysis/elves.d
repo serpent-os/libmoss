@@ -146,9 +146,13 @@ public AnalysisReturn scanElfFiles(scope Analyser analyser, ref FileInfo fileInf
             /* Soname exposed? Lets share it. */
             /* TODO: Only expose ACTUAL libraries */
             auto soname = dynTable.soname;
-            if (soname == "" || !fileInfo.fullPath.canFind(".so"))
+            if (!fileInfo.fullPath.canFind(".so"))
             {
                 break;
+            }
+            if (soname == "")
+            {
+                soname = fileInfo.fullPath.baseName;
             }
             auto sonameProvider = "%s(%s)".format(soname, fi.header.machineISA);
             auto p = Provider(sonameProvider, ProviderType.SharedLibraryName);
