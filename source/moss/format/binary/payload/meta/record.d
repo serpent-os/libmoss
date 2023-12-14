@@ -76,7 +76,7 @@ enum RecordTag : uint16_t
     @(RecordType.Provider) Provides = 9,
 
     /** Conflicts with some capability or name */
-    @(RecordType.Unknown) Conflicts = 10,
+    @(RecordType.Provider) Conflicts = 10,
 
     /** Release number for the package */
     @(RecordType.Uint64) Release = 11,
