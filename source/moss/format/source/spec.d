@@ -229,6 +229,7 @@ public:
         pkd.description = _sbuilder.process(pkd.description);
         pkd.runtimeDependencies = pkd.runtimeDependencies.map!((r) => _sbuilder.process(r))
             .uniq.array;
+        pkd.conflicts = pkd.conflicts.map!((r) => _sbuilder.process(r)).uniq.array;
         /* this expands the raw paths, but doesn't touch the type information */
         foreach (pd; pkd.paths)
         {

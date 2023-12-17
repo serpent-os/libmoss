@@ -55,4 +55,9 @@ struct PackageDefinition
      * custom subpackages to be created.
      */
     PathDefinition[] paths;
+
+    /**
+     * A list of providers (usually names) that cannot be installed together.
+     */
+    @YamlSchema("conflicts", false, YamlType.Array) string[] conflicts;
 }
