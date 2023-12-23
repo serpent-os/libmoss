@@ -37,6 +37,9 @@ struct CompilerFlags
 
     /** The LDFLAGS variable to export */
     @YamlSchema("ld") string ldflags = null;
+
+    /** The RUSTFLAGS variable to export */
+    @YamlSchema("rust") string rustflags = null;
 }
 
 /**
@@ -135,6 +138,15 @@ struct TuningFlag
             return llvm.ldflags;
         }
         return root.ldflags;
+    }
+
+    /**
+     * Return the RUSTFLAGS
+     */
+    pure @property string rustflags(Toolchain toolchain) @safe @nogc nothrow
+    {
+        /* NOTE: GNU vs LLVM doesn't apply here */
+        return root.rustflags;
     }
 
 }
