@@ -90,6 +90,11 @@ struct BuildOptions
     @YamlSchema("networking") bool networking = false;
 
     /**
+     * Compress man pages
+     */
+    @YamlSchema("compressman") bool compressman = false;
+
+    /**
      * A set of tuning selections to apply. Constructed at runtime through
      * parsing
      */
